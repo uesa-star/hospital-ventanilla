@@ -1,0 +1,1442 @@
+<!DOCTYPE html>
+<html lang="es" class="bg-slate-50 font-sans">
+<head>    
+    <meta charset="UTF-8">    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <title>Hospital de Ventanilla - Gestión de Laboratorio y Vigilancia Epidemiológica</title>    
+    <!-- Tailwind CSS -->    
+    <script src="https://cdn.tailwindcss.com"></script>    
+    <!-- FontAwesome para iconos -->    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">    
+    <!-- Chart.js para gráficos analíticos -->    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>    
+    <!-- PapaParse para procesamiento de CSV -->    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>    
+    <!-- SheetJS para procesar y exportar archivos de Excel -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <script>        
+        tailwind.config = {            
+            theme: {                
+                extend: {                    
+                    colors: {                        
+                        brand: {                            
+                            dark: '#0f4c43',     // Verde bosque corporativo
+                            teal: '#115e54',     // Verde azulado interactivo
+                            accent: '#10b981',   // Esmeralda activo
+                            softBg: '#f8fafc'                        
+                        }                    
+                    }                
+                }            
+            }        
+        }    
+    </script>    
+    <style>        
+        html { scroll-behavior: smooth; }        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }        
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }        
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }        
+        @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }        
+        .animate-marquee { display: flex; width: max-content; animation: marquee 45s linear infinite; }        
+        .animate-marquee:hover { animation-play-state: paused; }    
+
+        /* ESTILOS DE IMPRESIÓN / REPORTE PDF */
+        @media print {
+            body { background: white !important; color: black !important; }
+            header, section.bg-rose-950, #connectionAlert, #kardexForm, select, button, #excelFileInput, .no-print {
+                display: none !important;
+            }
+            main { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+            .bg-white { border: none !important; box-shadow: none !important; }
+            canvas { max-height: 200px !important; }
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col bg-slate-50 relative">
+    
+    <!-- CABECERA PRINCIPAL -->    
+    <header class="bg-brand-dark text-white px-6 py-5 shadow-md shrink-0">        
+        <div class="max-w-[1850px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">            
+            <div class="flex items-center gap-4">                
+                <div class="bg-emerald-500 p-3 rounded-2xl text-brand-dark shadow-lg shadow-emerald-500/10 shrink-0">                    
+                    <i class="fa-solid fa-hospital text-3xl text-white"></i>                
+                </div>                
+                <div class="flex flex-col">                    
+                    <h1 class="text-lg md:text-xl font-extrabold tracking-tight text-white uppercase leading-none">HOSPITAL DE VENTANILLA</h1>                    
+                    <h2 class="text-xs md:text-sm font-bold text-emerald-300 uppercase tracking-wide mt-1.5 leading-none">GESTIÓN DE LABORATORIO</h2>                    
+                    <p class="text-[9px] md:text-[10px] font-semibold text-slate-300 uppercase tracking-widest mt-1.5 leading-none">DASHBOARD DE ANÁLISIS Y VIGILANCIA EPIDEMIOLÓGICA</p>                
+                </div>            
+            </div>                        
+            <div class="flex flex-wrap items-center gap-3">                
+                <span id="syncStatusBadge" class="bg-amber-600/30 text-amber-300 text-xs px-3.5 py-2 rounded-full border border-amber-500/30 flex items-center gap-2 font-bold transition-all duration-300">                    
+                    <span id="syncStatusDot" class="h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse"></span>                    
+                    <span id="syncStatusText">Estableciendo sincronización...</span>
+                </span>                                
+                
+                <!-- BOTÓN GENERAR REPORTE (PDF/Impresora) -->
+                <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 transition-all text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-md no-print">
+                    <i class="fa-solid fa-file-pdf text-base"></i> Imprimir Reporte / PDF
+                </button>
+
+                <!-- BOTÓN IMPORTAR BASE DE DATOS -->
+                <button onclick="triggerExcelImport()" class="bg-indigo-600 hover:bg-indigo-700 transition-all duration-150 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-md no-print">
+                    <i class="fa-solid fa-file-excel text-base"></i> Importar Excel/CSV
+                </button>
+                <input type="file" id="excelFileInput" accept=".csv, .xlsx, .xls" class="hidden" onchange="handleExcelImport(event)">
+            </div>        
+        </div>    
+    </header>
+    
+    <!-- BARRA DE ALERTA EPIDEMIOLÓGICA -->    
+    <section class="bg-rose-950 text-rose-100 px-6 py-3 border-b border-rose-900 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-semibold shrink-0 shadow-inner">        
+        <div class="flex items-center gap-3 overflow-hidden w-full sm:flex-1">            
+            <span class="bg-rose-600 text-white text-[9px] font-black px-2.5 py-1 rounded uppercase tracking-wider flex items-center gap-1.5 shrink-0 animate-pulse">                
+                <span class="h-2 w-2 rounded-full bg-white"></span> Alerta Epidemiológica            
+            </span>            
+            <div class="overflow-hidden relative w-full flex items-center select-none cursor-pointer">                
+                <div id="liveAlertTicker" class="animate-marquee flex gap-12 whitespace-nowrap">                    
+                    <span>🌍 <strong>OMS GLOBAL:</strong> Alerta de la OPS/OMS por rebrote masivo de Sarampión ante el flujo del Mundial 2026.</span>                    
+                    <span>🇵🇪 <strong>CDC PERÚ:</strong> Alerta Epidemiológica por Sarampión y Dengue grave en territorio nacional.</span>                    
+                    <span>🇧🇷 <strong>VIGILANCIA FRONTERA:</strong> Transmisión de Fiebre de Oropouche en la frontera con Brasil (Acre).</span>                
+                </div>            
+            </div>        
+        </div>    
+    </section>
+
+    <!-- BANNER DINÁMICO DE ESTADO DE CONEXIÓN -->
+    <div id="connectionAlert" class="hidden max-w-[1850px] mx-auto mt-4 px-6 py-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300">
+        <div class="flex items-center gap-3">
+            <div id="alertIconContainer" class="p-2 rounded-full shrink-0">
+                <i id="alertIcon" class="fa-solid text-lg"></i>
+            </div>
+            <div>
+                <h4 id="alertTitle" class="font-bold text-sm text-slate-800">Estado de Sincronización</h4>
+                <p id="alertDescription" class="text-xs mt-0.5 opacity-90"></p>
+            </div>
+        </div>
+        <button id="alertActionButton" onclick="conectarYDescargar()" class="px-4 py-2 rounded-lg text-xs font-bold shadow transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0">
+            Forzar Reintento
+        </button>
+    </div>
+    
+    <!-- CUERPO PRINCIPAL DEL SISTEMA -->    
+    <main class="flex-1 max-w-[1850px] w-full mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- ================= FILTRO DE CONTROL ================= -->
+        <section class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print">
+            <div class="bg-brand-dark text-white px-6 py-4 flex items-center gap-2 shadow-sm border-b border-teal-900">
+                <i class="fa-solid fa-sliders text-emerald-400 text-lg"></i>
+                <h2 class="text-sm font-extrabold uppercase tracking-wider">Filtros de Control de Vigilancia</h2>
+            </div>
+            <div class="p-6 bg-slate-50/40">
+                <div class="flex flex-col lg:flex-row items-stretch lg:items-end gap-4 text-sm justify-between">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
+                        <!-- S.E. -->
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Semana Epidemiológica (S.E.)</span>
+                            <select id="filterWeek" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                                <option value="ALL" selected>Todas</option>
+                            </select>
+                        </div>
+                        <!-- Año -->
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Año de Vigilancia</span>
+                            <select id="filterYear" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                                <option value="ALL" selected>Todos los Años</option>
+                            </select>
+                        </div>
+                        <!-- Tipo de Prueba -->
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipo de Prueba</span>
+                            <select id="filterTestType" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                                <option value="ALL" selected>Todas las Pruebas</option>
+                            </select>
+                        </div>
+                        <!-- Resultado -->
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Resultado Clínico</span>
+                            <select id="filterResult" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                                <option value="ALL" selected>Todos los Resultados</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="PENDIENTE">PENDIENTE</option>
+                                <option value="DESCARTADO">DESCARTADO</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <button onclick="resetFilters()" class="bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 px-6 py-2.5 rounded-lg text-xs font-black transition-colors shadow-sm uppercase tracking-wider shrink-0 h-[38px]">
+                            Limpiar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- KPIs DE ALTO IMPACTO -->        
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3.5">            
+            <!-- KPI 1 -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
+                <div>                    
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Ingresados</p>                    
+                    <h3 id="kpiTotal" class="text-2xl font-black text-slate-800 mt-1 leading-none">...</h3>                    
+                    <p id="kpiTotalSub" class="text-[10px] text-slate-500 mt-2 font-semibold">Total General Base</p>                
+                </div>                
+                <div class="bg-blue-50 p-3 rounded-full text-blue-600 shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-folder-open text-xl"></i>                
+                </div>            
+            </div>
+            <!-- KPI 2 -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
+                <div>                    
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Casos Patógeno</p>                    
+                    <h3 id="kpiPatogeno" class="text-2xl font-black text-teal-700 mt-1 leading-none">0</h3>                    
+                    <p id="kpiPatogenoSub" class="text-[10px] text-teal-600 mt-2 font-semibold truncate max-w-[120px]">Seleccione examen</p>                
+                </div>                
+                <div class="bg-teal-50 p-3 rounded-full text-teal-600 shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-flask-vial text-xl"></i>                
+                </div>            
+            </div>
+            <!-- KPI 3 -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
+                <div>                    
+                    <p id="kpiSETitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Casos S.E. 21</p>                    
+                    <h3 id="kpiSEValue" class="text-2xl font-black text-amber-700 mt-1 leading-none">0</h3>                    
+                    <p class="text-[10px] text-amber-600 mt-2 font-semibold">Casos en la semana</p>                
+                </div>                
+                <div class="bg-amber-50 p-3 rounded-full text-amber-500 shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-calendar-week text-xl"></i>                
+                </div>            
+            </div>
+            <!-- KPI 4 -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
+                <div>                    
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Positivos (+)</p>                    
+                    <h3 id="kpiPositivos" class="text-2xl font-black text-rose-600 mt-1 leading-none">0</h3>                    
+                    <p class="text-[10px] text-rose-500 mt-2 font-bold flex items-center gap-1"><i class="fa-solid fa-virus mr-0.5 animate-pulse"></i> Alerta Activa</p>                
+                </div>                
+                <div class="bg-rose-50 p-3 rounded-full text-rose-600 shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-circle-exclamation text-xl"></i>                
+                </div>            
+            </div>
+            <!-- KPI 5 -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
+                <div>                    
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Negativos (-)</p>                    
+                    <h3 id="kpiNegativos" class="text-2xl font-black text-emerald-600 mt-1 leading-none">0</h3>                    
+                    <p class="text-[10px] text-emerald-600 mt-2 font-semibold">Casos descartados</p>                
+                </div>                
+                <div class="bg-emerald-50 p-3 rounded-full text-emerald-600 shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-circle-check text-xl"></i>                
+                </div>            
+            </div>
+            <!-- KPI 6 -->
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
+                <div>                    
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pendientes</p>                    
+                    <h3 id="kpiPendientes" class="text-2xl font-black text-slate-500 mt-1 leading-none">0</h3>                    
+                    <p class="text-[10px] text-slate-500 mt-2 font-semibold">En censo clínico</p>                
+                </div>                
+                <div class="bg-slate-50 p-3 rounded-full text-slate-500 shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-hourglass-half text-xl"></i>                
+                </div>            
+            </div>
+            <!-- KPI 7: TASA DE POSITIVIDAD DINÁMICA CON SEMÁFORO (EPIDEMIOLÓGICAMENTE CORRECTA) -->
+            <div id="kpiTasaCard" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-md flex items-center justify-between min-h-[110px] transition-all duration-350">                
+                <div>                    
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tasa Positividad</p>                    
+                    <h3 id="kpiTasa" class="text-2xl font-black text-brand-dark mt-1 leading-none">0.0%</h3>                    
+                    <p id="kpiTasaAlert" class="text-[9px] mt-2 font-black uppercase tracking-wider text-slate-500">Calculando...</p>                
+                </div>                
+                <div id="kpiTasaIconContainer" class="bg-slate-100 p-3 rounded-full text-slate-700 shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-chart-line text-xl"></i>                
+                </div>            
+            </div>        
+        </section>
+
+        <!-- SECCIÓN DE GRÁFICOS ANALÍTICOS -->        
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">                        
+            <!-- GRÁFICO 1 -->            
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
+                <div>                    
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
+                        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Casos Registrados por Mes</h3>                        
+                        <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full uppercase tracking-wider">Tendencia</span>                    
+                    </div>                    
+                    <div class="relative h-64 w-full flex items-center justify-center mt-2">                        
+                        <canvas id="chartMensual"></canvas>                    
+                    </div>                
+                </div>                
+                <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Evolución temporal del censo de muestras clínicas</p>            
+            </div>
+            <!-- GRÁFICO 2 -->            
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
+                <div>                    
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
+                        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Casos por Semana Epidemiológica</h3>                        
+                        <span class="text-[10px] font-bold text-brand-teal bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">S.E. Curva</span>                    
+                    </div>                    
+                    <div class="relative h-64 w-full flex items-center justify-center mt-2">                        
+                        <canvas id="chartSemanal"></canvas>                    
+                    </div>                
+                </div>                
+                <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Distribución de volumen agrupado por Semana Epidemiológica</p>            
+            </div>
+            <!-- GRÁFICO 3 -->            
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
+                <div>                    
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">                        
+                        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Distribución por Tipo de Examen</h3>                        
+                        <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full uppercase tracking-wider">Patógenos</span>                    
+                    </div>                    
+                    <div class="relative h-64 w-full flex items-center justify-center mt-2">                        
+                        <canvas id="chartPatogenos"></canvas>                    
+                    </div>                
+                </div>                
+                <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Incidencia relativa según tipo de análisis de laboratorio</p>            
+            </div>
+            <!-- GRÁFICO 4 -->            
+            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
+                <div>                    
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">                        
+                        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Diagnósticos Clínicos</h3>                        
+                        <span class="text-[10px] font-bold text-rose-800 bg-rose-50 px-2.5 py-1 rounded-full uppercase tracking-wide">Diagnósticos</span>                    
+                    </div>                    
+                    <div class="relative h-64 w-full flex items-center justify-center mt-2">                        
+                        <canvas id="chartResultados"></canvas>                    
+                    </div>                
+                </div>                
+                <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Resumen de positividad y descarte clínico</p>            
+            </div>
+        </section>
+
+        <!-- TABLA DE RESUMEN EPIDEMIOLÓGICO POR EXAMEN -->
+        <section class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-md space-y-3.5 hover:shadow-lg transition-all">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div>
+                    <h2 class="text-base font-extrabold text-slate-700 uppercase tracking-wider">Resumen Epidemiológico de Patógenos Vigilados</h2>
+                    <p class="text-[11px] text-slate-400">Distribución global con censo real extraído de tu base de datos (Ordenado de Mayor a Menor Casos)</p>
+                </div>
+                <span class="bg-teal-50 text-brand-teal text-xs px-3.5 py-1.5 rounded-full font-bold uppercase border border-teal-100 flex items-center gap-1 no-print">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Procesando en Vivo
+                </span>
+            </div>
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-xs text-left text-slate-600">
+                    <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="p-3.5 font-bold text-slate-700">Tipo de Examen</th>
+                            <th class="p-3.5 text-center font-bold text-slate-700">Total Casos</th>
+                            <th class="p-3.5 text-center font-bold text-slate-700 text-rose-600">Positivos (+)</th>
+                            <th class="p-3.5 text-center font-bold text-slate-700 text-emerald-600">Negativos (-)</th>
+                            <th class="p-3.5 text-center font-bold text-slate-700 text-amber-600">Pendientes</th>
+                            <th class="p-3.5 text-center font-bold text-slate-700 text-slate-500">Descartados</th>
+                            <th class="p-3.5 text-center font-bold text-slate-700 text-brand-dark bg-slate-100/50">Tasa Positividad (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryTableBody" class="divide-y divide-slate-100 font-bold text-sm">
+                        <tr>
+                            <td colspan="7" class="p-4 text-center text-slate-400 italic">Cargando resumen epidemiológico...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- TABLA PRINCIPAL: HISTORIAL DE REGISTROS -->        
+        <section class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">            
+            <div class="p-6 border-b border-slate-155 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">                
+                <div class="space-y-1">
+                    <h2 class="text-base font-extrabold text-slate-700 uppercase tracking-wider">Historial Integrado de Muestras Registradas</h2>                    
+                    <p class="text-[11px] text-slate-400 font-semibold text-teal-800">Censo de Vigilancia General - Hospital de Ventanilla (Último ingreso primero)</p>                
+                </div>                                
+                <!-- BUSCADOR CON FILTRADO MULTIVARIABLE Y BOTONES DE EXPORTACIÓN (NO-PRINT) -->                
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full xl:w-auto no-print">                    
+                    <div class="relative flex-1 sm:w-96">                        
+                        <span class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">                            
+                            <i class="fa-solid fa-magnifying-glass text-xs"></i>                        
+                        </span>                        
+                        <input type="text" id="buscadorPaciente" onkeyup="filtrarTabla()" placeholder="Buscar por S.E., Paciente, H.C., DNI..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 ps-9 text-xs focus:ring-2 focus:ring-brand-teal focus:outline-none font-bold text-slate-800">                    
+                    </div>                    
+                    
+                    <button onclick="exportarExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-lg text-xs font-extrabold transition-colors shadow-sm flex items-center justify-center gap-2 uppercase tracking-wider">
+                        <i class="fa-solid fa-file-excel"></i> Exportar Excel
+                    </button>
+
+                    <button onclick="clearSearch()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2.5 rounded-lg text-xs font-extrabold transition-colors shadow-sm whitespace-nowrap uppercase tracking-wider">                        
+                        Limpiar
+                    </button>                
+                </div>            
+            </div>
+            <!-- Tabla de datos -->            
+            <div class="overflow-x-auto custom-scrollbar">                
+                <table class="w-full text-xs text-left text-slate-600 font-bold">                    
+                    <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-150">                        
+                        <tr>                            
+                            <th class="p-3.5 font-bold text-slate-700 text-center">S.E.</th>                            
+                            <th class="p-3.5 font-bold text-slate-700">Fecha Noti</th>                            
+                            <th class="p-3.5 font-bold text-slate-700">Paciente</th>                            
+                            <th class="p-3.5 font-bold text-slate-700 text-center">H.C.</th>                            
+                            <th class="p-3.5 font-bold text-slate-700">DNI</th>                            
+                            <th class="p-3.5 font-bold text-slate-700">Tipo de Prueba</th>                            
+                            <th class="p-3.5 font-bold text-slate-700 text-center">Resultado</th>                            
+                            <th class="p-3.5 font-bold text-slate-700 text-center">Observación</th>                        
+                        </tr>                    
+                    </thead>                    
+                    <tbody id="samplesTableBody" class="divide-y divide-slate-100 font-bold text-sm">                        
+                        <tr>                            
+                            <td colspan="8" class="p-8 text-center text-slate-400 font-semibold">                                
+                                <i class="fa-solid fa-spinner animate-spin text-2xl mb-1 block text-teal-600"></i>                                
+                                Cargando historial...                            
+                            </td>                        
+                        </tr>                    
+                    </tbody>                
+                </table>            
+            </div>
+            <!-- Paginador -->            
+            <div class="p-4 bg-slate-50/50 border-t border-slate-150 flex justify-between items-center text-xs text-slate-500 no-print">                
+                <span id="paginationInfo" class="font-semibold">Mostrando 0-0 de 0 registros</span>                
+                <div class="flex gap-1.5">                    
+                    <button id="btnPrevPage" onclick="prevPage()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors font-semibold disabled:opacity-50" disabled>Anterior</button>                    
+                    <button id="btnNextPage" onclick="nextPage()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors font-semibold disabled:opacity-50" disabled>Siguiente</button>                
+                </div>            
+            </div>        
+        </section>
+
+        <!-- ================= MÓDULO DE GESTIÓN DE INSUMOS (KARDEX OPERATIVO) ================= -->        
+        <section class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-md space-y-6 hover:shadow-lg transition-all duration-300">            
+            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-slate-100 pb-4 gap-4">                
+                <div>                    
+                    <h2 class="text-base font-extrabold text-slate-700 uppercase tracking-wider"><i class="fa-solid fa-boxes-stacked text-brand-teal mr-2"></i> Kardex de Control de Insumos Críticos</h2>                    
+                    <p class="text-[11px] text-slate-400">Monitoreo operativo de stock de reactivos y consumibles (Sincronizado permanentemente con la base de datos cargada)</p>                
+                </div>                
+                <div class="flex items-center gap-2 no-print">                    
+                    <span class="bg-emerald-50 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full border border-emerald-150 uppercase"><i class="fa-solid fa-check-double mr-1"></i> Stock Sincronizado</span>                
+                </div>            
+            </div>
+            
+            <!-- Formulario de Entrada Rápida de Insumo (NO-PRINT) -->            
+            <form id="kardexForm" onsubmit="addInsumoStock(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 p-4 bg-slate-50/50 rounded-xl border border-slate-200/50 text-xs no-print">                
+                <div class="lg:col-span-6 flex justify-between items-center border-b border-slate-200 pb-2 mb-2">                    
+                    <span id="kardexFormTitle" class="text-xs font-black text-brand-dark uppercase tracking-wider flex items-center gap-2">                        
+                        <i class="fa-solid fa-pen-to-square text-emerald-500"></i> Registrar Entrada de Insumos                    
+                    </span>                    
+                    <button type="button" id="btnCancelEdit" onclick="cancelEditInsumo()" class="hidden bg-rose-100 hover:bg-rose-200 text-rose-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded transition-colors shadow-sm">                        
+                        <i class="fa-solid fa-times-circle"></i> Cancelar Edición                    
+                    </button>                
+                </div>                
+                <div>                    
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Fecha de Ingreso</label>                    
+                    <input type="date" id="kardexFechaIngreso" required class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">                
+                </div>                
+                <div>                    
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Insumo a Recargar</label>                    
+                    <select id="kardexSelectInsumo" required class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">                        
+                        <option value="1" selected>Pruebas Rápidas Dengue NS1</option>                        
+                        <option value="2">Hisopos Nasofaringeos (Medio Viral)</option>                        
+                        <option value="3">Kits de Extracción de ARN Molecular</option>                        
+                        <option value="4">Láminas Reactivas Bartonella IFI</option>                        
+                        <option value="5">Lancetas de Punción Periférica</option>                    
+                    </select>                
+                </div>                
+                <div>                    
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Cantidad de Entrada (+)</label>                    
+                    <input type="number" id="kardexCantidad" required min="1" placeholder="Ej. 100" class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">                
+                </div>                
+                <div>                    
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nº de Lote / Guía</label>                    
+                    <input type="text" id="kardexLote" required placeholder="Ej. LOT-2026-X" class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">                
+                </div>                
+                <div>                    
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Fecha de Vencimiento</label>                    
+                    <input type="date" id="kardexFechaVence" required class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">                
+                </div>                
+                <div class="flex items-end">                    
+                    <button type="submit" id="btnSubmitKardex" class="w-full bg-brand-teal hover:bg-brand-dark text-white px-5 py-2.5 rounded-lg text-xs font-black transition-all shadow-md uppercase tracking-wider h-[38px] flex items-center justify-center gap-1.5">                        
+                        <i class="fa-solid fa-plus"></i> Registrar Entrada                    
+                    </button>                
+                </div>            
+            </form>
+
+            <!-- Tabla Kardex de Existencias -->
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-xs text-left text-slate-600 font-bold">
+                    <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="p-3.5">F. Ingreso</th>
+                            <th class="p-3.5">Insumo del Almacén</th>
+                            <th class="p-3.5 text-center">Ingresos Totales</th>
+                            <th class="p-3.5 text-center text-rose-600">Consumo (Muestras)</th>
+                            <th class="p-3.5 text-center text-brand-dark bg-teal-50">Stock Disponible</th>
+                            <th class="p-3.5">Último Uso</th>
+                            <th class="p-3.5">Lote Activo</th>
+                            <th class="p-3.5">F. Vencimiento</th>
+                            <th class="p-3.5 text-center">Alerta de Stock</th>
+                            <th class="p-3.5 text-center no-print">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kardexTableBody" class="divide-y divide-slate-100 font-bold text-sm">
+                        <!-- Llenado automático vía JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- PIE DE PÁGINA -->
+    <footer class="bg-brand-dark text-slate-300 text-[10px] py-4 text-center border-t border-teal-900 font-bold shrink-0 uppercase tracking-widest no-print">
+        © 2026 Hospital de Ventanilla - Oficina de Epidemiología e Informática - Gestión Automatizada de Laboratorio
+    </footer>
+
+    <!-- LOGICA JAVASCRIPT PRINCIPAL -->
+    <script>
+        // Enlace CSV oficial de tu hoja de cálculo obtenido con output=csv
+        const URL_GOOGLE_SHEET = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH-sGKVHNCt-kPiOoVv1BnmsTSE1onfi0f05kk0hh8Uc0l0kH3V8QzY22UdS23TjA9MCX8tDYwSNe7/pub?gid=1171051655&single=true&output=csv";
+
+        // Respaldos de Contingencia por si la red falla en el visor local
+        const DATOS_RESPALDO = [
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "22/05/2026", "APELLIDOS Y NOMBRES": "DIAZ MUÑOZ DYLAN JHEBECO (Dengue 7)", "H.C.": "208015", "DNI": "10008024", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "20/05/2026", "APELLIDOS Y NOMBRES": "CHAVEZ MOZOMBIRE EMILIA (Dengue 6)", "H.C.": "208013", "DNI": "10000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "25/05/2026", "APELLIDOS Y NOMBRES": "DOMINGUEZ REQUE DEYBI STEVEN (Dengue 5)", "H.C.": "208014", "DNI": "1000814", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "24/05/2026", "APELLIDOS Y NOMBRES": "BARRIOS NICOSUP MARIA INCOMA (Dengue 4)", "H.C.": "208013", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "23/05/2026", "APELLIDOS Y NOMBRES": "ARTEAGA VIVAS JUAN JACK (Dengue 3)", "H.C.": "208012", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "22/05/2026", "APELLIDOS Y NOMBRES": "LAZARO MILAGROS STEFANNY (Dengue 2)", "H.C.": "208015", "DNI": "10008024", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "21/05/2026", "APELLIDOS Y NOMBRES": "GOMEZ MOSQUEIRA JUAN PAULINO (Dengue 1)", "H.C.": "208013", "DNI": "10000810", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "19", "FECHAS DE NOTIFICACIÓN": "11/05/2026", "APELLIDOS Y NOMBRES": "POMAL BARRERA KELLY MARITZA (Especifico)", "H.C.": "---", "DNI": "10000214", "TIPO DE PRUEBA": "Coqueluche", "RESULTADO CLÍNICO": "PENDIENTE", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "18", "FECHAS DE NOTIFICACIÓN": "10/05/2026", "APELLIDOS Y NOMBRES": "PORTAL ABANTO LUZ MARIELA (Dengue 56)", "H.C.": "208013", "DNI": "10000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "PENDIENTE", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "18", "FECHAS DE NOTIFICACIÓN": "10/05/2026", "APELLIDOS Y NOMBRES": "CORTEZ MEJIA ROSA ELIZIA (Dengue 55)", "H.C.": "208014", "DNI": "10000804", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "NEGATIVO", "OBSERVACION": "---" }
+        ];
+
+        // Estado Global de la Aplicación
+        let datosGlobales = [];
+        let datosFiltrados = [];
+        
+        // Paginación del Historial
+        let currentPage = 1;
+        const recordsPerPage = 10;
+
+        // Instancias de Gráficos de Chart.js
+        let chartMensualInstance = null;
+        let chartSemanalInstance = null;
+        let chartPatogenosInstance = null;
+        let chartResultadosInstance = null;
+
+        // Base de datos local inicial del Kardex (Se guardará en localStorage para no perder cambios)
+        let inventarioKardex = [
+            { id: 1, nombre: "Pruebas Rápidas Dengue NS1", ingresos: 500, lote: "DENG-2026-A1", vence: "31-Dic-2027", f_ingreso: "20-May-2026", prueba_asoc: "Dengue" },
+            { id: 2, nombre: "Hisopos Nasofaringeos (Medio Viral)", ingresos: 450, lote: "NASO-2026-T2", vence: "15-Ago-2027", f_ingreso: "22-May-2026", prueba_asoc: "Panel resp" },
+            { id: 3, nombre: "Kits de Extracción de ARN Molecular", ingresos: 250, lote: "extr-2026-R3", vence: "20-Mar-2028", f_ingreso: "23-May-2026", prueba_asoc: "Sarampion" },
+            { id: 4, nombre: "Láminas Reactivas Bartonella IFI", ingresos: 200, lote: "BART-2026-G8", vence: "10-May-2027", f_ingreso: "10-May-2026", prueba_asoc: "Arañazo de gato" },
+            { id: 5, nombre: "Lancetas de Punción Periférica", ingresos: 100, lote: "LANC-2026-L5", vence: "01-Jun-2028", f_ingreso: "23-May-2026", prueba_asoc: "Todas" }
+        ];
+
+        let editInsumoId = null;
+
+        // --- SISTEMA DE EXPORTACIÓN DIRECTA A EXCEL (SHEETJS) ---
+        function exportarExcel() {
+            if (datosFiltrados.length === 0) {
+                alert("No hay registros en la vista actual para exportar. Limpia tus filtros o carga datos.");
+                return;
+            }
+
+            // Mapear los datos filtrados con nombres de columna limpios para el reporte final
+            const datosParaExportar = datosFiltrados.map(f => ({
+                "S.E.": f.semana,
+                "Fecha Notificación": f.fechaNoti,
+                "Paciente / Apellidos y Nombres": f.paciente,
+                "Historial Clínico (H.C.)": f.hc,
+                "DNI": f.dni,
+                "Examen / Tipo de Prueba": f.prueba,
+                "Resultado Clínico": f.resultado,
+                "Observaciones del Laboratorio": f.observacion
+            }));
+
+            const worksheet = XLSX.utils.json_to_sheet(datosParaExportar);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Vigilancia Filtrada");
+
+            // Generar archivo de descarga
+            const fechaHoy = new Date().toISOString().slice(0, 10);
+            XLSX.writeFile(workbook, `Reporte_Epidemiologico_Ventanilla_${fechaHoy}.xlsx`);
+        }
+
+        // --- MOTOR INTELIGENTE DE NORMALIZACIÓN DE CABECERAS (RESISTENTE A ACENTOS, ESPACIOS Y MAYÚSCULAS) ---
+        function getRowValue(fila, possibleHeaders, defaultValue = "---") {
+            const keys = Object.keys(fila);
+            const normalize = str => str.toLowerCase()
+                                       .normalize("NFD")
+                                       .replace(/[\u0300-\u036f]/g, "") // Remueve acentos tildados (ó -> o)
+                                       .replace(/[^a-z0-9]/g, "");      // Conserva únicamente caracteres alfanuméricos
+            
+            const normalizedTargets = possibleHeaders.map(normalize);
+            
+            for (let key of keys) {
+                const normKey = normalize(key);
+                if (normalizedTargets.includes(normKey)) {
+                    return (fila[key] !== undefined && fila[key] !== null) ? fila[key].toString().trim() : defaultValue;
+                }
+            }
+            return defaultValue;
+        }
+
+        // --- SISTEMA INTELIGENTE DE CONEXIÓN MULTICANAL (CORS RESISTANT) ---
+        async function conectarYDescargar() {
+            actualizarEstadoVisualConexion("connecting");
+            
+            // Intento 1: Fetch Directo (Netlify)
+            try {
+                console.log("Intento 1: Conexión directa al servidor de Google...");
+                const res = await fetch(URL_GOOGLE_SHEET);
+                if (res.ok) {
+                    const text = await res.text();
+                    if (validarYProcesarCSV(text, "success")) return;
+                }
+            } catch (e) {
+                console.warn("Intento 1 bloqueado por restricciones de origen del explorador (CORS).");
+            }
+
+            // Intento 2: Proxy corsproxy.io
+            try {
+                console.log("Intento 2: Conexión cifrada vía corsproxy.io...");
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(URL_GOOGLE_SHEET)}`;
+                const res = await fetch(proxyUrl);
+                if (res.ok) {
+                    const text = await res.text();
+                    if (validarYProcesarCSV(text, "proxy")) return;
+                }
+            } catch (e) {
+                console.warn("Intento 2 falló o está saturado.");
+            }
+
+            // Intento 3: Proxy AllOrigins
+            try {
+                console.log("Intento 3: Conexión alternativa vía allorigins...");
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(URL_GOOGLE_SHEET)}`;
+                const res = await fetch(proxyUrl);
+                if (res.ok) {
+                    const text = await res.text();
+                    if (validarYProcesarCSV(text, "proxy")) return;
+                }
+            } catch (e) {
+                console.error("Todos los canales de red asíncronos fallaron.");
+            }
+
+            // Fallback total: Modo Demostración Local
+            console.log("Cargando datos locales integrados por contingencia...");
+            cargarDatosEnDashboard(DATOS_RESPALDO);
+            actualizarEstadoVisualConexion("fallback");
+        }
+
+        function validarYProcesarCSV(texto, canal) {
+            if (texto.trim().startsWith("<!DOCTYPE") || texto.trim().startsWith("<html")) {
+                console.error("El enlace de Google Sheets apunta a la versión HTML y no a la versión de Datos (CSV).");
+                return false;
+            }
+
+            Papa.parse(texto, {
+                header: true,
+                skipEmptyLines: true,
+                complete: function(resultados) {
+                    if (resultados.data && resultados.data.length > 0) {
+                        cargarDatosEnDashboard(resultados.data);
+                        actualizarEstadoVisualConexion(canal);
+                    } else {
+                        cargarDatosEnDashboard(DATOS_RESPALDO);
+                        actualizarEstadoVisualConexion("fallback");
+                    }
+                },
+                error: function() {
+                    cargarDatosEnDashboard(DATOS_RESPALDO);
+                    actualizarEstadoVisualConexion("fallback");
+                }
+            });
+            return true;
+        }
+
+        function actualizarEstadoVisualConexion(estado) {
+            const badge = document.getElementById("syncStatusBadge");
+            const dot = document.getElementById("syncStatusDot");
+            const text = document.getElementById("syncStatusText");
+            const alertBanner = document.getElementById("connectionAlert");
+            const alertIconContainer = document.getElementById("alertIconContainer");
+            const alertIcon = document.getElementById("alertIcon");
+            const alertTitle = document.getElementById("alertTitle");
+            const alertDescription = document.getElementById("alertDescription");
+            const actionButton = document.getElementById("alertActionButton");
+
+            if (!badge || !dot || !text || !alertBanner) return;
+
+            if (estado === "connecting") {
+                badge.className = "bg-amber-600/30 text-amber-300 text-xs px-3.5 py-2 rounded-full border border-amber-500/30 flex items-center gap-2 font-bold";
+                dot.className = "h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse";
+                text.innerText = "Estableciendo Sincronización... ";
+                alertBanner.classList.add("hidden");
+            } 
+            else if (estado === "success") {
+                badge.className = "bg-emerald-600/30 text-emerald-300 text-xs px-3.5 py-2 rounded-full border border-emerald-500/30 flex items-center gap-2 font-bold";
+                dot.className = "h-2.5 w-2.5 rounded-full bg-emerald-400 animate-none";
+                text.innerText = "Sincronizador Activo";
+                
+                alertBanner.className = "max-w-[1850px] mx-auto mt-4 px-6 py-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 bg-emerald-50 border-emerald-200 text-emerald-800 no-print";
+                alertIconContainer.className = "p-2 rounded-full shrink-0 bg-emerald-100 text-emerald-600";
+                alertIcon.className = "fa-solid fa-circle-check text-lg";
+                alertTitle.innerText = "¡Sincronización Automática Activa!";
+                alertDescription.innerText = "Conexión directa establecida exitosamente. Los datos corresponden a tu Google Sheets en tiempo real.";
+                actionButton.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow";
+                actionButton.innerText = "Sincronizar ahora";
+                alertBanner.classList.remove("hidden");
+            } 
+            else if (estado === "proxy") {
+                badge.className = "bg-teal-600/30 text-teal-300 text-xs px-3.5 py-2 rounded-full border border-teal-500/30 flex items-center gap-2 font-bold";
+                dot.className = "h-2.5 w-2.5 rounded-full bg-teal-400 animate-none";
+                text.innerText = "Conectado vía Túnel de Red";
+
+                alertBanner.className = "max-w-[1850px] mx-auto mt-4 px-6 py-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 bg-teal-50 border-teal-200 text-teal-800 no-print";
+                alertIconContainer.className = "p-2 rounded-full shrink-0 bg-teal-100 text-teal-600";
+                alertIcon.className = "fa-solid fa-network-wired text-lg";
+                alertTitle.innerText = "Conexión vía Túnel Seguro";
+                alertDescription.innerText = "Hemos burlado las restricciones del explorador utilizando un canal de red seguro. El panel está leyendo tu Google Sheets perfectamente.";
+                actionButton.className = "bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow";
+                actionButton.innerText = "Sincronizar ahora";
+                alertBanner.classList.remove("hidden");
+            }
+            else if (estado === "fallback") {
+                badge.className = "bg-sky-600/30 text-sky-300 text-xs px-3.5 py-2 rounded-full border border-sky-500/30 flex items-center gap-2 font-bold";
+                dot.className = "h-2.5 w-2.5 rounded-full bg-sky-400 animate-pulse";
+                text.innerText = "Modo Demostración Activo";
+
+                alertBanner.className = "max-w-[1850px] mx-auto mt-4 px-6 py-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 bg-amber-50 border-amber-200 text-amber-800 no-print";
+                alertIconContainer.className = "p-2 rounded-full shrink-0 bg-amber-100 text-amber-600";
+                alertIcon.className = "fa-solid fa-triangle-exclamation text-lg";
+                alertTitle.innerText = "Mostrando Modo Demostración";
+                alertDescription.innerText = "No se logró conectar con Google Sheets debido a restricciones locales (CORS). Pero no te preocupes: cuando subas este archivo a Netlify se sincronizará automáticamente. También puedes importar tu Excel manualmente arriba.";
+                actionButton.className = "bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow";
+                actionButton.innerText = "Forzar Reconexión";
+                alertBanner.classList.remove("hidden");
+            }
+        }
+
+        // --- MANEJO DE IMPORTACIÓN MANUAL ---
+        function triggerExcelImport() {
+            document.getElementById("excelFileInput").click();
+        }
+
+        function handleExcelImport(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            
+            if (file.name.endsWith(".csv")) {
+                reader.onload = function(e) {
+                    Papa.parse(e.target.result, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: function(resultados) {
+                            if (resultados.data && resultados.data.length > 0) {
+                                cargarDatosEnDashboard(resultados.data);
+                                alert("¡Base de datos importada exitosamente desde archivo CSV!");
+                            }
+                        }
+                    });
+                };
+                reader.readAsText(file);
+            } else {
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    if (json && json.length > 0) {
+                        cargarDatosEnDashboard(json);
+                        alert("¡Base de datos importada exitosamente desde archivo Excel!");
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        // --- MAPEO DE COLUMNAS USANDO EL MOTOR DE NORMALIZACIÓN ---
+        function cargarDatosEnDashboard(datos) {
+            datosGlobales = datos.map(fila => {
+                return {
+                    semana: getRowValue(fila, ["SEMANA EPIDEMIOLOGICA", "S.E.", "SEMANA", "SE"], "---"),
+                    fechaNoti: getRowValue(fila, ["FECHAS DE NOTIFICACION", "FECHA DE NOTIFICACION", "FECHA NOTI", "FECHAS", "FECHA"], "---"),
+                    paciente: getRowValue(fila, ["APELLIDOS Y NOMBRES", "PACIENTE", "NOMBRES", "APELLIDOS", "PACIENTES"], "Paciente Anónimo"),
+                    hc: getRowValue(fila, ["H.C.", "HC", "HISTORIA CLINICA", "HISTORIA"], "---"),
+                    dni: getRowValue(fila, ["DNI", "DOCUMENTO", "IDENTIFICACION", "CEDULA"], "---"),
+                    prueba: getRowValue(fila, ["TIPO DE PRUEBA", "PRUEBA", "EXAMEN", "PRUEBAS"], "No especificado"),
+                    resultado: getRowValue(fila, ["RESULTADO CLINICO", "RESULTADO CLÍNICO", "RESULTADO", "RESULTADOS", "DIAGNOSTICO", "DIAGNÓSTICO"], "PENDIENTE").toUpperCase(),
+                    observacion: getRowValue(fila, ["OBSERVACION", "OBSERVACIONES", "OBSER"], "---")
+                };
+            });
+
+            inicializarOpcionesDeFiltros(datosGlobales);
+            filtrarYRefrescarDashboard();
+        }
+
+        function inicializarOpcionesDeFiltros(datos) {
+            const selectWeek = document.getElementById("filterWeek");
+            const selectYear = document.getElementById("filterYear");
+            const selectTestType = document.getElementById("filterTestType");
+
+            const currentWeek = selectWeek.value;
+            const currentYear = selectYear.value;
+            const currentTest = selectTestType.value;
+
+            let semanasSet = new Set();
+            let anosSet = new Set();
+            let tiposPruebaSet = new Set();
+
+            datos.forEach(f => {
+                if (f.semana && f.semana !== "" && f.semana !== "---") semanasSet.add(f.semana);
+                if (f.fechaNoti && f.fechaNoti.includes("/")) {
+                    let partes = f.fechaNoti.split("/");
+                    if (partes.length === 3) {
+                        let ano = partes[2].trim();
+                        if (ano.length === 4) anosSet.add(ano);
+                    }
+                }
+                if (f.prueba && f.prueba !== "" && f.prueba !== "---") tiposPruebaSet.add(f.prueba);
+            });
+
+            let semanas = Array.from(semanasSet).sort((a,b) => parseInt(a) - parseInt(b));
+            selectWeek.innerHTML = '<option value="ALL">Todas</option>';
+            semanas.forEach(s => selectWeek.innerHTML += `<option value="${s}">Semana ${s}</option>`);
+
+            let anos = Array.from(anosSet).sort((a,b) => parseInt(b) - parseInt(a));
+            selectYear.innerHTML = '<option value="ALL">Todos los Años</option>';
+            anos.forEach(a => selectYear.innerHTML += `<option value="${a}">${a}</option>`);
+
+            let pruebas = Array.from(tiposPruebaSet).sort();
+            selectTestType.innerHTML = '<option value="ALL">Todas las Pruebas</option>';
+            pruebas.forEach(p => selectTestType.innerHTML += `<option value="${p}">${p}</option>`);
+
+            if (Array.from(selectWeek.options).some(o => o.value === currentWeek)) selectWeek.value = currentWeek;
+            if (Array.from(selectYear.options).some(o => o.value === currentYear)) selectYear.value = currentYear;
+            if (Array.from(selectTestType.options).some(o => o.value === currentTest)) selectTestType.value = currentTest;
+        }
+
+        function applyFilters() {
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+        }
+
+        function resetFilters() {
+            document.getElementById("filterWeek").value = "ALL";
+            document.getElementById("filterYear").value = "ALL";
+            document.getElementById("filterTestType").value = "ALL";
+            document.getElementById("filterResult").value = "ALL";
+            document.getElementById("buscadorPaciente").value = "";
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+        }
+
+        function clearSearch() {
+            document.getElementById("buscadorPaciente").value = "";
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+        }
+
+        function filtrarTabla() {
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+        }
+
+        function filtrarYRefrescarDashboard() {
+            const filterWeek = document.getElementById("filterWeek").value;
+            const filterYear = document.getElementById("filterYear").value;
+            const filterTestType = document.getElementById("filterTestType").value;
+            const filterResult = document.getElementById("filterResult").value;
+            const searchVal = document.getElementById("buscadorPaciente").value.toLowerCase().trim();
+
+            datosFiltrados = datosGlobales.filter(f => {
+                if (filterWeek !== "ALL" && f.semana !== filterWeek) return false;
+                
+                if (filterYear !== "ALL") {
+                    let anoFila = "";
+                    if (f.fechaNoti && f.fechaNoti.includes("/")) {
+                        let partes = f.fechaNoti.split("/");
+                        if (partes.length === 3) anoFila = partes[2].trim();
+                    }
+                    if (anoFila !== filterYear) return false;
+                }
+
+                if (filterTestType !== "ALL" && f.prueba !== filterTestType) return false;
+
+                if (filterResult !== "ALL") {
+                    let res = f.resultado;
+                    if (filterResult === "POSITIVO" && !res.includes("POSITIVO")) return false;
+                    if (filterResult === "NEGATIVO" && !res.includes("NEGATIVO") && !res.includes("DESCARTADO")) return false;
+                    if (filterResult === "PENDIENTE" && !res.includes("PENDIENTE")) return false;
+                    if (filterResult === "DESCARTADO" && !res.includes("DESCARTADO")) return false;
+                }
+
+                if (searchVal !== "") {
+                    let term = searchVal;
+                    let pac = f.paciente.toLowerCase();
+                    let pru = f.prueba.toLowerCase();
+                    let res = f.resultado.toLowerCase();
+                    let hc_f = f.hc.toLowerCase();
+                    let dni_f = f.dni.toLowerCase();
+                    let sem_f = f.semana.toLowerCase();
+                    
+                    if (!pac.includes(term) && !pru.includes(term) && !res.includes(term) && !hc_f.includes(term) && !dni_f.includes(term) && !sem_f.includes(term)) return false;
+                }
+
+                return true;
+            });
+
+            renderizarKPIs(datosFiltrados);
+            renderizarTablaResumen(datosFiltrados);
+            renderizarTablaHistorial(datosFiltrados);
+            actualizarGraficos(datosFiltrados);
+            actualizarExistenciasKardex();
+        }
+
+        // --- KPIs DE ALTO IMPACTO (CALCULADOS CON SEMÁFORO EPIDEMIOLÓGICAMENTE CORRECTO) ---
+        function renderizarKPIs(datos) {
+            let total = datos.length;
+            let positivos = 0;
+            let negativos = 0;
+            let pendientes = 0;
+
+            const selectedTest = document.getElementById("filterTestType").value;
+            let countPatogeno = 0;
+
+            let selectedSE = document.getElementById("filterWeek").value;
+            if (selectedSE === "ALL") selectedSE = "21"; 
+            
+            const kpiSETitleElement = document.getElementById("kpiSETitle");
+            if (kpiSETitleElement) kpiSETitleElement.innerText = `Casos S.E. ${selectedSE}`;
+            
+            let countSE = 0;
+
+            datos.forEach(f => {
+                let res = f.resultado.toUpperCase();
+                // Detección ultra-flexible de diagnósticos incluyendo abreviaturas
+                if (res.includes("POSITIVO") || res === "POS") {
+                    positivos++;
+                } else if (res.includes("NEGATIVO") || res.includes("DESCARTADO") || res === "NEG" || res === "DES") {
+                    negativos++;
+                } else {
+                    pendientes++;
+                }
+
+                if (selectedTest !== "ALL" && f.prueba === selectedTest) countPatogeno++;
+                if (f.semana === selectedSE) countSE++;
+            });
+
+            // TASA DE POSITIVIDAD CIENTÍFICAMENTE EXACTA: Positivos / (Positivos + Negativos) * 100
+            // Excluye las muestras "Pendientes" que aún no tienen diagnóstico clínico para no deprimir la tasa
+            let totalProcesados = positivos + negativos;
+            let tasaNumerica = totalProcesados > 0 ? (positivos / totalProcesados) * 100 : 0;
+            let tasaText = tasaNumerica.toFixed(1) + "%";
+
+            // Sincronizar elementos básicos en el HTML
+            document.getElementById("kpiTotal").innerText = total;
+            document.getElementById("kpiTotalSub").innerText = `De ${datosGlobales.length} registros globales`;
+            document.getElementById("kpiPositivos").innerText = positivos;
+            document.getElementById("kpiNegativos").innerText = negativos;
+            document.getElementById("kpiPendientes").innerText = pendientes;
+            document.getElementById("kpiTasa").innerText = tasaText;
+
+            // Actualización dinámica del Semáforo de Riesgo (KPI 7)
+            const cardTasa = document.getElementById("kpiTasaCard");
+            const alertTasaText = document.getElementById("kpiTasaAlert");
+            const iconTasaContainer = document.getElementById("kpiTasaIconContainer");
+
+            if (cardTasa && alertTasaText && iconTasaContainer) {
+                if (totalProcesados === 0) {
+                    cardTasa.className = "bg-white p-5 rounded-2xl border border-slate-200/80 shadow-md flex items-center justify-between min-h-[110px] transition-all";
+                    alertTasaText.innerText = "Sin Casos Procesados";
+                    alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-slate-500";
+                    iconTasaContainer.className = "bg-slate-100 p-3 rounded-full text-slate-600 shrink-0 shadow-inner";
+                } else if (tasaNumerica < 5.0) {
+                    cardTasa.className = "bg-emerald-50/70 p-5 rounded-2xl border border-emerald-200 shadow-md flex items-center justify-between min-h-[110px] transition-all";
+                    alertTasaText.innerText = `Riesgo Bajo ✔ (${totalProcesados} proc.)`;
+                    alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-emerald-700";
+                    iconTasaContainer.className = "bg-emerald-100 p-3 rounded-full text-emerald-600 shrink-0 shadow-inner";
+                } else if (tasaNumerica >= 5.0 && tasaNumerica <= 15.0) {
+                    cardTasa.className = "bg-amber-50/70 p-5 rounded-2xl border border-amber-200 shadow-md flex items-center justify-between min-h-[110px] transition-all";
+                    alertTasaText.innerText = `Riesgo Moderado ⚠ (${totalProcesados} proc.)`;
+                    alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-amber-700";
+                    iconTasaContainer.className = "bg-amber-100 p-3 rounded-full text-amber-600 shrink-0 shadow-inner";
+                } else {
+                    cardTasa.className = "bg-rose-50 p-5 rounded-2xl border border-rose-200 shadow-md flex items-center justify-between min-h-[110px] animate-pulse transition-all";
+                    alertTasaText.innerText = `ALERTA: Riesgo Alto 🚨 (${totalProcesados} proc.)`;
+                    alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-rose-700";
+                    iconTasaContainer.className = "bg-rose-100 p-3 rounded-full text-rose-600 shrink-0 shadow-inner";
+                }
+            }
+
+            // Sincronizar KPI de Patógeno Dinámico
+            if (selectedTest !== "ALL") {
+                document.getElementById("kpiPatogeno").innerText = countPatogeno;
+                document.getElementById("kpiPatogenoSub").innerText = selectedTest;
+            } else {
+                let tiposDiferentes = new Set(datos.map(d => d.prueba).filter(p => p && p !== "No especificado"));
+                document.getElementById("kpiPatogeno").innerText = tiposDiferentes.size;
+                document.getElementById("kpiPatogenoSub").innerText = "Patógenos Vigilados";
+            }
+
+            document.getElementById("kpiSEValue").innerText = countSE;
+        }
+
+        // TABLA 1: RESUMEN EPIDEMIOLÓGICO DE PATÓGENOS VIGILADOS
+        function renderizarTablaResumen(datos) {
+            let agrupado = {};
+
+            datos.forEach(f => {
+                let p = f.prueba;
+                if (!agrupado[p]) {
+                    agrupado[p] = { total: 0, pos: 0, neg: 0, pen: 0, des: 0 };
+                }
+                agrupado[p].total++;
+                let res = f.resultado.toUpperCase();
+                if (res.includes("POSITIVO") || res === "POS") agrupado[p].pos++;
+                else if (res.includes("NEGATIVO") || res === "NEG") agrupado[p].neg++;
+                else if (res.includes("DESCARTADO") || res === "DES") agrupado[p].des++;
+                else agrupado[p].pen++;
+            });
+
+            let items = Object.keys(agrupado).map(key => {
+                let item = agrupado[key];
+                let totalConResultado = item.pos + item.neg + item.des;
+                let tasa = totalConResultado > 0 ? ((item.pos / totalConResultado) * 100).toFixed(1) : "0.0";
+                return {
+                    nombre: key,
+                    total: item.total,
+                    pos: item.pos,
+                    neg: item.neg,
+                    pen: item.pen,
+                    des: item.des,
+                    tasa: tasa
+                };
+            }).sort((a,b) => b.total - a.total);
+
+            let html = "";
+            if (items.length === 0) {
+                html = `<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">No hay datos que coincidan.</td></tr>`;
+            } else {
+                items.forEach(it => {
+                    html += `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-3.5 text-slate-800"><i class="fa-solid fa-virus text-teal-600 mr-2"></i> ${it.nombre}</td>
+                            <td class="p-3.5 text-center text-slate-900">${it.total}</td>
+                            <td class="p-3.5 text-center text-rose-600">${it.pos}</td>
+                            <td class="p-3.5 text-center text-emerald-600">${it.neg}</td>
+                            <td class="p-3.5 text-center text-amber-600">${it.pen}</td>
+                            <td class="p-3.5 text-center text-slate-500">${it.des}</td>
+                            <td class="p-3.5 text-center text-brand-dark bg-slate-50/50">${it.tasa}%</td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById("summaryTableBody").innerHTML = html;
+        }
+
+        // TABLA 2: HISTORIAL INTEGRADO DE MUESTRAS REGISTRADAS
+        function renderizarTablaHistorial(datos) {
+            const tbody = document.getElementById("samplesTableBody");
+            
+            if (datos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="p-8 text-center text-slate-400 font-semibold">
+                            <i class="fa-solid fa-folder-open text-2xl mb-1 block text-slate-300"></i>
+                            Base de datos vacía o ningún registro coincide con la búsqueda.
+                        </td>
+                    </tr>
+                `;
+                document.getElementById("paginationInfo").innerText = "Mostrando 0-0 de 0 registros";
+                document.getElementById("btnPrevPage").disabled = true;
+                document.getElementById("btnNextPage").disabled = true;
+                return;
+            }
+
+            const totalRecords = datos.length;
+            const totalPages = Math.ceil(totalRecords / recordsPerPage);
+            
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIndex = (currentPage - 1) * recordsPerPage;
+            const endIndex = Math.min(startIndex + recordsPerPage, totalRecords);
+
+            const pageRecords = datos.slice(startIndex, endIndex);
+
+            let html = "";
+            pageRecords.forEach(f => {
+                let displayRes = f.resultado;
+                let badgeClass = "bg-amber-100 text-amber-700 border border-amber-200";
+                
+                if (displayRes.includes('POSITIVO') || displayRes === 'POS') {
+                    badgeClass = "bg-rose-100 text-rose-700 border border-rose-200";
+                } else if (displayRes.includes('NEGATIVO') || displayRes.includes('DESCARTADO') || displayRes === 'NEG' || displayRes === 'DES') {
+                    badgeClass = "bg-emerald-100 text-emerald-700 border border-emerald-200";
+                }
+
+                html += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-3.5 text-center text-slate-500 font-medium">${f.semana}</td>
+                        <td class="p-3.5 text-slate-700">${f.fechaNoti}</td>
+                        <td class="p-3.5 text-slate-900 uppercase">${f.paciente}</td>
+                        <td class="p-3.5 text-center text-slate-600">${f.hc}</td>
+                        <td class="p-3.5 text-slate-600">${f.dni}</td>
+                        <td class="p-3.5 text-brand-teal">${f.prueba}</td>
+                        <td class="p-3.5 text-center">
+                            <span class="px-2 py-1 rounded text-xs font-black ${badgeClass}">${displayRes}</span>
+                        </td>
+                        <td class="p-3.5 text-center text-slate-500 font-medium">${f.observacion}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+
+            document.getElementById("paginationInfo").innerText = `Mostrando ${startIndex + 1}-${endIndex} de ${totalRecords} registros`;
+            document.getElementById("btnPrevPage").disabled = currentPage === 1;
+            document.getElementById("btnNextPage").disabled = currentPage === totalPages;
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderizarTablaHistorial(datosFiltrados);
+            }
+        }
+
+        const nextPage = () => {
+            const totalPages = Math.ceil(datosFiltrados.length / recordsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderizarTablaHistorial(datosFiltrados);
+            }
+        }
+
+        // --- SISTEMA DE GRÁFICOS (CHART.JS) ---
+        function actualizarGraficos(datos) {
+            let mesesMap = { "Ene":0, "Feb":0, "Mar":0, "Abr":0, "May":0, "Jun":0, "Jul":0, "Ago":0, "Sep":0, "Oct":0, "Nov":0, "Dic":0 };
+            let semanasConteo = {};
+            let patogenosConteo = {};
+            let resultadosConteo = { "POSITIVO": 0, "NEGATIVO": 0, "PENDIENTE": 0, "DESCARTADO": 0 };
+
+            datos.forEach(f => {
+                if (f.fechaNoti && f.fechaNoti.includes("/")) {
+                    let partes = f.fechaNoti.split("/");
+                    if (partes.length === 3) {
+                        let mesIdx = parseInt(partes[1]) - 1;
+                        let nombresMeses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                        if (mesIdx >= 0 && mesIdx < 12) {
+                            mesesMap[nombresMeses[mesIdx]]++;
+                        }
+                    }
+                }
+
+                if (f.semana && f.semana !== "" && f.semana !== "---") {
+                    semanasConteo[f.semana] = (semanasConteo[f.semana] || 0) + 1;
+                }
+
+                if (f.prueba && f.prueba !== "" && f.prueba !== "---") {
+                    patogenosConteo[f.prueba] = (patogenosConteo[f.prueba] || 0) + 1;
+                }
+
+                let res = f.resultado.toUpperCase();
+                if (res.includes("POSITIVO") || res === "POS") resultadosConteo["POSITIVO"]++;
+                else if (res.includes("NEGATIVO") || res === "NEG") resultadosConteo["NEGATIVO"]++;
+                else if (res.includes("DESCARTADO") || res === "DES") resultadosConteo["DESCARTADO"]++;
+                else resultadosConteo["PENDIENTE"]++;
+            });
+
+            let labelsMeses = Object.keys(mesesMap).filter(m => mesesMap[m] > 0);
+            if (labelsMeses.length === 0) labelsMeses = ["Mar", "Abr", "May", "Nov", "Dic"]; 
+            let datosMeses = labelsMeses.map(m => mesesMap[m] || 0);
+
+            if (chartMensualInstance) chartMensualInstance.destroy();
+            chartMensualInstance = new Chart(document.getElementById('chartMensual'), {
+                type: 'bar',
+                data: {
+                    labels: labelsMeses,
+                    datasets: [{
+                        label: 'Muestras',
+                        data: datosMeses,
+                        backgroundColor: '#0f4c43',
+                        borderRadius: 6
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            let labelsSemanas = Object.keys(semanasConteo).sort((a,b) => parseInt(a) - parseInt(b));
+            let datosSemanas = labelsSemanas.map(s => semanasConteo[s]);
+            if (labelsSemanas.length === 0) {
+                labelsSemanas = ["11", "12", "13", "14", "15", "16", "17", "18", "19", "21", "47", "48", "49"];
+                datosSemanas = [30, 2, 2, 2, 43, 10, 0, 1, 48, 7, 2, 3, 5];
+            }
+
+            if (chartSemanalInstance) chartSemanalInstance.destroy();
+            chartSemanalInstance = new Chart(document.getElementById('chartSemanal'), {
+                type: 'line',
+                data: {
+                    labels: labelsSemanas.map(s => "SE " + s),
+                    datasets: [{
+                        label: 'Volumen',
+                        data: datosSemanas,
+                        borderColor: '#0f4c43',
+                        backgroundColor: 'rgba(15, 76, 67, 0.08)',
+                        fill: true,
+                        tension: 0.3,
+                        pointBackgroundColor: '#10b981',
+                        borderWidth: 2
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+
+            let labelsPatogenos = Object.keys(patogenosConteo).sort((a,b) => patogenosConteo[b] - patogenosConteo[a]).slice(0, 6);
+            let datosPatogenos = labelsPatogenos.map(p => patogenosConteo[p]);
+            if (labelsPatogenos.length === 0) {
+                labelsPatogenos = ["Dengue", "Panel resp", "Arañazo de gato", "Sarampion", "Leishmaniasis", "Leptospirosis"];
+                datosPatogenos = [59, 47, 35, 3, 2, 2];
+            }
+
+            if (chartPatogenosInstance) chartPatogenosInstance.destroy();
+            chartPatogenosInstance = new Chart(document.getElementById('chartPatogenos'), {
+                type: 'bar',
+                data: {
+                    labels: labelsPatogenos,
+                    datasets: [{
+                        data: datosPatogenos,
+                        backgroundColor: '#115e54',
+                        borderRadius: 4
+                    }]
+                },
+                options: { 
+                    indexAxis: 'y',
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { legend: { display: false } } 
+                }
+            });
+
+            if (chartResultadosInstance) chartResultadosInstance.destroy();
+            chartResultadosInstance = new Chart(document.getElementById('chartResultados'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positivos', 'Negativos', 'Pendientes', 'Descartados'],
+                    datasets: [{
+                        data: [
+                            resultadosConteo["POSITIVO"] || 0, 
+                            resultadosConteo["NEGATIVO"] || 0, 
+                            resultadosConteo["PENDIENTE"] || 0, 
+                            resultadosConteo["DESCARTADO"] || 0
+                        ],
+                        backgroundColor: ['#ef4444', '#10b981', '#f59e0b', '#94a3b8']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+            });
+        }
+
+        // --- SISTEMA DE GESTIÓN OREPATIVA KARDEX ---
+        function actualizarExistenciasKardex() {
+            const tableBody = document.getElementById("kardexTableBody");
+            if (!tableBody) return;
+            
+            inventarioKardex.forEach(ins => {
+                let countMuestras = 0;
+                
+                datosGlobales.forEach(fila => {
+                    if (ins.prueba_asoc === "Todas") {
+                        countMuestras++;
+                    } else if (fila.prueba.toLowerCase().includes(ins.prueba_asoc.toLowerCase())) {
+                        countMuestras++;
+                    }
+                });
+
+                ins.consumo = countMuestras;
+                ins.stock = Math.max(0, ins.ingresos - ins.consumo);
+            });
+
+            let html = "";
+            inventarioKardex.forEach(ins => {
+                let statusClass = "bg-emerald-100 text-emerald-800";
+                let statusText = "Óptimo";
+
+                if (ins.stock <= 20) {
+                    statusClass = "bg-rose-100 text-rose-800 animate-pulse";
+                    statusText = "Crítico";
+                } else if (ins.stock <= 100) {
+                    statusClass = "bg-amber-100 text-amber-800";
+                    statusText = "Bajo";
+                }
+
+                html += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-3.5 text-slate-500">${ins.f_ingreso}</td>
+                        <td class="p-3.5 text-slate-950 font-extrabold">${ins.nombre}</td>
+                        <td class="p-3.5 text-center text-slate-600">${ins.ingresos} u.</td>
+                        <td class="p-3.5 text-center text-rose-600 font-extrabold">${ins.consumo} u.</td>
+                        <td class="p-3.5 text-center text-brand-teal bg-teal-50/50 font-black">${ins.stock} u.</td>
+                        <td class="p-3.5 text-slate-500">Hace 1 d.</td>
+                        <td class="p-3.5 text-slate-600">${ins.lote}</td>
+                        <td class="p-3.5 text-slate-600">${ins.vence}</td>
+                        <td class="p-3.5 text-center">
+                            <span class="px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider ${statusClass}">${statusText}</span>
+                        </td>
+                        <td class="p-3.5 text-center no-print">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="startEditInsumo(${ins.id})" class="text-teal-600 hover:text-teal-800 transition-colors"><i class="fa-solid fa-edit"></i></button>
+                                <button onclick="deleteInsumoKardex(${ins.id})" class="text-rose-600 hover:text-rose-800 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableBody.innerHTML = html;
+            localStorage.setItem("ventanilla_kardex_db", JSON.stringify(inventarioKardex));
+        }
+
+        function addInsumoStock(event) {
+            event.preventDefault();
+
+            const f_ingreso = formatDate(document.getElementById("kardexFechaIngreso").value);
+            const selectElement = document.getElementById("kardexSelectInsumo");
+            const nombre = selectElement.options[selectElement.selectedIndex].text;
+            const cantidad = parseInt(document.getElementById("kardexCantidad").value);
+            const lote = document.getElementById("kardexLote").value;
+            const vence = formatDate(document.getElementById("kardexFechaVence").value);
+
+            let prueba_asoc = "Dengue";
+            if (nombre.includes("Hisopos")) prueba_asoc = "Panel resp";
+            else if (nombre.includes("ARN")) prueba_asoc = "Sarampion";
+            else if (nombre.includes("Láminas")) prueba_asoc = "Arañazo de gato";
+            else if (nombre.includes("Lancetas")) prueba_asoc = "Todas";
+
+            if (editInsumoId !== null) {
+                let item = inventarioKardex.find(x => x.id === editInsumoId);
+                if (item) {
+                    item.f_ingreso = f_ingreso;
+                    item.nombre = nombre;
+                    item.ingresos = cantidad;
+                    item.lote = lote;
+                    item.vence = vence;
+                    item.prueba_asoc = prueba_asoc;
+                }
+                editInsumoId = null;
+                document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-plus-circle text-emerald-500"></i> Registrar Entrada de Insumos`;
+                document.getElementById("btnCancelEdit").classList.add("hidden");
+                document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-plus"></i> Registrar Entrada`;
+            } else {
+                const nuevoId = inventarioKardex.length > 0 ? Math.max(...inventarioKardex.map(x => x.id)) + 1 : 1;
+                inventarioKardex.push({
+                    id: nuevoId,
+                    f_ingreso: f_ingreso,
+                    nombre: nombre,
+                    ingresos: cantidad,
+                    lote: lote,
+                    vence: vence,
+                    prueba_asoc: prueba_asoc
+                });
+            }
+
+            document.getElementById("kardexForm").reset();
+            setDefaultDates();
+            actualizarExistenciasKardex();
+        }
+
+        function startEditInsumo(id) {
+            const item = inventarioKardex.find(x => x.id === id);
+            if (!item) return;
+
+            editInsumoId = id;
+
+            document.getElementById("kardexFechaIngreso").value = parseDateToInputFormat(item.f_ingreso);
+            document.getElementById("kardexCantidad").value = item.ingresos;
+            document.getElementById("kardexLote").value = item.lote;
+            document.getElementById("kardexFechaVence").value = parseDateToInputFormat(item.vence);
+
+            const selectElement = document.getElementById("kardexSelectInsumo");
+            for (let i = 0; i < selectElement.options.length; i++) {
+                if (selectElement.options[i].text === item.nombre) {
+                    selectElement.selectedIndex = i;
+                    break;
+                }
+            }
+
+            document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-edit text-amber-500"></i> Modificar Entrada de Insumo`;
+            document.getElementById("btnCancelEdit").classList.remove("hidden");
+            document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-save"></i> Guardar Cambios`;
+            document.getElementById("kardexForm").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEditInsumo() {
+            editInsumoId = null;
+            document.getElementById("kardexForm").reset();
+            setDefaultDates();
+            document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-plus-circle text-emerald-500"></i> Registrar Entrada de Insumos`;
+            document.getElementById("btnCancelEdit").classList.add("hidden");
+            document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-plus"></i> Registrar Entrada`;
+        }
+
+        function deleteInsumoKardex(id) {
+            if (confirm("¿Estás seguro de eliminar este registro de inventario del Kardex?")) {
+                inventarioKardex = inventarioKardex.filter(x => x.id !== id);
+                actualizarExistenciasKardex();
+            }
+        }
+
+        // --- FUNCIONES UTILITARIAS DE FECHA ---
+        function setDefaultDates() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            document.getElementById("kardexFechaIngreso").value = `${yyyy}-${mm}-${dd}`;
+            document.getElementById("kardexFechaVence").value = `${yyyy + 2}-${mm}-${dd}`;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return "";
+            const partes = dateStr.split("-");
+            if (partes.length === 3) {
+                const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                const mesIdx = parseInt(partes[1]) - 1;
+                return `${partes[2]}-${meses[mesIdx]}-${partes[0]}`;
+            }
+            return dateStr;
+        }
+
+        function parseDateToInputFormat(formattedStr) {
+            if (!formattedStr) return "";
+            const partes = formattedStr.split("-");
+            if (partes.length === 3) {
+                const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                const mesIdx = meses.indexOf(partes[1]) + 1;
+                const mm = String(mesIdx).padStart(2, '0');
+                return `${partes[2]}-${mm}-${partes[0]}`;
+            }
+            return "";
+        }
+
+        window.onload = function() {
+            const guardado = localStorage.getItem("ventanilla_kardex_db");
+            if (guardado) {
+                inventarioKardex = JSON.parse(guardado);
+            }
+            
+            setDefaultDates();
+            conectarYDescargar();
+
+            // Sincronizar automáticamente en segundo plano cada 5 minutos
+            setInterval(() => {
+                conectarYDescargar();
+            }, 5 * 60 * 1000);
+        };
+    </script>
+</body>
+</html>
