@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>    
     <!-- PapaParse para procesamiento de CSV -->    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>    
-    <!-- SheetJS para procesar y exportar archivos de Excel -->
+    <!-- SheetJS para procesar archivos de Excel locales si se importan manualmente -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     
     <script>        
@@ -39,7 +39,7 @@
         @keyframes marquee { 0% { transform: translateX(0%); } 100% { transform: translateX(-50%); } }        
         .animate-marquee { display: flex; width: max-content; animation: marquee 45s linear infinite; }        
         .animate-marquee:hover { animation-play-state: paused; }    
-
+        
         /* ESTILOS DE IMPRESIÓN / REPORTE PDF */
         @media print {
             body { background: white !important; color: black !important; }
@@ -68,21 +68,16 @@
                 </div>            
             </div>                        
             <div class="flex flex-wrap items-center gap-3">                
-                <span id="syncStatusBadge" class="bg-amber-600/30 text-amber-300 text-xs px-3.5 py-2 rounded-full border border-amber-500/30 flex items-center gap-2 font-bold transition-all duration-300">                    
-                    <span id="syncStatusDot" class="h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse"></span>                    
-                    <span id="syncStatusText">Estableciendo sincronización...</span>
+                <!-- BOTÓN INDICADOR DE CONEXIÓN ACTIVO Y PARPADEANTE -->
+                <span id="syncStatusBadge" class="bg-amber-600/30 text-amber-300 text-xs px-3.5 py-2.5 rounded-xl border border-amber-500/30 flex items-center gap-2 font-bold transition-all duration-300 select-none shadow-sm">                    
+                    <span id="syncStatusDot" class="h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_#f59e0b]"></span>                    
+                    <span id="syncStatusText">CONECTANDO...</span>
                 </span>                                
                 
                 <!-- BOTÓN GENERAR REPORTE (PDF/Impresora) -->
-                <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 transition-all text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-md no-print">
+                <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 transition-all text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-md no-print uppercase tracking-wider">
                     <i class="fa-solid fa-file-pdf text-base"></i> Imprimir Reporte / PDF
                 </button>
-
-                <!-- BOTÓN IMPORTAR BASE DE DATOS -->
-                <button onclick="triggerExcelImport()" class="bg-indigo-600 hover:bg-indigo-700 transition-all duration-150 text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 shadow-md no-print">
-                    <i class="fa-solid fa-file-excel text-base"></i> Importar Excel/CSV
-                </button>
-                <input type="file" id="excelFileInput" accept=".csv, .xlsx, .xls" class="hidden" onchange="handleExcelImport(event)">
             </div>        
         </div>    
     </header>
@@ -110,7 +105,7 @@
                 <i id="alertIcon" class="fa-solid text-lg"></i>
             </div>
             <div>
-                <h4 id="alertTitle" class="font-bold text-sm text-slate-800">Estado de Sincronización</h4>
+                <h4 id="alertTitle" class="font-bold text-sm text-slate-800">Estado de sincronización</h4>
                 <p id="alertDescription" class="text-xs mt-0.5 opacity-90"></p>
             </div>
         </div>
@@ -130,7 +125,7 @@
             </div>
             <div class="p-6 bg-slate-50/40">
                 <div class="flex flex-col lg:flex-row items-stretch lg:items-end gap-4 text-sm justify-between">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
                         <!-- S.E. -->
                         <div class="flex flex-col gap-1.5">
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Semana Epidemiológica (S.E.)</span>
@@ -150,6 +145,20 @@
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipo de Prueba</span>
                             <select id="filterTestType" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
                                 <option value="ALL" selected>Todas las Pruebas</option>
+                            </select>
+                        </div>
+                        <!-- Sector / Zona de Ventanilla -->
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sector / Zona</span>
+                            <select id="filterSector" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                                <option value="ALL" selected>Todos los Sectores</option>
+                                <option value="Pachacútec">Pachacútec / Proyecto Piloto</option>
+                                <option value="Mi Perú">Mi Perú</option>
+                                <option value="Ventanilla Alta">Ventanilla Alta / Centro</option>
+                                <option value="Ventanilla Baja">Ventanilla Baja / Naval</option>
+                                <option value="Villa Los Reyes">Villa Los Reyes</option>
+                                <option value="Angamos">Angamos</option>
+                                <option value="Otros">Otros Sectores / Sin Especificar</option>
                             </select>
                         </div>
                         <!-- Resultado -->
@@ -241,7 +250,7 @@
                     <i class="fa-solid fa-hourglass-half text-xl"></i>                
                 </div>            
             </div>
-            <!-- KPI 7: TASA DE POSITIVIDAD DINÁMICA CON SEMÁFORO (EPIDEMIOLÓGICAMENTE CORRECTA) -->
+            <!-- KPI 7: TASA DE POSITIVIDAD DINÁMICA CON SEMÁFORO -->
             <div id="kpiTasaCard" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-md flex items-center justify-between min-h-[110px] transition-all duration-350">                
                 <div>                    
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tasa Positividad</p>                    
@@ -467,7 +476,7 @@
                             <th class="p-3.5">Insumo del Almacén</th>
                             <th class="p-3.5 text-center">Ingresos Totales</th>
                             <th class="p-3.5 text-center text-rose-600">Consumo (Muestras)</th>
-                            <th class="p-3.5 text-center text-brand-dark bg-teal-50">Stock Disponible</th>
+                            <th class="p-3.5 text-center text-brand-dark bg-teal-50 font-black">Stock Disponible</th>
                             <th class="p-3.5">Último Uso</th>
                             <th class="p-3.5">Lote Activo</th>
                             <th class="p-3.5">F. Vencimiento</th>
@@ -495,16 +504,16 @@
 
         // Respaldos de Contingencia por si la red falla en el visor local
         const DATOS_RESPALDO = [
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "22/05/2026", "APELLIDOS Y NOMBRES": "DIAZ MUÑOZ DYLAN JHEBECO (Dengue 7)", "H.C.": "208015", "DNI": "10008024", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "20/05/2026", "APELLIDOS Y NOMBRES": "CHAVEZ MOZOMBIRE EMILIA (Dengue 6)", "H.C.": "208013", "DNI": "10000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "25/05/2026", "APELLIDOS Y NOMBRES": "DOMINGUEZ REQUE DEYBI STEVEN (Dengue 5)", "H.C.": "208014", "DNI": "1000814", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "24/05/2026", "APELLIDOS Y NOMBRES": "BARRIOS NICOSUP MARIA INCOMA (Dengue 4)", "H.C.": "208013", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "23/05/2026", "APELLIDOS Y NOMBRES": "ARTEAGA VIVAS JUAN JACK (Dengue 3)", "H.C.": "208012", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "22/05/2026", "APELLIDOS Y NOMBRES": "DIAZ MUÑOZ DYLAN JHEBECO (Pachacútec)", "H.C.": "208015", "DNI": "10008024", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "Muestra tomada en Pachacutec" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "20/05/2026", "APELLIDOS Y NOMBRES": "CHAVEZ MOZOMBIRE EMILIA (Mi Perú)", "H.C.": "208013", "DNI": "10000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "Sector Mi Peru" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "25/05/2026", "APELLIDOS Y NOMBRES": "DOMINGUEZ REQUE DEYBI STEVEN (Angamos)", "H.C.": "208014", "DNI": "1000814", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "AA.HH. Angamos" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "24/05/2026", "APELLIDOS Y NOMBRES": "BARRIOS NICOSUP MARIA INCOMA (Ventanilla Alta)", "H.C.": "208013", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "23/05/2026", "APELLIDOS Y NOMBRES": "ARTEAGA VIVAS JUAN JACK (Villa Los Reyes)", "H.C.": "208012", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
             { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "22/05/2026", "APELLIDOS Y NOMBRES": "LAZARO MILAGROS STEFANNY (Dengue 2)", "H.C.": "208015", "DNI": "10008024", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
             { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "21/05/2026", "APELLIDOS Y NOMBRES": "GOMEZ MOSQUEIRA JUAN PAULINO (Dengue 1)", "H.C.": "208013", "DNI": "10000810", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "19", "FECHAS DE NOTIFICACIÓN": "11/05/2026", "APELLIDOS Y NOMBRES": "POMAL BARRERA KELLY MARITZA (Especifico)", "H.C.": "---", "DNI": "10000214", "TIPO DE PRUEBA": "Coqueluche", "RESULTADO CLÍNICO": "PENDIENTE", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "18", "FECHAS DE NOTIFICACIÓN": "10/05/2026", "APELLIDOS Y NOMBRES": "PORTAL ABANTO LUZ MARIELA (Dengue 56)", "H.C.": "208013", "DNI": "10000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "PENDIENTE", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "18", "FECHAS DE NOTIFICACIÓN": "10/05/2026", "APELLIDOS Y NOMBRES": "CORTEZ MEJIA ROSA ELIZIA (Dengue 55)", "H.C.": "208014", "DNI": "10000804", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "NEGATIVO", "OBSERVACION": "---" }
+            { "SEMANA EPIDEMIOLÓGICA": "19", "FECHAS DE NOTIFICACIÓN": "11/05/2026", "APELLIDOS Y NOMBRES": "POMAL BARRERA KELLY MARITZA", "H.C.": "---", "DNI": "10000214", "TIPO DE PRUEBA": "Coqueluche", "RESULTADO CLÍNICO": "PENDIENTE", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "18", "FECHAS DE NOTIFICACIÓN": "10/05/2026", "APELLIDOS Y NOMBRES": "PORTAL ABANTO LUZ MARIELA", "H.C.": "208013", "DNI": "10000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "PENDIENTE", "OBSERVACION": "---" },
+            { "SEMANA EPIDEMIOLÓGICA": "18", "FECHAS DE NOTIFICACIÓN": "10/05/2026", "APELLIDOS Y NOMBRES": "CORTEZ MEJIA ROSA ELIZIA", "H.C.": "208014", "DNI": "10000804", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "NEGATIVO", "OBSERVACION": "---" }
         ];
 
         // Estado Global de la Aplicación
@@ -521,7 +530,7 @@
         let chartPatogenosInstance = null;
         let chartResultadosInstance = null;
 
-        // Base de datos local inicial del Kardex (Se guardará en localStorage para no perder cambios)
+        // Base de datos local inicial del Kardex (Se guardará en localStorage)
         let inventarioKardex = [
             { id: 1, nombre: "Pruebas Rápidas Dengue NS1", ingresos: 500, lote: "DENG-2026-A1", vence: "31-Dic-2027", f_ingreso: "20-May-2026", prueba_asoc: "Dengue" },
             { id: 2, nombre: "Hisopos Nasofaringeos (Medio Viral)", ingresos: 450, lote: "NASO-2026-T2", vence: "15-Ago-2027", f_ingreso: "22-May-2026", prueba_asoc: "Panel resp" },
@@ -539,7 +548,6 @@
                 return;
             }
 
-            // Mapear los datos filtrados con nombres de columna limpios para el reporte final
             const datosParaExportar = datosFiltrados.map(f => ({
                 "S.E.": f.semana,
                 "Fecha Notificación": f.fechaNoti,
@@ -555,17 +563,16 @@
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Vigilancia Filtrada");
 
-            // Generar archivo de descarga
             const fechaHoy = new Date().toISOString().slice(0, 10);
             XLSX.writeFile(workbook, `Reporte_Epidemiologico_Ventanilla_${fechaHoy}.xlsx`);
         }
 
-        // --- MOTOR INTELIGENTE DE NORMALIZACIÓN DE CABECERAS (RESISTENTE A ACENTOS, ESPACIOS Y MAYÚSCULAS) ---
+        // --- MOTOR INTELIGENTE DE NORMALIZACIÓN DE CABECERAS ---
         function getRowValue(fila, possibleHeaders, defaultValue = "---") {
             const keys = Object.keys(fila);
             const normalize = str => str.toLowerCase()
                                        .normalize("NFD")
-                                       .replace(/[\u0300-\u036f]/g, "") // Remueve acentos tildados (ó -> o)
+                                       .replace(/[\u0300-\u036f]/g, "") // Remueve acentos tildados
                                        .replace(/[^a-z0-9]/g, "");      // Conserva únicamente caracteres alfanuméricos
             
             const normalizedTargets = possibleHeaders.map(normalize);
@@ -583,7 +590,7 @@
         async function conectarYDescargar() {
             actualizarEstadoVisualConexion("connecting");
             
-            // Intento 1: Fetch Directo (Netlify)
+            // Intento 1: Fetch Directo
             try {
                 console.log("Intento 1: Conexión directa al servidor de Google...");
                 const res = await fetch(URL_GOOGLE_SHEET);
@@ -592,7 +599,7 @@
                     if (validarYProcesarCSV(text, "success")) return;
                 }
             } catch (e) {
-                console.warn("Intento 1 bloqueado por restricciones de origen del explorador (CORS).");
+                console.warn("Intento 1 bloqueado por restricciones de origen (CORS).");
             }
 
             // Intento 2: Proxy corsproxy.io
@@ -653,6 +660,7 @@
             return true;
         }
 
+        // CONTROL DINÁMICO DEL BOTÓN / CÁPSULA "EN LÍNEA"
         function actualizarEstadoVisualConexion(estado) {
             const badge = document.getElementById("syncStatusBadge");
             const dot = document.getElementById("syncStatusDot");
@@ -667,15 +675,16 @@
             if (!badge || !dot || !text || !alertBanner) return;
 
             if (estado === "connecting") {
-                badge.className = "bg-amber-600/30 text-amber-300 text-xs px-3.5 py-2 rounded-full border border-amber-500/30 flex items-center gap-2 font-bold";
-                dot.className = "h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse";
-                text.innerText = "Estableciendo Sincronización... ";
+                badge.className = "bg-amber-600/30 text-amber-300 text-xs px-3.5 py-2.5 rounded-xl border border-amber-500/30 flex items-center gap-2 font-bold select-none shadow-inner";
+                dot.className = "h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_#f59e0b]";
+                text.innerText = "CONECTANDO...";
                 alertBanner.classList.add("hidden");
             } 
             else if (estado === "success") {
-                badge.className = "bg-emerald-600/30 text-emerald-300 text-xs px-3.5 py-2 rounded-full border border-emerald-500/30 flex items-center gap-2 font-bold";
-                dot.className = "h-2.5 w-2.5 rounded-full bg-emerald-400 animate-none";
-                text.innerText = "Sincronizador Activo";
+                // Sincronización exitosa y verde parpadeante en vivo "EN LÍNEA"
+                badge.className = "bg-emerald-600 text-white text-xs px-4 py-2.5 rounded-xl border border-emerald-500 flex items-center gap-2 font-black select-none shadow-[0_0_15px_rgba(16,185,129,0.4)]";
+                dot.className = "h-2.5 w-2.5 rounded-full bg-white animate-pulse shadow-[0_0_10px_#ffffff]";
+                text.innerText = "EN LÍNEA";
                 
                 alertBanner.className = "max-w-[1850px] mx-auto mt-4 px-6 py-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 bg-emerald-50 border-emerald-200 text-emerald-800 no-print";
                 alertIconContainer.className = "p-2 rounded-full shrink-0 bg-emerald-100 text-emerald-600";
@@ -687,9 +696,10 @@
                 alertBanner.classList.remove("hidden");
             } 
             else if (estado === "proxy") {
-                badge.className = "bg-teal-600/30 text-teal-300 text-xs px-3.5 py-2 rounded-full border border-teal-500/30 flex items-center gap-2 font-bold";
-                dot.className = "h-2.5 w-2.5 rounded-full bg-teal-400 animate-none";
-                text.innerText = "Conectado vía Túnel de Red";
+                // Sincronización exitosa vía proxy y verde parpadeante en vivo "EN LÍNEA"
+                badge.className = "bg-emerald-600 text-white text-xs px-4 py-2.5 rounded-xl border border-emerald-500 flex items-center gap-2 font-black select-none shadow-[0_0_15px_rgba(16,185,129,0.4)]";
+                dot.className = "h-2.5 w-2.5 rounded-full bg-white animate-pulse shadow-[0_0_10px_#ffffff]";
+                text.innerText = "EN LÍNEA";
 
                 alertBanner.className = "max-w-[1850px] mx-auto mt-4 px-6 py-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 bg-teal-50 border-teal-200 text-teal-800 no-print";
                 alertIconContainer.className = "p-2 rounded-full shrink-0 bg-teal-100 text-teal-600";
@@ -701,60 +711,18 @@
                 alertBanner.classList.remove("hidden");
             }
             else if (estado === "fallback") {
-                badge.className = "bg-sky-600/30 text-sky-300 text-xs px-3.5 py-2 rounded-full border border-sky-500/30 flex items-center gap-2 font-bold";
-                dot.className = "h-2.5 w-2.5 rounded-full bg-sky-400 animate-pulse";
-                text.innerText = "Modo Demostración Activo";
+                badge.className = "bg-sky-600 text-white text-xs px-4 py-2.5 rounded-xl border border-sky-500 flex items-center gap-2 font-black select-none shadow-sm";
+                dot.className = "h-2.5 w-2.5 rounded-full bg-white animate-pulse";
+                text.innerText = "VISTA LOCAL";
 
                 alertBanner.className = "max-w-[1850px] mx-auto mt-4 px-6 py-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 bg-amber-50 border-amber-200 text-amber-800 no-print";
                 alertIconContainer.className = "p-2 rounded-full shrink-0 bg-amber-100 text-amber-600";
                 alertIcon.className = "fa-solid fa-triangle-exclamation text-lg";
                 alertTitle.innerText = "Mostrando Modo Demostración";
-                alertDescription.innerText = "No se logró conectar con Google Sheets debido a restricciones locales (CORS). Pero no te preocupes: cuando subas este archivo a Netlify se sincronizará automáticamente. También puedes importar tu Excel manualmente arriba.";
+                alertDescription.innerText = "No se logró conectar con Google Sheets debido a restricciones de red (CORS). Cuando subas este archivo a Netlify se sincronizará automáticamente.";
                 actionButton.className = "bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow";
                 actionButton.innerText = "Forzar Reconexión";
                 alertBanner.classList.remove("hidden");
-            }
-        }
-
-        // --- MANEJO DE IMPORTACIÓN MANUAL ---
-        function triggerExcelImport() {
-            document.getElementById("excelFileInput").click();
-        }
-
-        function handleExcelImport(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            
-            if (file.name.endsWith(".csv")) {
-                reader.onload = function(e) {
-                    Papa.parse(e.target.result, {
-                        header: true,
-                        skipEmptyLines: true,
-                        complete: function(resultados) {
-                            if (resultados.data && resultados.data.length > 0) {
-                                cargarDatosEnDashboard(resultados.data);
-                                alert("¡Base de datos importada exitosamente desde archivo CSV!");
-                            }
-                        }
-                    });
-                };
-                reader.readAsText(file);
-            } else {
-                reader.onload = function(e) {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
-                    const json = XLSX.utils.sheet_to_json(worksheet);
-                    
-                    if (json && json.length > 0) {
-                        cargarDatosEnDashboard(json);
-                        alert("¡Base de datos importada exitosamente desde archivo Excel!");
-                    }
-                };
-                reader.readAsArrayBuffer(file);
             }
         }
 
@@ -777,7 +745,7 @@
             filtrarYRefrescarDashboard();
         }
 
-        function inicializarOpcionesDeFiltros(datos) {
+        function initializeOptionsOfFilters(datos) {
             const selectWeek = document.getElementById("filterWeek");
             const selectYear = document.getElementById("filterYear");
             const selectTestType = document.getElementById("filterTestType");
@@ -828,6 +796,7 @@
             document.getElementById("filterWeek").value = "ALL";
             document.getElementById("filterYear").value = "ALL";
             document.getElementById("filterTestType").value = "ALL";
+            document.getElementById("filterSector").value = "ALL";
             document.getElementById("filterResult").value = "ALL";
             document.getElementById("buscadorPaciente").value = "";
             currentPage = 1;
@@ -845,10 +814,12 @@
             filtrarYRefrescarDashboard();
         }
 
+        // MOTOR DE FILTRADO MULTIVARIABLE (INCLUYENDO SECTOR DE VENTANILLA)
         function filtrarYRefrescarDashboard() {
             const filterWeek = document.getElementById("filterWeek").value;
             const filterYear = document.getElementById("filterYear").value;
             const filterTestType = document.getElementById("filterTestType").value;
+            const filterSector = document.getElementById("filterSector").value;
             const filterResult = document.getElementById("filterResult").value;
             const searchVal = document.getElementById("buscadorPaciente").value.toLowerCase().trim();
 
@@ -865,6 +836,29 @@
                 }
 
                 if (filterTestType !== "ALL" && f.prueba !== filterTestType) return false;
+
+                // Filtrado por Sector de Ventanilla usando búsqueda cruzada de palabras clave
+                if (filterSector !== "ALL") {
+                    const sectorObj = filterSector.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const buscarEn = (f.paciente + " " + f.observacion).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    
+                    if (sectorObj === "pachacutec") {
+                        if (!buscarEn.includes("pachacutec") && !buscarEn.includes("piloto")) return false;
+                    } else if (sectorObj === "mi peru") {
+                        if (!buscarEn.includes("mi peru") && !buscarEn.includes("miperu")) return false;
+                    } else if (sectorObj === "ventanilla alta") {
+                        if (!buscarEn.includes("alta") && !buscarEn.includes("centro")) return false;
+                    } else if (sectorObj === "ventanilla baja") {
+                        if (!buscarEn.includes("baja") && !buscarEn.includes("naval")) return false;
+                    } else if (sectorObj === "villa los reyes") {
+                        if (!buscarEn.includes("reyes") && !buscarEn.includes("villa los reyes")) return false;
+                    } else if (sectorObj === "angamos") {
+                        if (!buscarEn.includes("angamos")) return false;
+                    } else if (sectorObj === "otros") {
+                        const coincideConConocidos = ["pachacutec", "piloto", "mi peru", "miperu", "alta", "baja", "reyes", "angamos"].some(k => buscarEn.includes(k));
+                        if (coincideConConocidos) return false;
+                    }
+                }
 
                 if (filterResult !== "ALL") {
                     let res = f.resultado;
@@ -896,7 +890,7 @@
             actualizarExistenciasKardex();
         }
 
-        // --- KPIs DE ALTO IMPACTO (CALCULADOS CON SEMÁFORO EPIDEMIOLÓGICAMENTE CORRECTO) ---
+        // --- KPIs DE ALTO IMPACTO ---
         function renderizarKPIs(datos) {
             let total = datos.length;
             let positivos = 0;
@@ -916,7 +910,6 @@
 
             datos.forEach(f => {
                 let res = f.resultado.toUpperCase();
-                // Detección ultra-flexible de diagnósticos incluyendo abreviaturas
                 if (res.includes("POSITIVO") || res === "POS") {
                     positivos++;
                 } else if (res.includes("NEGATIVO") || res.includes("DESCARTADO") || res === "NEG" || res === "DES") {
@@ -929,13 +922,11 @@
                 if (f.semana === selectedSE) countSE++;
             });
 
-            // TASA DE POSITIVIDAD CIENTÍFICAMENTE EXACTA: Positivos / (Positivos + Negativos) * 100
-            // Excluye las muestras "Pendientes" que aún no tienen diagnóstico clínico para no deprimir la tasa
+            // TASA DE POSITIVIDAD CIENTÍFICAMENTE EXACTA
             let totalProcesados = positivos + negativos;
             let tasaNumerica = totalProcesados > 0 ? (positivos / totalProcesados) * 100 : 0;
             let tasaText = tasaNumerica.toFixed(1) + "%";
 
-            // Sincronizar elementos básicos en el HTML
             document.getElementById("kpiTotal").innerText = total;
             document.getElementById("kpiTotalSub").innerText = `De ${datosGlobales.length} registros globales`;
             document.getElementById("kpiPositivos").innerText = positivos;
@@ -1384,7 +1375,7 @@
         }
 
         function deleteInsumoKardex(id) {
-            if (confirm("¿Estás seguro de eliminar este registro de inventario del Kardex?")) {
+            if (confirm("¿Está seguro de eliminar este registro de stock?")) {
                 inventarioKardex = inventarioKardex.filter(x => x.id !== id);
                 actualizarExistenciasKardex();
             }
