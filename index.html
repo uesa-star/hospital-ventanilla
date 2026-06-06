@@ -43,7 +43,7 @@
         /* ESTILOS DE IMPRESIÓN / REPORTE PDF */
         @media print {
             body { background: white !important; color: black !important; }
-            header, section.bg-rose-950, #welcomeModal, #customDialogModal, #kardexForm, select, button, #excelFileInput, .no-print {
+            header, section.bg-rose-950, #welcomeModal, #protocolModal, #customDialogModal, #kardexForm, select, button, #excelFileInput, .no-print {
                 display: none !important;
             }
             main { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
@@ -68,6 +68,11 @@
                 </div>            
             </div>                        
             <div class="flex flex-wrap items-center gap-3">                
+                <!-- BOTÓN INTERACTIVO DE HISTORIAL Y PROTOCOLO POR ZONA (NUEVO) -->
+                <button onclick="openProtocolModal()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 transition-all text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-md no-print uppercase tracking-wider">
+                    <i class="fa-solid fa-book-medical text-base"></i> Historial y Protocolos de Ventanilla
+                </button>
+
                 <!-- BOTÓN INDICADOR DE CONEXIÓN ACTIVO Y PARPADEANTE (Sincroniza al hacer clic) -->
                 <span id="syncStatusBadge" onclick="conectarYDescargar()" class="bg-amber-600/30 text-amber-300 text-xs px-3.5 py-2.5 rounded-xl border border-amber-500/30 flex items-center gap-2 font-bold transition-all duration-300 select-none shadow-sm cursor-pointer hover:scale-105 active:scale-95">                    
                     <span id="syncStatusDot" class="h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_#f59e0b]"></span>                    
@@ -82,14 +87,14 @@
         </div>    
     </header>
     
-    <!-- BARRA DE ALERTA EPIDEMIOLÓGICA -->    
-    <section class="bg-rose-950 text-rose-100 px-6 py-3 border-b border-rose-900 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-semibold shrink-0 shadow-inner">        
-        <div class="flex items-center gap-3 overflow-hidden w-full sm:flex-1">            
-            <span class="bg-rose-600 text-white text-[9px] font-black px-2.5 py-1 rounded uppercase tracking-wider flex items-center gap-1.5 shrink-0 animate-pulse">                
-                <span class="h-2 w-2 rounded-full bg-white"></span> Alerta Epidemiológica            
+    <!-- BARRA DE ALERTA EPIDEMIOLÓGICA - ANCHURA Y VISIBILIDAD MEJORADA -->    
+    <section class="bg-rose-950 text-rose-100 px-8 py-4.5 border-b border-rose-900 flex flex-col sm:flex-row items-center justify-between gap-3 text-sm font-bold shrink-0 shadow-lg relative z-10">        
+        <div class="flex items-center gap-4 overflow-hidden w-full sm:flex-1">            
+            <span class="bg-rose-600 text-white text-[10px] font-black px-3.5 py-1.5 rounded uppercase tracking-wider flex items-center gap-2 shrink-0 animate-pulse shadow-md shadow-rose-900/30">                
+                <span class="h-2.5 w-2.5 rounded-full bg-white"></span> Alerta Epidemiológica Activa            
             </span>            
             <div class="overflow-hidden relative w-full flex items-center select-none cursor-pointer">                
-                <div id="liveAlertTicker" class="animate-marquee flex gap-12 whitespace-nowrap">                    
+                <div id="liveAlertTicker" class="animate-marquee flex gap-16 whitespace-nowrap text-xs md:text-sm tracking-wide text-rose-200">                    
                     <span>🌍 <strong>OMS GLOBAL:</strong> Alerta de la OPS/OMS por rebrote masivo de Sarampión ante el flujo del Mundial 2026.</span>                    
                     <span>🇵🇪 <strong>CDC PERÚ:</strong> Alerta Epidemiológica por Sarampión y Dengue grave en territorio nacional.</span>                    
                     <span>🇧🇷 <strong>VIGILANCIA FRONTERA:</strong> Transmisión de Fiebre de Oropouche en la frontera con Brasil (Acre).</span>                
@@ -112,6 +117,103 @@
             <button onclick="closeWelcomeModal()" class="mt-6 w-full bg-brand-dark hover:bg-brand-teal text-white py-3 px-6 rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-brand-teal/10 hover:-translate-y-0.5 active:translate-y-0">
                 Entrar al Módulo
             </button>
+        </div>
+    </div>
+
+    <!-- MODAL DE HISTORIAL POR ZONA Y PROTOCOLO DE LABORATORIO (NUEVO) -->
+    <div id="protocolModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-3xl p-8 max-w-4xl w-full mx-4 max-h-[85vh] overflow-y-auto shadow-2xl border border-slate-100 transform scale-95 transition-all duration-350 flex flex-col gap-6 custom-scrollbar">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+                <div class="flex items-center gap-3">
+                    <div class="p-3 bg-teal-100 text-brand-dark rounded-2xl">
+                        <i class="fa-solid fa-book-medical text-2xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-extrabold text-slate-900 uppercase">Historial y Protocolo de Actuación por Zona</h3>
+                        <p class="text-xs text-slate-400 font-semibold uppercase">Instrucciones Operativas de Vigilancia Epidemiológica - Hospital de Ventanilla</p>
+                    </div>
+                </div>
+                <button onclick="closeProtocolModal()" class="text-slate-400 hover:text-rose-600 transition-colors p-2 bg-slate-50 hover:bg-rose-50 rounded-xl">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Contenido del Protocolo -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                <!-- Columna Izquierda: Historial por Zonas -->
+                <div class="space-y-4">
+                    <h4 class="text-sm font-black text-brand-teal uppercase border-b border-teal-100 pb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-map-location-dot"></i> Historial y Comentarios Epidemiológicos de Ventanilla
+                    </h4>
+                    
+                    <div class="space-y-3">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-150">
+                            <span class="font-extrabold text-brand-dark uppercase block">Pachacútec (Proyecto Piloto)</span>
+                            <p class="text-slate-600 mt-1">Zona de alta densidad sobre laderas de arena. Abastecimiento de agua no permanente, propiciando el almacenamiento doméstico en cilindros que actúan como criaderos del vector <em>Aedes aegypti</em>. Brote activo de Dengue y vigilancia del virus Oropouche.</p>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-150">
+                            <span class="font-extrabold text-brand-dark uppercase block">Mi Perú</span>
+                            <p class="text-slate-600 mt-1">Densidad alta y problemas históricos de metales pesados. Presenta alta susceptibilidad ambiental ante brotes de virus respiratorios y sarampión. Monitoreo constante de coqueluche en infantes.</p>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-150">
+                            <span class="font-extrabold text-brand-dark uppercase block">Ventanilla Alta / Centro</span>
+                            <p class="text-slate-600 mt-1">Eje comercial de gran tránsito peatonal. Riesgo elevado de propagación viral de persona a persona debido al flujo metropolitano. Vigilancia intensiva de casos de fiebre exantemática.</p>
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-150">
+                            <span class="font-extrabold text-brand-dark uppercase block">Ventanilla Baja / Villa Los Reyes / Angamos</span>
+                            <p class="text-slate-600 mt-1">Cercanía a humedales y laderas de cerros. Presencia de pozos sépticos y vectores de roedores, lo que obliga al tamizaje sistemático de Bartonellosis (Fiebre de la Oroya) y Leptospirosis ante febriles inexplicables.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna Derecha: Protocolo para el Laboratorio -->
+                <div class="space-y-4">
+                    <h4 class="text-sm font-black text-rose-700 uppercase border-b border-rose-100 pb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-microscope"></i> Protocolo de Actuación del Personal de Laboratorio
+                    </h4>
+
+                    <div class="space-y-4 bg-teal-50/50 p-4 rounded-2xl border border-teal-100">
+                        <div class="flex gap-3">
+                            <span class="h-6 w-6 rounded-full bg-brand-dark text-white font-extrabold flex items-center justify-center shrink-0">1</span>
+                            <div>
+                                <span class="font-extrabold text-slate-800 uppercase block">Bioseguridad y Recepción</span>
+                                <p class="text-slate-600 mt-0.5">Uso obligatorio de EPP Nivel 3. Toda muestra de febril sospechoso debe registrarse inmediatamente en el libro de vigilancia con georreferenciación y ficha epidemiológica completa.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <span class="h-6 w-6 rounded-full bg-brand-dark text-white font-extrabold flex items-center justify-center shrink-0">2</span>
+                            <div>
+                                <span class="font-extrabold text-slate-800 uppercase block">Procesamiento y Cadena de Frío</span>
+                                <p class="text-slate-600 mt-0.5">Las muestras para Dengue NS1 (suero) deben procesarse en las primeras 48 horas. Para pruebas enviadas al INS (como sospecha de Sarampión), conservar rigurosamente entre 2°C y 8°C.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <span class="h-6 w-6 rounded-full bg-brand-dark text-white font-extrabold flex items-center justify-center shrink-0">3</span>
+                            <div>
+                                <span class="font-extrabold text-slate-800 uppercase block">Notificación Inmediata Obligatoria</span>
+                                <p class="text-slate-600 mt-0.5">Cualquier caso **POSITIVO** de Dengue, Bartonella o sospecha de Sarampión debe ser notificado telefónicamente y vía sistema a la Dirección de Epidemiología en un plazo **máximo de 2 horas**.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-3">
+                            <span class="h-6 w-6 rounded-full bg-brand-dark text-white font-extrabold flex items-center justify-center shrink-0">4</span>
+                            <div>
+                                <span class="font-extrabold text-slate-800 uppercase block">Monitoreo de Kardex de Insumos</span>
+                                <p class="text-slate-600 mt-0.5">Frente a la confirmación de un brote, el personal de laboratorio debe validar inmediatamente el stock en el Kardex. Si el stock cae a nivel **Crítico**, se debe solicitar reposición urgente a DIRESA Callao.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón de Cerrar -->
+            <div class="border-t border-slate-100 pt-4 flex justify-end">
+                <button onclick="closeProtocolModal()" class="bg-brand-dark hover:bg-brand-teal text-white py-2.5 px-6 rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-md">
+                    Entendido, Volver al Dashboard
+                </button>
+            </div>
         </div>
     </div>
 
@@ -522,16 +624,16 @@
 
         // Respaldos de Contingencia por si la red falla en el visor local
         const DATOS_RESPALDO = [
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "22/05/2026", "APELLIDOS Y NOMBRES": "DIAZ MUÑOZ DYLAN JHEBECO (Pachacútec)", "H.C.": "208015", "DNI": "10008024", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "Muestra tomada en Pachacutec" },
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "20/05/2026", "APELLIDOS Y NOMBRES": "CHAVEZ MOZOMBIRE EMILIA (Mi Perú)", "H.C.": "208013", "DNI": "10000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "Sector Mi Peru" },
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "25/05/2026", "APELLIDOS Y NOMBRES": "DOMINGUEZ REQUE DEYBI STEVEN (Angamos)", "H.C.": "208014", "DNI": "1000814", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "AA.HH. Angamos" },
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "24/05/2026", "APELLIDOS Y NOMBRES": "BARRIOS NICOSUP MARIA INCOMA (Ventanilla Alta)", "H.C.": "208013", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "23/05/2026", "APELLIDOS Y NOMBRES": "ARTEAGA VIVAS JUAN JACK (Villa Los Reyes)", "H.C.": "208012", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "22/05/2026", "APELLIDOS Y NOMBRES": "LAZARO MILAGROS STEFANNY (Dengue 2)", "H.C.": "208015", "DNI": "10008024", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "21/05/2026", "APELLIDOS Y NOMBRES": "GOMEZ MOSQUEIRA JUAN PAULINO (Dengue 1)", "H.C.": "208013", "DNI": "10000810", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "19", "FECHAS DE NOTIFICACIÓN": "11/05/2026", "APELLIDOS Y NOMBRES": "POMAL BARRERA KELLY MARITZA", "H.C.": "---", "DNI": "10000214", "TIPO DE PRUEBA": "Coqueluche", "RESULTADO CLÍNICO": "PENDIENTE", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "18", "FECHAS DE NOTIFICACIÓN": "10/05/2026", "APELLIDOS Y NOMBRES": "PORTAL ABANTO LUZ MARIELA", "H.C.": "208013", "DNI": "10000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "PENDIENTE", "OBSERVACION": "---" },
-            { "SEMANA EPIDEMIOLÓGICA": "18", "FECHAS DE NOTIFICACIÓN": "10/05/2026", "APELLIDOS Y NOMBRES": "CORTEZ MEJIA ROSA ELIZIA", "H.C.": "208014", "DNI": "10000804", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "NEGATIVO", "OBSERVACION": "---" }
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "22/05/2026", "APELLIDOS Y NOMBRES": "DIAZ MUÑOZ DYLAN JHEBECO (Pachacútec)", "H.C.": "208015", "DNI": "10008024", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "Muestra tomada en Pachacutec", "SECTOR": "Pachacútec" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "20/05/2026", "APELLIDOS Y NOMBRES": "CHAVEZ MOZOMBIRE EMILIA (Mi Perú)", "H.C.": "208013", "DNI": "10000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "Sector Mi Peru", "SECTOR": "Mi Perú" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "25/05/2026", "APELLIDOS Y NOMBRES": "DOMINGUEZ REQUE DEYBI STEVEN (Angamos)", "H.C.": "208014", "DNI": "1000814", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "AA.HH. Angamos", "SECTOR": "Angamos" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "24/05/2026", "APELLIDOS Y NOMBRES": "BARRIOS NICOSUP MARIA INCOMA (Ventanilla Alta)", "H.C.": "208013", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---", "SECTOR": "Ventanilla Alta" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "23/05/2026", "APELLIDOS Y NOMBRES": "ARTEAGA VIVAS JUAN JACK (Villa Los Reyes)", "H.C.": "208012", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---", "SECTOR": "Villa Los Reyes" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "22/05/2026", "APELLIDOS Y NOMBRES": "LAZARO MILAGROS STEFANNY (Dengue 2)", "H.C.": "208015", "DNI": "10008024", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---", "SECTOR": "Pachacútec" },
+            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "21/05/2026", "APELLIDOS Y NOMBRES": "GOMEZ MOSQUEIRA JUAN PAULINO (Dengue 1)", "H.C.": "208013", "DNI": "10000810", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---", "SECTOR": "Ventanilla Alta" },
+            { "SEMANA EPIDEMIOLÓGICA": "19", "FECHAS DE NOTIFICACIÓN": "11/05/2026", "APELLIDOS Y NOMBRES": "POMAL BARRERA KELLY MARITZA", "H.C.": "---", "DNI": "10000214", "TIPO DE PRUEBA": "Coqueluche", "RESULTADO CLÍNICO": "PENDIENTE", "OBSERVACION": "---", "SECTOR": "Otros" },
+            { "SEMANA EPIDEMIOLÓGICA": "18", "FECHAS DE NOTIFICACIÓN": "10/05/2026", "APELLIDOS Y NOMBRES": "PORTAL ABANTO LUZ MARIELA", "H.C.": "208013", "DNI": "10000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "PENDIENTE", "OBSERVACION": "---", "SECTOR": "Otros" },
+            { "SEMANA EPIDEMIOLÓGICA": "18", "FECHAS DE NOTIFICACIÓN": "10/05/2026", "APELLIDOS Y NOMBRES": "CORTEZ MEJIA ROSA ELIZIA", "H.C.": "208014", "DNI": "10000804", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "NEGATIVO", "OBSERVACION": "---", "SECTOR": "Mi Perú" }
         ];
 
         // Estado Global de la Aplicación
@@ -639,30 +741,23 @@
             return defaultValue;
         }
 
-        // --- SISTEMA DE EXPORTACIÓN DIRECTA A EXCEL (SHEETJS) ---
-        function exportarExcel() {
-            if (datosFiltrados.length === 0) {
-                mostrarAlertaDialog("Error", "No hay registros en la vista actual para exportar.");
-                return;
+        // --- MANEJO DE MODALES DE PROTOCOLO (NUEVO) ---
+        function openProtocolModal() {
+            const modal = document.getElementById("protocolModal");
+            if (modal) {
+                modal.classList.remove("opacity-0", "pointer-events-none");
+                modal.querySelector("div").classList.remove("scale-95");
+                modal.querySelector("div").classList.add("scale-100");
             }
+        }
 
-            const datosParaExportar = datosFiltrados.map(f => ({
-                "S.E.": f.semana,
-                "Fecha Notificación": f.fechaNoti,
-                "Paciente / Apellidos y Nombres": f.paciente,
-                "Historial Clínico (H.C.)": f.hc,
-                "DNI": f.dni,
-                "Examen / Tipo de Prueba": f.prueba,
-                "Resultado Clínico": f.resultado,
-                "Observaciones del Laboratorio": f.observacion
-            }));
-
-            const worksheet = XLSX.utils.json_to_sheet(datosParaExportar);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Vigilancia Filtrada");
-
-            const fechaHoy = new Date().toISOString().slice(0, 10);
-            XLSX.writeFile(workbook, `Reporte_Epidemiologico_Ventanilla_${fechaHoy}.xlsx`);
+        function closeProtocolModal() {
+            const modal = document.getElementById("protocolModal");
+            if (modal) {
+                modal.classList.add("opacity-0", "pointer-events-none");
+                modal.querySelector("div").classList.remove("scale-100");
+                modal.querySelector("div").classList.add("scale-95");
+            }
         }
 
         // --- HELPER ASÍNCRONO DE CONTROL DE TIEMPO DE ESPERA (TIMEOUT) ---
@@ -929,6 +1024,29 @@
             filtrarYRefrescarDashboard();
         }
 
+        // FUNCIÓN CLAVE CORRECTORA DE REINICIO DE FILTROS TOTAL
+        function resetFilters() {
+            document.getElementById("filterWeek").value = "ALL";
+            document.getElementById("filterYear").value = "ALL";
+            document.getElementById("filterTestType").value = "ALL";
+            document.getElementById("filterSector").value = "ALL";
+            document.getElementById("filterResult").value = "ALL";
+            document.getElementById("buscadorPaciente").value = "";
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+        }
+
+        function clearSearch() {
+            document.getElementById("buscadorPaciente").value = "";
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+        }
+
+        function filtrarTabla() {
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+        }
+
         // MOTOR DE FILTRADO MULTIVARIABLE (INCLUYENDO SECTOR DE VENTANILLA)
         function filtrarYRefrescarDashboard() {
             const filterWeek = document.getElementById("filterWeek").value;
@@ -1098,7 +1216,7 @@
             document.getElementById("kpiSEValue").innerText = countSE;
         }
 
-        // TABLA 1: RESUMEN EPIDEMIOLÓGICO DE PATÓGENOS VIGILADOS (CORREGIDO DE RAÍZ)
+        // TABLA 1: RESUMEN EPIDEMIOLÓGICO DE PATÓGENOS VIGILADOS (CORREGIDO DE RAÍZ Y EN CAPA SEGURA)
         function renderizarTablaResumen(datos) {
             let agrupado = {};
 
@@ -1494,13 +1612,6 @@
             document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-plus-circle text-emerald-500"></i> Registrar Entrada de Insumos`;
             document.getElementById("btnCancelEdit").classList.add("hidden");
             document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-plus"></i> Registrar Entrada`;
-        }
-
-        function deleteInsumoKardex(id) {
-            mostrarConfirmacionDialog("¿Está completamente seguro de eliminar este registro de stock del almacén?", function() {
-                inventarioKardex = inventarioKardex.filter(x => x.id !== id);
-                actualizarExistenciasKardex();
-            });
         }
 
         // --- FUNCIONES UTILITARIAS DE FECHA ---
