@@ -227,7 +227,7 @@
             <!-- KPI 3 -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
                 <div>                    
-                    <p id="kpiSETitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Casos S.E. 21</p>                    
+                    <p id="kpiSETitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Casos S.E. ---</p>                    
                     <h3 id="kpiSEValue" class="text-2xl font-black text-amber-700 mt-1 leading-none">0</h3>                    
                     <p class="text-[10px] text-amber-600 mt-2 font-semibold">Casos en la semana</p>                
                 </div>                
@@ -585,7 +585,7 @@
             XLSX.writeFile(workbook, `Reporte_Epidemiologico_Ventanilla_${fechaHoy}.xlsx`);
         }
 
-        // --- MOTOR INTELIGENTE DE NORMALIZACIÓN DE CABECERAS ---
+        // --- MOTOR INTELIGENTE DE NORMALIZACIÓN DE CABECERAS CON MÚLTIPLES EQUIVALENCIAS ---
         function getRowValue(fila, possibleHeaders, defaultValue = "---") {
             const keys = Object.keys(fila);
             const normalize = str => str.toLowerCase()
@@ -604,7 +604,6 @@
             return defaultValue;
         }
 
-        // --- STREAMING_CHUNK: Initializing network loaders and proxies ... ---
         // --- SISTEMA INTELIGENTE DE CONEXIÓN MULTICANAL (CORS RESISTANT) ---
         async function conectarYDescargar() {
             actualizarEstadoVisualConexion("connecting");
@@ -727,7 +726,7 @@
             if (modal) {
                 modal.classList.add("opacity-0", "pointer-events-none");
                 modal.querySelector("div").classList.remove("scale-100");
-                modal.querySelector("div").classList.add("scale-95");
+                modal.querySelector("div").scale = "95";
             }
         }
 
@@ -791,14 +790,14 @@
         function cargarDatosEnDashboard(datos) {
             datosGlobales = datos.map(fila => {
                 return {
-                    semana: getRowValue(fila, ["SEMANA EPIDEMIOLOGICA", "S.E.", "SEMANA", "SE"], "---"),
-                    fechaNoti: getRowValue(fila, ["FECHAS DE NOTIFICACION", "FECHA DE NOTIFICACION", "FECHA NOTI", "FECHAS", "FECHA"], "---"),
-                    paciente: getRowValue(fila, ["APELLIDOS Y NOMBRES", "PACIENTE", "NOMBRES", "APELLIDOS", "PACIENTES"], "Paciente Anónimo"),
-                    hc: getRowValue(fila, ["H.C.", "HC", "HISTORIA CLINICA", "HISTORIA"], "---"),
-                    dni: getRowValue(fila, ["DNI", "DOCUMENTO", "IDENTIFICACION", "CEDULA"], "---"),
+                    semana: getRowValue(fila, ["SEMANA EPIDEMIOLOGICA", "S.E.", "SEMANA", "SE", "SEMANA EPIDEMIOLÓGICA", "EPI WEEK", "WEEK"], "---"),
+                    fechaNoti: getRowValue(fila, ["FECHAS DE NOTIFICACION", "FECHA DE NOTIFICACION", "FECHA NOTI", "FECHAS", "FECHA", "FECHA DE NOTIFICACIÓN", "NOTIFICACIÓN"], "---"),
+                    paciente: getRowValue(fila, ["APELLIDOS Y NOMBRES", "PACIENTE", "NOMBRES", "APELLIDOS", "PACIENTES", "NOMBRE"], "Paciente Anónimo"),
+                    hc: getRowValue(fila, ["H.C.", "HC", "HISTORIA CLINICA", "HISTORIA", "HISTORIA CLÍNICA"], "---"),
+                    dni: getRowValue(fila, ["DNI", "DOCUMENTO", "IDENTIFICACION", "CEDULA", "IDENTIFICACIÓN"], "---"),
                     prueba: getRowValue(fila, ["TIPO DE PRUEBA", "PRUEBA", "EXAMEN", "PRUEBAS"], "No especificado"),
                     resultado: getRowValue(fila, ["RESULTADO CLINICO", "RESULTADO CLÍNICO", "RESULTADO", "RESULTADOS", "DIAGNOSTICO", "DIAGNÓSTICO"], "PENDIENTE").toUpperCase(),
-                    observacion: getRowValue(fila, ["OBSERVACION", "OBSERVACIONES", "OBSER"], "---")
+                    observacion: getRowValue(fila, ["OBSERVACION", "OBSERVACIONES", "OBSER", "OBSERVACIÓN"], "---")
                 };
             });
 
@@ -820,7 +819,7 @@
             let tiposPruebaSet = new Set();
 
             datos.forEach(f => {
-                if (f.semana && f.semana !== "" && f.semana !== "---") semanasSet.add(f.semana);
+                if (f.semana && f.semana !== "" && f.semana !== "---") semanasSet.add(f.semana.trim());
                 if (f.fechaNoti && f.fechaNoti.includes("/")) {
                     let partes = f.fechaNoti.split("/");
                     if (partes.length === 3) {
@@ -828,7 +827,7 @@
                         if (ano.length === 4) anosSet.add(ano);
                     }
                 }
-                if (f.prueba && f.prueba !== "" && f.prueba !== "---") tiposPruebaSet.add(f.prueba);
+                if (f.prueba && f.prueba !== "" && f.prueba !== "---") tiposPruebaSet.add(f.prueba.trim());
             });
 
             let semanas = Array.from(semanasSet).sort((a,b) => parseInt(a) - parseInt(b));
@@ -875,7 +874,6 @@
             filtrarYRefrescarDashboard();
         }
 
-        // --- STREAMING_CHUNK: Processing data filtering filters ... ---
         // MOTOR DE FILTRADO MULTIVARIABLE (INCLUYENDO SECTOR DE VENTANILLA)
         function filtrarYRefrescarDashboard() {
             const filterWeek = document.getElementById("filterWeek").value;
@@ -952,7 +950,7 @@
             actualizarExistenciasKardex();
         }
 
-        // --- KPIs DE ALTO IMPACTO ---
+        // --- KPIs DE ALTO IMPACTO COMPLETAMENTE SINCRONIZADOS ---
         function renderizarKPIs(datos) {
             let total = datos.length;
             let positivos = 0;
@@ -962,29 +960,49 @@
             const selectedTest = document.getElementById("filterTestType").value;
             let countPatogeno = 0;
 
+            // Determinar dinámicamente la semana para el KPI
             let selectedSE = document.getElementById("filterWeek").value;
-            if (selectedSE === "ALL") selectedSE = "21"; 
+            let displaySE = selectedSE;
+            
+            if (selectedSE === "ALL") {
+                // Encontrar la semana epidemiológica más alta/reciente en los datos para no mostrar 0
+                const datosReferencia = datos.length > 0 ? datos : datosGlobales;
+                let semanasValidas = datosReferencia.map(f => parseInt(f.semana)).filter(w => !isNaN(w));
+                if (semanasValidas.length > 0) {
+                    displaySE = Math.max(...semanasValidas).toString();
+                } else {
+                    let semanasTexto = [...new Set(datosReferencia.map(f => f.semana).filter(s => s && s !== "---"))];
+                    displaySE = semanasTexto.length > 0 ? semanasTexto[0] : "---";
+                }
+            }
             
             const kpiSETitleElement = document.getElementById("kpiSETitle");
-            if (kpiSETitleElement) kpiSETitleElement.innerText = `Casos S.E. ${selectedSE}`;
+            if (kpiSETitleElement) kpiSETitleElement.innerText = `Casos S.E. ${displaySE}`;
             
             let countSE = 0;
 
             datos.forEach(f => {
-                let res = f.resultado.toUpperCase();
-                if (res.includes("POSITIVO") || res === "POS") {
+                let res = f.resultado.trim().toUpperCase();
+                
+                // Clasificación robusta de los resultados epidemiológicos
+                if (res.includes("POSITIVO") || res === "POS" || res === "+") {
                     positivos++;
-                } else if (res.includes("NEGATIVO") || res.includes("DESCARTADO") || res === "NEG" || res === "DES") {
+                } else if (res.includes("NEGATIVO") || res.includes("DESCARTADO") || res === "NEG" || res === "DES" || res === "DESC" || res === "-") {
                     negativos++;
                 } else {
                     pendientes++;
                 }
 
-                if (selectedTest !== "ALL" && f.prueba === selectedTest) countPatogeno++;
-                if (f.semana === selectedSE) countSE++;
+                // Conteos comparativos de pruebas y semanas limpiando espacios
+                if (selectedTest !== "ALL" && f.prueba.trim() === selectedTest.trim()) {
+                    countPatogeno++;
+                }
+                if (f.semana.trim() === displaySE.trim()) {
+                    countSE++;
+                }
             });
 
-            // TASA DE POSITIVIDAD CIENTÍFICAMENTE EXACTA
+            // TASA DE POSITIVIDAD CIENTÍFICAMENTE EXACTA (Sobre muestras procesadas con un resultado claro)
             let totalProcesados = positivos + negativos;
             let tasaNumerica = totalProcesados > 0 ? (positivos / totalProcesados) * 100 : 0;
             let tasaText = tasaNumerica.toFixed(1) + "%";
@@ -1030,9 +1048,9 @@
                 document.getElementById("kpiPatogeno").innerText = countPatogeno;
                 document.getElementById("kpiPatogenoSub").innerText = selectedTest;
             } else {
-                let tiposDiferentes = new Set(datos.map(d => d.prueba).filter(p => p && p !== "No especificado"));
-                document.getElementById("kpiPatogeno").innerText = tiposDiferentes.size;
-                document.getElementById("kpiPatogenoSub").innerText = "Patógenos Vigilados";
+                let totalMuestrasEspecificadas = datos.filter(d => d.prueba && d.prueba !== "No especificado" && d.prueba !== "---").length;
+                document.getElementById("kpiPatogeno").innerText = totalMuestrasEspecificadas;
+                document.getElementById("kpiPatogenoSub").innerText = "Muestras de Patógenos";
             }
 
             document.getElementById("kpiSEValue").innerText = countSE;
@@ -1170,7 +1188,6 @@
             }
         }
 
-        // --- STREAMING_CHUNK: Computing dynamic Chart graphs ... ---
         // --- SISTEMA DE GRÁFICOS (CHART.JS) ---
         function actualizarGraficos(datos) {
             let mesesMap = { "Ene":0, "Feb":0, "Mar":0, "Abr":0, "May":0, "Jun":0, "Jul":0, "Ago":0, "Sep":0, "Oct":0, "Nov":0, "Dic":0 };
