@@ -68,8 +68,8 @@
                 </div>            
             </div>                        
             <div class="flex flex-wrap items-center gap-3">                
-                <!-- BOTÓN INDICADOR DE CONEXIÓN ACTIVO Y PARPADEANTE -->
-                <span id="syncStatusBadge" class="bg-amber-600/30 text-amber-300 text-xs px-3.5 py-2.5 rounded-xl border border-amber-500/30 flex items-center gap-2 font-bold transition-all duration-300 select-none shadow-sm">                    
+                <!-- BOTÓN INDICADOR DE CONEXIÓN ACTIVO Y PARPADEANTE (Sincroniza al hacer clic) -->
+                <span id="syncStatusBadge" onclick="conectarYDescargar()" class="bg-amber-600/30 text-amber-300 text-xs px-3.5 py-2.5 rounded-xl border border-amber-500/30 flex items-center gap-2 font-bold transition-all duration-300 select-none shadow-sm cursor-pointer hover:scale-105 active:scale-95">                    
                     <span id="syncStatusDot" class="h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_#f59e0b]"></span>                    
                     <span id="syncStatusText">CONECTANDO...</span>
                 </span>                                
@@ -559,6 +559,86 @@
 
         let editInsumoId = null;
 
+        // Homologador Epidemiológico de Resultados Clínicos (Soporta múltiples nomenclaturas clínicas)
+        function mapResultado(resStr) {
+            if (!resStr) return "PENDIENTE";
+            let clean = resStr.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+            if (clean.includes("POSITIVO") || clean === "POS" || clean === "CONFIRMADO" || clean === "SI" || clean === "+" || clean === "REACTIVO" || clean === "REACTIVE" || clean === "DETECTADO") {
+                return "POSITIVO";
+            }
+            if (clean.includes("NEGATIVO") || clean === "NEG" || clean === "-" || clean.includes("NO REACTIVO") || clean === "NON-REACTIVE" || clean === "NO DETECTADO") {
+                return "NEGATIVO";
+            }
+            if (clean.includes("DESCARTADO") || clean === "DES" || clean === "DESC" || clean === "RECHAZADO") {
+                return "DESCARTADO";
+            }
+            return "PENDIENTE";
+        }
+
+        // Extractor Universal de Año (Insensible a delimitadores de fecha)
+        function extractYear(dateStr) {
+            if (!dateStr || dateStr === "---") return "";
+            const parts = dateStr.split(/[\/\-\s]+/);
+            for (let part of parts) {
+                part = part.trim();
+                if (part.length === 4 && !isNaN(part)) {
+                    return part;
+                }
+            }
+            if (parts.length >= 3) {
+                let lastPart = parts[parts.length - 1].trim();
+                if (lastPart.length === 2 && !isNaN(lastPart)) {
+                    return "20" + lastPart;
+                }
+            }
+            return "";
+        }
+
+        // Normalizador de Semana Epidemiológica (Limpia textos como "Semana 21" o decimales como "21.0")
+        function normalizeWeek(weekStr) {
+            if (!weekStr || weekStr === "---") return "---";
+            let firstPart = weekStr.split(".")[0];
+            let clean = firstPart.replace(/[^\d]/g, '').trim();
+            if (clean && !isNaN(clean)) {
+                return parseInt(clean, 10).toString();
+            }
+            return weekStr.trim();
+        }
+
+        // --- MOTOR INTELIGENTE DE NORMALIZACIÓN DE CABECERAS CON COINCIDENCIA MULTI-NIVEL ---
+        function getRowValue(fila, possibleHeaders, defaultValue = "---") {
+            if (!fila) return defaultValue;
+            const keys = Object.keys(fila);
+            const normalize = str => str.toLowerCase()
+                                       .normalize("NFD")
+                                       .replace(/[\u0300-\u036f]/g, "") 
+                                       .replace(/[^a-z0-9]/g, "")
+                                       .trim();      
+            
+            const normalizedTargets = possibleHeaders.map(normalize);
+            
+            // Intento 1: Coincidencia de cabecera normalizada exacta
+            for (let key of keys) {
+                const normKey = normalize(key);
+                if (normalizedTargets.includes(normKey)) {
+                    const val = fila[key];
+                    return (val !== undefined && val !== null) ? val.toString().trim() : defaultValue;
+                }
+            }
+
+            // Intento 2: Coincidencia por proximidad de texto (Substring)
+            for (let key of keys) {
+                const normKey = normalize(key);
+                for (let target of normalizedTargets) {
+                    if (target.length > 2 && (normKey.includes(target) || target.includes(normKey))) {
+                        const val = fila[key];
+                        return (val !== undefined && val !== null) ? val.toString().trim() : defaultValue;
+                    }
+                }
+            }
+            return defaultValue;
+        }
+
         // --- SISTEMA DE EXPORTACIÓN DIRECTA A EXCEL (SHEETJS) ---
         function exportarExcel() {
             if (datosFiltrados.length === 0) {
@@ -585,68 +665,61 @@
             XLSX.writeFile(workbook, `Reporte_Epidemiologico_Ventanilla_${fechaHoy}.xlsx`);
         }
 
-        // --- MOTOR INTELIGENTE DE NORMALIZACIÓN DE CABECERAS CON MÚLTIPLES EQUIVALENCIAS ---
-        function getRowValue(fila, possibleHeaders, defaultValue = "---") {
-            const keys = Object.keys(fila);
-            const normalize = str => str.toLowerCase()
-                                       .normalize("NFD")
-                                       .replace(/[\u0300-\u036f]/g, "") // Remueve acentos tildados
-                                       .replace(/[^a-z0-9]/g, "");      // Conserva únicamente caracteres alfanuméricos
-            
-            const normalizedTargets = possibleHeaders.map(normalize);
-            
-            for (let key of keys) {
-                const normKey = normalize(key);
-                if (normalizedTargets.includes(normKey)) {
-                    return (fila[key] !== undefined && fila[key] !== null) ? fila[key].toString().trim() : defaultValue;
-                }
-            }
-            return defaultValue;
+        // --- HELPER ASÍNCRONO DE CONTROL DE TIEMPO DE ESPERA (TIMEOUT) ---
+        async function fetchConTimeout(resource, options = {}, timeout = 2500) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), timeout);
+            const response = await fetch(resource, {
+                ...options,
+                signal: controller.signal
+            });
+            clearTimeout(id);
+            return response;
         }
 
-        // --- SISTEMA INTELIGENTE DE CONEXIÓN MULTICANAL (CORS RESISTANT) ---
+        // --- SISTEMA INTELIGENTE DE CONEXIÓN MULTICANAL (CORS RESISTANT Y DE BAJA LATENCIA) ---
         async function conectarYDescargar() {
             actualizarEstadoVisualConexion("connecting");
             
-            // Intento 1: Fetch Directo
+            // Intento 1: Fetch Directo con un timeout estricto de 2.5 segundos para evitar retrasos
             try {
                 console.log("Intento 1: Conexión directa al servidor de Google...");
-                const res = await fetch(URL_GOOGLE_SHEET);
+                const res = await fetchConTimeout(URL_GOOGLE_SHEET, {}, 2500);
                 if (res.ok) {
                     const text = await res.text();
                     if (validarYProcesarCSV(text, "success")) return;
                 }
             } catch (e) {
-                console.warn("Intento 1 bloqueado por restricciones de origen (CORS).");
+                console.warn("Intento 1 bloqueado o excedió el tiempo de respuesta (CORS/Timeout).");
             }
 
-            // Intento 2: Proxy corsproxy.io
+            // Intento 2: Proxy corsproxy.io (Timeout de 2.5s)
             try {
                 console.log("Intento 2: Conexión cifrada vía corsproxy.io...");
                 const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(URL_GOOGLE_SHEET)}`;
-                const res = await fetch(proxyUrl);
+                const res = await fetchConTimeout(proxyUrl, {}, 2500);
                 if (res.ok) {
                     const text = await res.text();
                     if (validarYProcesarCSV(text, "proxy")) return;
                 }
             } catch (e) {
-                console.warn("Intento 2 falló o está saturado.");
+                console.warn("Intento 2 falló o excedió el tiempo límite.");
             }
 
-            // Intento 3: Proxy AllOrigins
+            // Intento 3: Proxy AllOrigins (Timeout de 2.5s)
             try {
                 console.log("Intento 3: Conexión alternativa vía allorigins...");
                 const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(URL_GOOGLE_SHEET)}`;
-                const res = await fetch(proxyUrl);
+                const res = await fetchConTimeout(proxyUrl, {}, 2500);
                 if (res.ok) {
                     const text = await res.text();
                     if (validarYProcesarCSV(text, "proxy")) return;
                 }
             } catch (e) {
-                console.error("Todos los canales de red asíncronos fallaron.");
+                console.error("Todos los canales de red asíncronos fallaron o excedieron el tiempo de respuesta.");
             }
 
-            // Fallback total: Modo Demostración Local
+            // Fallback total inmediato: Modo Demostración Local
             console.log("Cargando datos locales integrados por contingencia...");
             cargarDatosEnDashboard(DATOS_RESPALDO);
             actualizarEstadoVisualConexion("fallback");
@@ -658,14 +731,24 @@
                 return false;
             }
 
+            // PapaParse configurado para limpiar BOM, comillas y recortar cabeceras de Google Sheets
             Papa.parse(texto, {
                 header: true,
                 skipEmptyLines: true,
+                transformHeader: function(h) {
+                    return h.trim().replace(/^\uFEFF/, '').replace(/["']/g, '');
+                },
                 complete: function(resultados) {
-                    if (resultados.data && resultados.data.length > 0) {
-                        cargarDatosEnDashboard(resultados.data);
-                        actualizarEstadoVisualConexion(canal);
-                    } else {
+                    try {
+                        if (resultados.data && resultados.data.length > 0) {
+                            cargarDatosEnDashboard(resultados.data);
+                            actualizarEstadoVisualConexion(canal);
+                        } else {
+                            cargarDatosEnDashboard(DATOS_RESPALDO);
+                            actualizarEstadoVisualConexion("fallback");
+                        }
+                    } catch (err) {
+                        console.error("Error al procesar datos, cargando contingencia local: ", err);
                         cargarDatosEnDashboard(DATOS_RESPALDO);
                         actualizarEstadoVisualConexion("fallback");
                     }
@@ -696,7 +779,6 @@
                 dot.className = "h-2.5 w-2.5 rounded-full bg-white animate-pulse shadow-[0_0_10px_#ffffff]";
                 text.innerText = "EN LÍNEA";
                 
-                // Dispara el Modal de Bienvenida indicando que la carga fue un éxito
                 triggerWelcomeModal("¡Carga Exitosa!");
             } 
             else if (estado === "fallback") {
@@ -704,7 +786,6 @@
                 dot.className = "h-2.5 w-2.5 rounded-full bg-white animate-pulse";
                 text.innerText = "VISTA LOCAL";
                 
-                // Dispara el modal indicando éxito en versión de simulación local
                 triggerWelcomeModal("¡Carga Exitosa! (Simulación)");
             }
         }
@@ -726,11 +807,11 @@
             if (modal) {
                 modal.classList.add("opacity-0", "pointer-events-none");
                 modal.querySelector("div").classList.remove("scale-100");
-                modal.querySelector("div").scale = "95";
+                modal.querySelector("div").classList.add("scale-95");
             }
         }
 
-        // --- DIÁLOGOS Y ALERTAS PERSONALIZADOS (SIN ALERT/CONFIRM) ---
+        // --- DIÁLOGOS Y ALERTAS PERSONALIZADOS ---
         function mostrarAlertaDialog(titulo, mensaje) {
             const dialog = document.getElementById("customDialogModal");
             const dialogMsg = document.getElementById("customDialogMessage");
@@ -740,7 +821,7 @@
             if (dialog && dialogMsg) {
                 dialog.querySelector("h4").innerText = titulo;
                 dialogMsg.innerText = mensaje;
-                cancelBtn.classList.add("hidden"); // Solo informativo, no necesita cancelar
+                cancelBtn.classList.add("hidden"); 
                 confirmBtn.innerText = "Entendido";
                 confirmBtn.onclick = function() {
                     closeDialog();
@@ -786,18 +867,19 @@
             dialog.querySelector("div").classList.add("scale-95");
         }
 
-        // --- MAPEO DE COLUMNAS USANDO EL MOTOR DE NORMALIZACIÓN ---
+        // --- MAPEO DE COLUMNAS USANDO EL MOTOR DE NORMALIZACIÓN ULTRA FUZZY ---
         function cargarDatosEnDashboard(datos) {
             datosGlobales = datos.map(fila => {
                 return {
-                    semana: getRowValue(fila, ["SEMANA EPIDEMIOLOGICA", "S.E.", "SEMANA", "SE", "SEMANA EPIDEMIOLÓGICA", "EPI WEEK", "WEEK"], "---"),
-                    fechaNoti: getRowValue(fila, ["FECHAS DE NOTIFICACION", "FECHA DE NOTIFICACION", "FECHA NOTI", "FECHAS", "FECHA", "FECHA DE NOTIFICACIÓN", "NOTIFICACIÓN"], "---"),
-                    paciente: getRowValue(fila, ["APELLIDOS Y NOMBRES", "PACIENTE", "NOMBRES", "APELLIDOS", "PACIENTES", "NOMBRE"], "Paciente Anónimo"),
-                    hc: getRowValue(fila, ["H.C.", "HC", "HISTORIA CLINICA", "HISTORIA", "HISTORIA CLÍNICA"], "---"),
-                    dni: getRowValue(fila, ["DNI", "DOCUMENTO", "IDENTIFICACION", "CEDULA", "IDENTIFICACIÓN"], "---"),
-                    prueba: getRowValue(fila, ["TIPO DE PRUEBA", "PRUEBA", "EXAMEN", "PRUEBAS"], "No especificado"),
-                    resultado: getRowValue(fila, ["RESULTADO CLINICO", "RESULTADO CLÍNICO", "RESULTADO", "RESULTADOS", "DIAGNOSTICO", "DIAGNÓSTICO"], "PENDIENTE").toUpperCase(),
-                    observacion: getRowValue(fila, ["OBSERVACION", "OBSERVACIONES", "OBSER", "OBSERVACIÓN"], "---")
+                    semana: normalizeWeek(getRowValue(fila, ["semana epidemiologica", "semana epidemiológica", "semana epi", "s.e.", "semana", "se", "epi week", "week", "n semana", "n° semana", "num semana", "numero de semana"], "---")),
+                    fechaNoti: getRowValue(fila, ["fechas de notificacion", "fecha de notificacion", "fecha de notificación", "fechas de notificación", "fecha noti", "fechas", "fecha", "notificacion", "notificación", "f_noti", "f.noti", "fnoti", "fecha de registro", "fecha registro"], "---"),
+                    paciente: getRowValue(fila, ["apellidos y nombres", "paciente", "nombres", "apellidos", "pacientes", "nombre", "nombre completo", "sujeto", "nombre del paciente", "nombres y apellidos"], "Paciente Anónimo"),
+                    hc: getRowValue(fila, ["h.c.", "hc", "historia clinica", "historia clínica", "historia", "historia clinica n°", "n° historia clinica", "n° hc", "nro hc", "nro historia", "numero de historia"], "---"),
+                    dni: getRowValue(fila, ["dni", "documento", "identificacion", "identificación", "cedula", "n° documento", "nro documento", "num documento", "documento de identidad", "doc"], "---"),
+                    prueba: getRowValue(fila, ["tipo de prueba", "prueba", "examen", "pruebas", "diagnostico", "analisis", "procedimiento", "examen solicitado", "prueba diagnostica", "patogeno", "patógeno", "enfermedad"], "No especificado"),
+                    resultado: mapResultado(getRowValue(fila, ["resultado clinico", "resultado final", "clasificacion final", "resultado", "resultados", "diagnostico", "diagnostico final", "resultado de prueba", "estado", "clasificacion", "clasificación", "condicion"], "PENDIENTE")),
+                    observacion: getRowValue(fila, ["observacion", "observación", "observaciones", "obser", "obs", "detalle", "comentario", "comentarios", "nota", "notas"], "---"),
+                    sector: getRowValue(fila, ["sector", "zona", "localidad", "distrito", "direccion", "dirección", "procedencia", "establecimiento", "e.s.", "lugar", "procedencia establecimiento", "jurisdiccion", "jurisdicción"], "---")
                 };
             });
 
@@ -819,14 +901,9 @@
             let tiposPruebaSet = new Set();
 
             datos.forEach(f => {
-                if (f.semana && f.semana !== "" && f.semana !== "---") semanasSet.add(f.semana.trim());
-                if (f.fechaNoti && f.fechaNoti.includes("/")) {
-                    let partes = f.fechaNoti.split("/");
-                    if (partes.length === 3) {
-                        let ano = partes[2].trim();
-                        if (ano.length === 4) anosSet.add(ano);
-                    }
-                }
+                if (f.semana && f.semana !== "" && f.semana !== "---") semanasSet.add(f.semana);
+                let anoExtraido = extractYear(f.fechaNoti);
+                if (anoExtraido) anosSet.add(anoExtraido);
                 if (f.prueba && f.prueba !== "" && f.prueba !== "---") tiposPruebaSet.add(f.prueba.trim());
             });
 
@@ -852,28 +929,6 @@
             filtrarYRefrescarDashboard();
         }
 
-        function resetFilters() {
-            document.getElementById("filterWeek").value = "ALL";
-            document.getElementById("filterYear").value = "ALL";
-            document.getElementById("filterTestType").value = "ALL";
-            document.getElementById("filterSector").value = "ALL";
-            document.getElementById("filterResult").value = "ALL";
-            document.getElementById("buscadorPaciente").value = "";
-            currentPage = 1;
-            filtrarYRefrescarDashboard();
-        }
-
-        function clearSearch() {
-            document.getElementById("buscadorPaciente").value = "";
-            currentPage = 1;
-            filtrarYRefrescarDashboard();
-        }
-
-        function filtrarTabla() {
-            currentPage = 1;
-            filtrarYRefrescarDashboard();
-        }
-
         // MOTOR DE FILTRADO MULTIVARIABLE (INCLUYENDO SECTOR DE VENTANILLA)
         function filtrarYRefrescarDashboard() {
             const filterWeek = document.getElementById("filterWeek").value;
@@ -887,11 +942,7 @@
                 if (filterWeek !== "ALL" && f.semana !== filterWeek) return false;
                 
                 if (filterYear !== "ALL") {
-                    let anoFila = "";
-                    if (f.fechaNoti && f.fechaNoti.includes("/")) {
-                        let partes = f.fechaNoti.split("/");
-                        if (partes.length === 3) anoFila = partes[2].trim();
-                    }
+                    let anoFila = extractYear(f.fechaNoti);
                     if (anoFila !== filterYear) return false;
                 }
 
@@ -900,7 +951,7 @@
                 // Filtrado por Sector de Ventanilla usando búsqueda cruzada de palabras clave
                 if (filterSector !== "ALL") {
                     const sectorObj = filterSector.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                    const buscarEn = (f.paciente + " " + f.observacion).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const buscarEn = (f.paciente + " " + f.observacion + " " + f.sector).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     
                     if (sectorObj === "pachacutec") {
                         if (!buscarEn.includes("pachacutec") && !buscarEn.includes("piloto")) return false;
@@ -921,11 +972,7 @@
                 }
 
                 if (filterResult !== "ALL") {
-                    let res = f.resultado;
-                    if (filterResult === "POSITIVO" && !res.includes("POSITIVO")) return false;
-                    if (filterResult === "NEGATIVO" && !res.includes("NEGATIVO") && !res.includes("DESCARTADO")) return false;
-                    if (filterResult === "PENDIENTE" && !res.includes("PENDIENTE")) return false;
-                    if (filterResult === "DESCARTADO" && !res.includes("DESCARTADO")) return false;
+                    if (f.resultado !== filterResult) return false;
                 }
 
                 if (searchVal !== "") {
@@ -936,8 +983,9 @@
                     let hc_f = f.hc.toLowerCase();
                     let dni_f = f.dni.toLowerCase();
                     let sem_f = f.semana.toLowerCase();
+                    let sec_f = f.sector.toLowerCase();
                     
-                    if (!pac.includes(term) && !pru.includes(term) && !res.includes(term) && !hc_f.includes(term) && !dni_f.includes(term) && !sem_f.includes(term)) return false;
+                    if (!pac.includes(term) && !pru.includes(term) && !res.includes(term) && !hc_f.includes(term) && !dni_f.includes(term) && !sem_f.includes(term) && !sec_f.includes(term)) return false;
                 }
 
                 return true;
@@ -956,6 +1004,7 @@
             let positivos = 0;
             let negativos = 0;
             let pendientes = 0;
+            let descartados = 0;
 
             const selectedTest = document.getElementById("filterTestType").value;
             let countPatogeno = 0;
@@ -965,14 +1014,13 @@
             let displaySE = selectedSE;
             
             if (selectedSE === "ALL") {
-                // Encontrar la semana epidemiológica más alta/reciente en los datos para no mostrar 0
-                const datosReferencia = datos.length > 0 ? datos : datosGlobales;
+                const datosReferencia = datos.length > 0 ? datos : (datosGlobales.length > 0 ? datosGlobales : DATOS_RESPALDO);
                 let semanasValidas = datosReferencia.map(f => parseInt(f.semana)).filter(w => !isNaN(w));
                 if (semanasValidas.length > 0) {
                     displaySE = Math.max(...semanasValidas).toString();
                 } else {
-                    let semanasTexto = [...new Set(datosReferencia.map(f => f.semana).filter(s => s && s !== "---"))];
-                    displaySE = semanasTexto.length > 0 ? semanasTexto[0] : "---";
+                    let semanasTexto = [...new Set(datosReferencia.map(f => f.semana).filter(s => s && s !== "---" && s !== ""))];
+                    displaySE = semanasTexto.length > 0 ? semanasTexto[0] : "21"; 
                 }
             }
             
@@ -982,35 +1030,29 @@
             let countSE = 0;
 
             datos.forEach(f => {
-                let res = f.resultado.trim().toUpperCase();
-                
-                // Clasificación robusta de los resultados epidemiológicos
-                if (res.includes("POSITIVO") || res === "POS" || res === "+") {
-                    positivos++;
-                } else if (res.includes("NEGATIVO") || res.includes("DESCARTADO") || res === "NEG" || res === "DES" || res === "DESC" || res === "-") {
-                    negativos++;
-                } else {
-                    pendientes++;
-                }
+                if (f.resultado === "POSITIVO") positivos++;
+                else if (f.resultado === "NEGATIVO") negativos++;
+                else if (f.resultado === "DESCARTADO") descartados++;
+                else pendientes++;
 
-                // Conteos comparativos de pruebas y semanas limpiando espacios
+                // Conteos comparativos
                 if (selectedTest !== "ALL" && f.prueba.trim() === selectedTest.trim()) {
                     countPatogeno++;
                 }
-                if (f.semana.trim() === displaySE.trim()) {
+                if (f.semana.trim() === displaySE.trim() && f.semana !== "---" && f.semana !== "") {
                     countSE++;
                 }
             });
 
             // TASA DE POSITIVIDAD CIENTÍFICAMENTE EXACTA (Sobre muestras procesadas con un resultado claro)
-            let totalProcesados = positivos + negativos;
+            let totalProcesados = positivos + negativos + descartados;
             let tasaNumerica = totalProcesados > 0 ? (positivos / totalProcesados) * 100 : 0;
             let tasaText = tasaNumerica.toFixed(1) + "%";
 
             document.getElementById("kpiTotal").innerText = total;
             document.getElementById("kpiTotalSub").innerText = `De ${datosGlobales.length} registros globales`;
             document.getElementById("kpiPositivos").innerText = positivos;
-            document.getElementById("kpiNegativos").innerText = negativos;
+            document.getElementById("kpiNegativos").innerText = negativos + descartados; // Agrupado para consistencia visual
             document.getElementById("kpiPendientes").innerText = pendientes;
             document.getElementById("kpiTasa").innerText = tasaText;
 
@@ -1056,7 +1098,7 @@
             document.getElementById("kpiSEValue").innerText = countSE;
         }
 
-        // TABLA 1: RESUMEN EPIDEMIOLÓGICO DE PATÓGENOS VIGILADOS
+        // TABLA 1: RESUMEN EPIDEMIOLÓGICO DE PATÓGENOS VIGILADOS (CORREGIDO DE RAÍZ)
         function renderizarTablaResumen(datos) {
             let agrupado = {};
 
@@ -1066,10 +1108,9 @@
                     agrupado[p] = { total: 0, pos: 0, neg: 0, pen: 0, des: 0 };
                 }
                 agrupado[p].total++;
-                let res = f.resultado.toUpperCase();
-                if (res.includes("POSITIVO") || res === "POS") agrupado[p].pos++;
-                else if (res.includes("NEGATIVO") || res === "NEG") agrupado[p].neg++;
-                else if (res.includes("DESCARTADO") || res === "DES") agrupado[p].des++;
+                if (f.resultado === "POSITIVO") agrupado[p].pos++;
+                else if (f.resultado === "NEGATIVO") agrupado[p].neg++;
+                else if (f.resultado === "DESCARTADO") agrupado[p].des++;
                 else agrupado[p].pen++;
             });
 
@@ -1144,9 +1185,9 @@
                 let displayRes = f.resultado;
                 let badgeClass = "bg-amber-100 text-amber-700 border border-amber-200";
                 
-                if (displayRes.includes('POSITIVO') || displayRes === 'POS') {
+                if (displayRes === 'POSITIVO') {
                     badgeClass = "bg-rose-100 text-rose-700 border border-rose-200";
-                } else if (displayRes.includes('NEGATIVO') || displayRes.includes('DESCARTADO') || displayRes === 'NEG' || displayRes === 'DES') {
+                } else if (displayRes === 'NEGATIVO' || displayRes === 'DESCARTADO') {
                     badgeClass = "bg-emerald-100 text-emerald-700 border border-emerald-200";
                 }
 
@@ -1196,14 +1237,15 @@
             let resultadosConteo = { "POSITIVO": 0, "NEGATIVO": 0, "PENDIENTE": 0, "DESCARTADO": 0 };
 
             datos.forEach(f => {
-                if (f.fechaNoti && f.fechaNoti.includes("/")) {
-                    let partes = f.fechaNoti.split("/");
-                    if (partes.length === 3) {
-                        let mesIdx = parseInt(partes[1]) - 1;
-                        let nombresMeses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-                        if (mesIdx >= 0 && mesIdx < 12) {
-                            mesesMap[nombresMeses[mesIdx]]++;
-                        }
+                if (f.fechaNoti && f.fechaNoti !== "---") {
+                    const parts = f.fechaNoti.split(/[\/\-\s]+/);
+                    let mesIdx = -1;
+                    if (parts.length >= 2) {
+                        mesIdx = parseInt(parts[1]) - 1; 
+                    }
+                    let nombresMeses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                    if (mesIdx >= 0 && mesIdx < 12) {
+                        mesesMap[nombresMeses[mesIdx]]++;
                     }
                 }
 
@@ -1215,11 +1257,9 @@
                     patogenosConteo[f.prueba] = (patogenosConteo[f.prueba] || 0) + 1;
                 }
 
-                let res = f.resultado.toUpperCase();
-                if (res.includes("POSITIVO") || res === "POS") resultadosConteo["POSITIVO"]++;
-                else if (res.includes("NEGATIVO") || res === "NEG") resultadosConteo["NEGATIVO"]++;
-                else if (res.includes("DESCARTADO") || res === "DES") resultadosConteo["DESCARTADO"]++;
-                else resultadosConteo["PENDIENTE"]++;
+                if (resultadosConteo[f.resultado] !== undefined) {
+                    resultadosConteo[f.resultado]++;
+                }
             });
 
             let labelsMeses = Object.keys(mesesMap).filter(m => mesesMap[m] > 0);
@@ -1244,8 +1284,8 @@
             let labelsSemanas = Object.keys(semanasConteo).sort((a,b) => parseInt(a) - parseInt(b));
             let datosSemanas = labelsSemanas.map(s => semanasConteo[s]);
             if (labelsSemanas.length === 0) {
-                labelsSemanas = ["11", "12", "13", "14", "15", "16", "17", "18", "19", "21", "47", "48", "49"];
-                datosSemanas = [30, 2, 2, 2, 43, 10, 0, 1, 48, 7, 2, 3, 5];
+                labelsSemanas = ["11", "12", "13", "14", "15", "16", "17", "18", "19", "21"];
+                datosSemanas = [30, 2, 2, 2, 43, 10, 0, 1, 48, 7];
             }
 
             if (chartSemanalInstance) chartSemanalInstance.destroy();
