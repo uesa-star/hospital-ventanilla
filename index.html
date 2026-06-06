@@ -43,7 +43,7 @@
         /* ESTILOS DE IMPRESIÓN / REPORTE PDF */
         @media print {
             body { background: white !important; color: black !important; }
-            header, section.bg-rose-950, #connectionAlert, #kardexForm, select, button, #excelFileInput, .no-print {
+            header, section.bg-rose-950, #welcomeModal, #customDialogModal, #kardexForm, select, button, #excelFileInput, .no-print {
                 display: none !important;
             }
             main { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
@@ -98,20 +98,38 @@
         </div>    
     </section>
 
-    <!-- BANNER DINÁMICO DE ESTADO DE CONEXIÓN -->
-    <div id="connectionAlert" class="hidden max-w-[1850px] mx-auto mt-4 px-6 py-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300">
-        <div class="flex items-center gap-3">
-            <div id="alertIconContainer" class="p-2 rounded-full shrink-0">
-                <i id="alertIcon" class="fa-solid text-lg"></i>
+    <!-- PANTALLA FLOTANTE DE BIENVENIDA (MODAL) -->
+    <div id="welcomeModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center z-50 transition-all duration-500 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-500 flex flex-col items-center text-center">
+            <div class="bg-emerald-100 text-emerald-600 p-5 rounded-full mb-4 animate-bounce">
+                <i class="fa-solid fa-circle-check text-4xl"></i>
             </div>
-            <div>
-                <h4 id="alertTitle" class="font-bold text-sm text-slate-800">Estado de Sincronización</h4>
-                <p id="alertDescription" class="text-xs mt-0.5 opacity-90"></p>
+            <h3 class="text-xl font-extrabold text-slate-800 uppercase tracking-tight">¡Bienvenido!</h3>
+            <p id="welcomeStatusText" class="text-emerald-600 font-extrabold text-sm mt-1 uppercase tracking-wide">Carga Exitosa</p>
+            <p class="text-xs text-slate-500 mt-3 leading-relaxed">
+                El sistema de vigilancia epidemiológica del Hospital de Ventanilla se ha cargado correctamente y está listo para operar.
+            </p>
+            <button onclick="closeWelcomeModal()" class="mt-6 w-full bg-brand-dark hover:bg-brand-teal text-white py-3 px-6 rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-brand-teal/10 hover:-translate-y-0.5 active:translate-y-0">
+                Entrar al Módulo
+            </button>
+        </div>
+    </div>
+
+    <!-- DIÁLOGO INTERACTIVO PERSONALIZADO (REEMPLAZO DE CONFIRM/ALERT) -->
+    <div id="customDialogModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-xl border border-slate-100 transform scale-95 transition-transform duration-300 flex flex-col">
+            <div class="flex items-center gap-3 text-slate-800 mb-3">
+                <div class="p-2 bg-rose-100 text-rose-600 rounded-full shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+                </div>
+                <h4 class="font-extrabold text-sm uppercase">¿Confirmar Acción?</h4>
+            </div>
+            <p id="customDialogMessage" class="text-xs text-slate-600 leading-relaxed">¿Seguro que desea realizar esta acción en el inventario?</p>
+            <div class="flex justify-end gap-2 mt-5">
+                <button id="customDialogCancelBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-xs font-bold transition-all uppercase tracking-wider">Cancelar</button>
+                <button id="customDialogConfirmBtn" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all uppercase tracking-wider">Confirmar</button>
             </div>
         </div>
-        <button id="alertActionButton" onclick="conectarYDescargar()" class="px-4 py-2 rounded-lg text-xs font-bold shadow transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0">
-            Forzar Reintento
-        </button>
     </div>
     
     <!-- CUERPO PRINCIPAL DEL SISTEMA -->    
@@ -295,7 +313,7 @@
             <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
                 <div>                    
                     <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">                        
-                        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Distribución por Tipo de Examen</h3>                        
+                        <h3 class="text-sm font-extrabold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full uppercase tracking-wider">Distribución por Tipo de Examen</h3>                        
                         <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full uppercase tracking-wider">Patógenos</span>                    
                     </div>                    
                     <div class="relative h-64 w-full flex items-center justify-center mt-2">                        
@@ -308,8 +326,8 @@
             <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
                 <div>                    
                     <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">                        
-                        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Diagnósticos Clínicos</h3>                        
-                        <span class="text-[10px] font-bold text-rose-800 bg-rose-50 px-2.5 py-1 rounded-full uppercase tracking-wide">Diagnósticos</span>                    
+                        <h3 class="text-sm font-extrabold text-rose-800 bg-rose-50 px-2.5 py-1 rounded-full uppercase tracking-wide">Diagnósticos</h3>                        
+                        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Diagnósticos Clínicos</h3>                    
                     </div>                    
                     <div class="relative h-64 w-full flex items-center justify-center mt-2">                        
                         <canvas id="chartResultados"></canvas>                    
@@ -544,7 +562,7 @@
         // --- SISTEMA DE EXPORTACIÓN DIRECTA A EXCEL (SHEETJS) ---
         function exportarExcel() {
             if (datosFiltrados.length === 0) {
-                alert("No hay registros en la vista actual para exportar. Limpia tus filtros o carga datos.");
+                mostrarAlertaDialog("Error", "No hay registros en la vista actual para exportar.");
                 return;
             }
 
@@ -586,6 +604,7 @@
             return defaultValue;
         }
 
+        // --- STREAMING_CHUNK: Initializing network loaders and proxies ... ---
         // --- SISTEMA INTELIGENTE DE CONEXIÓN MULTICANAL (CORS RESISTANT) ---
         async function conectarYDescargar() {
             actualizarEstadoVisualConexion("connecting");
@@ -660,68 +679,112 @@
             return true;
         }
 
-        // CONTROL DINÁMICO DEL BOTÓN / CÁPSULA "EN LÍNEA"
+        // CONTROL DINÁMICO DEL BOTÓN / CÁPSULA "EN LÍNEA" Y LANZAMIENTO DEL POPUP DE BIENVENIDA
         function actualizarEstadoVisualConexion(estado) {
             const badge = document.getElementById("syncStatusBadge");
             const dot = document.getElementById("syncStatusDot");
             const text = document.getElementById("syncStatusText");
-            const alertBanner = document.getElementById("connectionAlert");
-            const alertIconContainer = document.getElementById("alertIconContainer");
-            const alertIcon = document.getElementById("alertIcon");
-            const alertTitle = document.getElementById("alertTitle");
-            const alertDescription = document.getElementById("alertDescription");
-            const actionButton = document.getElementById("alertActionButton");
 
-            if (!badge || !dot || !text || !alertBanner) return;
+            if (!badge || !dot || !text) return;
 
             if (estado === "connecting") {
                 badge.className = "bg-amber-600/30 text-amber-300 text-xs px-3.5 py-2.5 rounded-xl border border-amber-500/30 flex items-center gap-2 font-bold select-none shadow-inner";
                 dot.className = "h-2.5 w-2.5 rounded-full bg-amber-400 animate-pulse shadow-[0_0_8px_#f59e0b]";
                 text.innerText = "CONECTANDO...";
-                alertBanner.classList.add("hidden");
             } 
-            else if (estado === "success") {
+            else if (estado === "success" || estado === "proxy") {
                 badge.className = "bg-emerald-600 text-white text-xs px-4 py-2.5 rounded-xl border border-emerald-500 flex items-center gap-2 font-black select-none shadow-[0_0_15px_rgba(16,185,129,0.4)] cursor-pointer hover:bg-emerald-700 transition-all";
                 dot.className = "h-2.5 w-2.5 rounded-full bg-white animate-pulse shadow-[0_0_10px_#ffffff]";
                 text.innerText = "EN LÍNEA";
                 
-                alertBanner.className = "max-w-[1850px] mx-auto mt-4 px-6 py-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 bg-emerald-50 border-emerald-200 text-emerald-800 no-print";
-                alertIconContainer.className = "p-2 rounded-full shrink-0 bg-emerald-100 text-emerald-600";
-                alertIcon.className = "fa-solid fa-circle-check text-lg";
-                alertTitle.innerText = "¡Sincronización Automática Activa!";
-                alertDescription.innerText = "Conexión directa establecida exitosamente. Los datos corresponden a tu Google Sheets en tiempo real.";
-                actionButton.className = "bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow";
-                actionButton.innerText = "Sincronizar ahora";
-                alertBanner.classList.remove("hidden");
+                // Dispara el Modal de Bienvenida indicando que la carga fue un éxito
+                triggerWelcomeModal("¡Carga Exitosa!");
             } 
-            else if (estado === "proxy") {
-                badge.className = "bg-emerald-600 text-white text-xs px-4 py-2.5 rounded-xl border border-emerald-500 flex items-center gap-2 font-black select-none shadow-[0_0_15px_rgba(16,185,129,0.4)] cursor-pointer hover:bg-emerald-700 transition-all";
-                dot.className = "h-2.5 w-2.5 rounded-full bg-white animate-pulse shadow-[0_0_10px_#ffffff]";
-                text.innerText = "EN LÍNEA";
-
-                alertBanner.className = "max-w-[1850px] mx-auto mt-4 px-6 py-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 bg-teal-50 border-teal-200 text-teal-800 no-print";
-                alertIconContainer.className = "p-2 rounded-full shrink-0 bg-teal-100 text-teal-600";
-                alertIcon.className = "fa-solid fa-network-wired text-lg";
-                alertTitle.innerText = "Conexión vía Túnel Seguro";
-                alertDescription.innerText = "Hemos burlado las restricciones del explorador utilizando un canal de red seguro. El panel está leyendo tu Google Sheets perfectamente.";
-                actionButton.className = "bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow";
-                actionButton.innerText = "Sincronizar ahora";
-                alertBanner.classList.remove("hidden");
-            }
             else if (estado === "fallback") {
                 badge.className = "bg-sky-600 text-white text-xs px-4 py-2.5 rounded-xl border border-sky-500 flex items-center gap-2 font-black select-none shadow-sm cursor-pointer hover:bg-sky-700 transition-all";
                 dot.className = "h-2.5 w-2.5 rounded-full bg-white animate-pulse";
                 text.innerText = "VISTA LOCAL";
-
-                alertBanner.className = "max-w-[1850px] mx-auto mt-4 px-6 py-4 rounded-2xl border flex flex-col md:flex-row items-center justify-between gap-4 transition-all duration-300 bg-amber-50 border-amber-200 text-amber-800 no-print";
-                alertIconContainer.className = "p-2 rounded-full shrink-0 bg-amber-100 text-amber-600";
-                alertIcon.className = "fa-solid fa-triangle-exclamation text-lg";
-                alertTitle.innerText = "Mostrando Modo Demostración";
-                alertDescription.innerText = "No se logró conectar con Google Sheets debido a restricciones de red (CORS). Cuando subas este archivo a Netlify se sincronizará automáticamente.";
-                actionButton.className = "bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow";
-                actionButton.innerText = "Forzar Reconexión";
-                alertBanner.classList.remove("hidden");
+                
+                // Dispara el modal indicando éxito en versión de simulación local
+                triggerWelcomeModal("¡Carga Exitosa! (Simulación)");
             }
+        }
+
+        // --- SISTEMA REVOLUCIONARIO DE PANTALLA DE BIENVENIDA (MODAL) ---
+        function triggerWelcomeModal(statusMessage) {
+            const modal = document.getElementById("welcomeModal");
+            const statusLabel = document.getElementById("welcomeStatusText");
+            if (modal) {
+                if (statusLabel) statusLabel.innerText = statusMessage;
+                modal.classList.remove("opacity-0", "pointer-events-none");
+                modal.querySelector("div").classList.remove("scale-95");
+                modal.querySelector("div").classList.add("scale-100");
+            }
+        }
+
+        function closeWelcomeModal() {
+            const modal = document.getElementById("welcomeModal");
+            if (modal) {
+                modal.classList.add("opacity-0", "pointer-events-none");
+                modal.querySelector("div").classList.remove("scale-100");
+                modal.querySelector("div").classList.add("scale-95");
+            }
+        }
+
+        // --- DIÁLOGOS Y ALERTAS PERSONALIZADOS (SIN ALERT/CONFIRM) ---
+        function mostrarAlertaDialog(titulo, mensaje) {
+            const dialog = document.getElementById("customDialogModal");
+            const dialogMsg = document.getElementById("customDialogMessage");
+            const confirmBtn = document.getElementById("customDialogConfirmBtn");
+            const cancelBtn = document.getElementById("customDialogCancelBtn");
+
+            if (dialog && dialogMsg) {
+                dialog.querySelector("h4").innerText = titulo;
+                dialogMsg.innerText = mensaje;
+                cancelBtn.classList.add("hidden"); // Solo informativo, no necesita cancelar
+                confirmBtn.innerText = "Entendido";
+                confirmBtn.onclick = function() {
+                    closeDialog();
+                };
+                openDialog();
+            }
+        }
+
+        function mostrarConfirmacionDialog(mensaje, callback) {
+            const dialog = document.getElementById("customDialogModal");
+            const dialogMsg = document.getElementById("customDialogMessage");
+            const confirmBtn = document.getElementById("customDialogConfirmBtn");
+            const cancelBtn = document.getElementById("customDialogCancelBtn");
+
+            if (dialog && dialogMsg) {
+                dialog.querySelector("h4").innerText = "¿Confirmar Operación?";
+                dialogMsg.innerText = mensaje;
+                cancelBtn.classList.remove("hidden");
+                confirmBtn.innerText = "Confirmar";
+                
+                cancelBtn.onclick = function() {
+                    closeDialog();
+                };
+                confirmBtn.onclick = function() {
+                    callback();
+                    closeDialog();
+                };
+                openDialog();
+            }
+        }
+
+        function openDialog() {
+            const dialog = document.getElementById("customDialogModal");
+            dialog.classList.remove("opacity-0", "pointer-events-none");
+            dialog.querySelector("div").classList.remove("scale-95");
+            dialog.querySelector("div").classList.add("scale-100");
+        }
+
+        function closeDialog() {
+            const dialog = document.getElementById("customDialogModal");
+            dialog.classList.add("opacity-0", "pointer-events-none");
+            dialog.querySelector("div").classList.remove("scale-100");
+            dialog.querySelector("div").classList.add("scale-95");
         }
 
         // --- MAPEO DE COLUMNAS USANDO EL MOTOR DE NORMALIZACIÓN ---
@@ -812,6 +875,7 @@
             filtrarYRefrescarDashboard();
         }
 
+        // --- STREAMING_CHUNK: Processing data filtering filters ... ---
         // MOTOR DE FILTRADO MULTIVARIABLE (INCLUYENDO SECTOR DE VENTANILLA)
         function filtrarYRefrescarDashboard() {
             const filterWeek = document.getElementById("filterWeek").value;
@@ -1106,6 +1170,7 @@
             }
         }
 
+        // --- STREAMING_CHUNK: Computing dynamic Chart graphs ... ---
         // --- SISTEMA DE GRÁFICOS (CHART.JS) ---
         function actualizarGraficos(datos) {
             let mesesMap = { "Ene":0, "Feb":0, "Mar":0, "Abr":0, "May":0, "Jun":0, "Jul":0, "Ago":0, "Sep":0, "Oct":0, "Nov":0, "Dic":0 };
@@ -1230,7 +1295,7 @@
             });
         }
 
-        // --- SISTEMA DE GESTIÓN OREPATIVA KARDEX ---
+        // --- SISTEMA DE GESTIÓN OPERATIVA KARDEX ---
         function actualizarExistenciasKardex() {
             const tableBody = document.getElementById("kardexTableBody");
             if (!tableBody) return;
@@ -1320,6 +1385,7 @@
                 document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-plus-circle text-emerald-500"></i> Registrar Entrada de Insumos`;
                 document.getElementById("btnCancelEdit").classList.add("hidden");
                 document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-plus"></i> Registrar Entrada`;
+                mostrarAlertaDialog("Actualización Exitosa", "Los cambios en el insumo fueron guardados correctamente.");
             } else {
                 const nuevoId = inventarioKardex.length > 0 ? Math.max(...inventarioKardex.map(x => x.id)) + 1 : 1;
                 inventarioKardex.push({
@@ -1331,6 +1397,7 @@
                     vence: vence,
                     prueba_asoc: prueba_asoc
                 });
+                mostrarAlertaDialog("Registro Exitoso", "Se ha agregado una nueva entrada de stock de forma exitosa.");
             }
 
             document.getElementById("kardexForm").reset();
@@ -1373,10 +1440,10 @@
         }
 
         function deleteInsumoKardex(id) {
-            if (confirm("¿Está seguro de eliminar este registro de stock?")) {
+            mostrarConfirmacionDialog("¿Está completamente seguro de eliminar este registro de stock del almacén?", function() {
                 inventarioKardex = inventarioKardex.filter(x => x.id !== id);
                 actualizarExistenciasKardex();
-            }
+            });
         }
 
         // --- FUNCIONES UTILITARIAS DE FECHA ---
