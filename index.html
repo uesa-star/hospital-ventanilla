@@ -43,7 +43,7 @@
         /* ESTILOS DE IMPRESIÓN / REPORTE PDF */
         @media print {
             body { background: white !important; color: black !important; }
-            header, section.bg-rose-950, #welcomeModal, #alertsModal, #customDialogModal, #kardexForm, select, button, #excelFileInput, .no-print {
+            header, section.bg-rose-950, #welcomeModal, #alertsModal, #customDialogModal, #kardexForm, #formCasoSection, select, button, #excelFileInput, .no-print {
                 display: none !important;
             }
             main { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
@@ -69,18 +69,27 @@
             </div>                        
             
             <!-- PANEL DE CONTROL DE ESTADOS Y REPORTES -->
-            <div class="flex flex-col items-end gap-2 shrink-0">                
-                <!-- NUEVO BOTÓN QUE PARPADEA "MÓDULO ACTIVO" (Ubicado arriba del botón de PDF) -->
-                <span id="updateSuccessBadge" class="hidden bg-emerald-500/20 text-emerald-300 text-xs px-4 py-2 rounded-xl border border-emerald-500/30 flex items-center gap-2.5 font-black select-none animate-pulse shadow-sm shadow-emerald-500/10">
-                    <span class="relative flex h-2.5 w-2.5">
+            <div class="flex flex-row items-center gap-3 shrink-0 no-print">                
+                <!-- INDICADOR DE CONEXIÓN EN TIEMPO REAL -->
+                <div id="connectionStatusBadge" class="bg-yellow-500/20 text-yellow-300 text-xs px-4 py-2.5 rounded-xl border border-yellow-500/30 flex items-center gap-2.5 font-black select-none h-[38px] leading-none transition-all duration-300">
+                    <span class="relative flex h-2 w-2">
+                        <span id="connectionPing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                        <span id="connectionDot" class="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
+                    </span>
+                    <span id="connectionText">CONECTANDO...</span>
+                </div>
+
+                <!-- BOTÓN "MÓDULO ACTIVO" -->
+                <span id="updateSuccessBadge" class="hidden bg-emerald-500/20 text-emerald-300 text-xs px-4 py-2.5 rounded-xl border border-emerald-500/30 flex items-center gap-2.5 font-black select-none animate-pulse shadow-sm shadow-emerald-500/10 h-[38px] leading-none">
+                    <span class="relative flex h-2 w-2">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
                     <span>MÓDULO ACTIVO</span>
                 </span>
 
-                <!-- BOTÓN GENERAR REPORTE (PDF/Impresora) -->
-                <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 transition-all text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-md no-print uppercase tracking-wider">
+                <!-- BOTÓN GENERAR REPORTE -->
+                <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 transition-all text-white px-4 py-2.5 rounded-xl border border-teal-500/30 text-xs font-black flex items-center justify-center gap-2 shadow-md uppercase tracking-wider h-[38px] hover:scale-105 active:scale-95 duration-200 leading-none">
                     <i class="fa-solid fa-file-pdf text-base"></i> Imprimir Reporte / PDF
                 </button>
             </div>        
@@ -121,198 +130,204 @@
         </div>
     </div>
 
-    <!-- MODAL DE ALERTAS DETALLADAS CON PESTAÑAS (TABS CENTRADOS Y ALERTA ÚNICA CON ANCHURA AMPLIADA PREMIUM) -->
+    <!-- MODAL DE ALERTAS DETALLADAS CON PESTAÑAS (DISEÑO SATELLITE DARK ROOM - image_bac1d8.png) -->
     <div id="alertsModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
-        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-6xl w-full mx-4 max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-100 transform scale-95 transition-all duration-350 flex flex-col gap-6 custom-scrollbar">
+        <div class="bg-[#111827] rounded-3xl max-w-6xl w-full mx-4 max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-800 flex flex-col transform scale-95 transition-all duration-350 custom-scrollbar text-slate-100">
             
             <!-- Cabecera del Modal -->
-            <div class="flex justify-between items-center border-b border-slate-100 pb-4">
+            <div class="bg-[#4c0519] px-6 py-4 flex justify-between items-center border-b border-rose-950">
                 <div class="flex items-center gap-3">
-                    <div class="p-3 bg-rose-100 text-rose-700 rounded-2xl shadow-sm">
-                        <i class="fa-solid fa-triangle-exclamation text-2xl animate-pulse"></i>
+                    <div class="p-2 bg-rose-900/40 text-rose-400 rounded-lg shrink-0">
+                        <i class="fa-solid fa-triangle-exclamation text-lg animate-pulse"></i>
                     </div>
                     <div>
-                        <h3 class="text-lg font-extrabold text-slate-900 uppercase">Centro de Alertas Epidemiológicas Globales y Regionales</h3>
-                        <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide">Vigilancia de Repuntes Activos y Amenazas Críticas - Hospital de Ventanilla</p>
+                        <h3 class="text-sm font-extrabold tracking-wider text-white uppercase leading-tight">Detalle de Alertas Epidemiológicas Activas</h3>
+                        <p class="text-[11px] text-rose-300 font-semibold block uppercase">Hospital de Ventanilla - Sala de Inteligencia Epidemiológica</p>
                     </div>
                 </div>
-                <button onclick="closeAlertsModal()" class="text-slate-400 hover:text-rose-600 transition-colors p-2 bg-slate-50 hover:bg-rose-50 rounded-xl">
-                    <i class="fa-solid fa-xmark text-lg"></i>
+                <button onclick="closeAlertsModal()" class="bg-rose-900/30 hover:bg-rose-800/50 p-2 rounded-lg text-rose-300 hover:text-white transition-all">
+                    <i class="fa-solid fa-xmark text-sm"></i>
                 </button>
             </div>
 
-            <!-- CONTROLES DE PESTAÑAS (TABS) - CENTRADOS -->
-            <div class="flex justify-center border-b border-slate-200 gap-2 overflow-x-auto no-print pb-1 select-none w-full">
-                <button onclick="switchAlertTab('oms')" id="tabBtn-oms" class="py-3 px-6 font-black uppercase tracking-wider text-xs border-b-2 border-brand-teal text-brand-dark transition-all duration-200 flex items-center gap-2 shrink-0">
-                    <i class="fa-solid fa-earth-americas text-emerald-600"></i> Alerta OMS / OPS Global
-                </button>
-                <button onclick="switchAlertTab('cdc')" id="tabBtn-cdc" class="py-3 px-6 font-black uppercase tracking-wider text-xs border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-all duration-200 flex items-center gap-2 shrink-0">
-                    <i class="fa-solid fa-map-location-dot text-rose-600"></i> Alertas CDC Perú
-                </button>
-                <button onclick="switchAlertTab('region')" id="tabBtn-region" class="py-3 px-6 font-black uppercase tracking-wider text-xs border-b-2 border-transparent text-slate-500 hover:text-slate-800 transition-all duration-200 flex items-center gap-2 shrink-0">
-                    <i class="fa-solid fa-flag text-blue-600"></i> Repuntes en la Región
-                </button>
+            <!-- CONTROLES DE PESTAÑAS -->
+            <div class="bg-[#182232] px-6 py-4 border-b border-slate-800/50 flex justify-center">
+                <div class="bg-[#0e1420] p-1.5 rounded-2xl flex items-center gap-1.5 overflow-x-auto max-w-full select-none no-print">
+                    <button onclick="switchAlertTab('oms')" id="tabBtn-oms" class="py-2.5 px-6 font-extrabold text-amber-500 bg-[#1e2a41] border border-amber-500/40 rounded-xl transition-all duration-200 shrink-0 text-sm shadow-md">
+                        OMS (Mundial)
+                    </button>
+                    <button onclick="switchAlertTab('cdc')" id="tabBtn-cdc" class="py-2.5 px-6 font-bold text-slate-400 hover:text-slate-200 transition-all duration-200 shrink-0 text-sm">
+                        CDC Perú (Nacional)
+                    </button>
+                    <button onclick="switchAlertTab('region')" id="tabBtn-region" class="py-2.5 px-6 font-bold text-slate-400 hover:text-slate-200 transition-all duration-200 shrink-0 text-sm">
+                        Países Vecinos
+                    </button>
+                </div>
             </div>
 
             <!-- CONTENIDOS DE LAS PESTAÑAS -->
-            <div class="flex-1 w-full">
+            <div class="p-6 space-y-6 flex-1 bg-[#111827]">
                 
-                <!-- PESTAÑA 1: OMS / OPS GLOBAL -->
+                <!-- PESTAÑA 1: OMS (MUNDIAL) -->
                 <div id="tabContent-oms" class="space-y-6">
-                    <div class="w-full">
-                        <div class="bg-slate-50/70 rounded-3xl p-6 md:p-8 border border-slate-200 relative shadow-sm hover:shadow transition-all flex flex-col gap-5">
-                            <div class="flex justify-between items-start">
-                                <h4 class="text-base font-extrabold text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                                    <span class="text-lg">🌍</span> Gripe Aviar (H5N1) - Vigilancia Mundial
-                                </h4>
-                                <span class="bg-rose-100 text-rose-700 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">Alta Prioridad</span>
+                    <!-- ALERTA SARAMPIÓN -->
+                    <div class="bg-[#182235] p-6 rounded-2xl border border-amber-600/30 shadow-md relative">
+                        <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+                            <div>
+                                <span class="text-[10px] font-black tracking-widest text-amber-500 uppercase block mb-1">OMS - ALERTA MUNDIAL</span>
+                                <h4 class="text-base font-extrabold text-white leading-snug">Alerta de la OPS/OMS por rebrote masivo de Sarampión ante el flujo del Mundial 2026</h4>
                             </div>
-                            <p class="text-sm text-slate-600 leading-relaxed max-w-4xl">Monitoreo internacional intensivo por repunte en mamíferos terrestres e infecciones esporádicas en humanos. La OPS recomienda reforzar la bioseguridad en áreas costeras del continente americano.</p>
-                            
-                            <!-- CREDENCIAL DE FUENTE OFICIAL CON FECHA DE ACTIVACIÓN -->
-                            <div class="p-4 bg-slate-100/90 rounded-2xl border-l-4 border-teal-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs font-bold shadow-inner">
-                                <div class="flex items-center gap-3 text-slate-700">
-                                    <i class="fa-solid fa-building-shield text-teal-600 text-xl"></i>
-                                    <div>
-                                        <p class="uppercase leading-none text-slate-900 font-extrabold">Fuente Oficial: OMS / OPS</p>
-                                        <span class="text-[10px] text-slate-500 font-semibold uppercase block mt-1">Ref: Boletín Epidemiológico de Emergencia de la OMS (OMS-2026-H5N1)</span>
-                                    </div>
-                                </div>
-                                <div class="flex flex-col items-end shrink-0">
-                                    <span class="bg-rose-600 text-white border border-rose-700 px-4 py-1.5 rounded-xl text-[10px] uppercase font-black tracking-wider animate-pulse flex items-center gap-1.5 shadow-sm">
-                                        <i class="fa-solid fa-clock-rotate-left"></i> ACTIVADA: 24 de Mayo de 2026
-                                    </span>
-                                </div>
-                            </div>
+                        </div>
 
-                            <!-- Ficha de Información de Acción Directa - ESPACIADO ANCHO PREMIUM -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-200/80">
-                                <div class="p-6 bg-white rounded-2xl border-l-4 border-teal-500 shadow-sm hover:shadow-md transition-all duration-300">
-                                    <span class="font-extrabold block mb-3 uppercase text-xs tracking-wider text-teal-700 flex items-center gap-2"><i class="fa-solid fa-location-dot text-sm"></i> ¿Dónde Afecta?</span>
-                                    <p class="text-slate-600 leading-relaxed text-xs sm:text-sm">Rutas de migración de aves silvestres, humedales costeros de la cuenca del Pacífico y granjas de producción avícola comerciales o de traspatio a nivel continental.</p>
-                                </div>
-                                <div class="p-6 bg-white rounded-2xl border-l-4 border-rose-500 shadow-sm hover:shadow-md transition-all duration-300">
-                                    <span class="font-extrabold block mb-3 uppercase text-xs tracking-wider text-rose-700 flex items-center gap-2"><i class="fa-solid fa-hand-holding-hand text-sm"></i> ¿Qué Hacer?</span>
-                                    <p class="text-slate-600 leading-relaxed text-xs sm:text-sm">Evitar manipulación de aves silvestres muertas o enfermas, uso obligatorio de EPP respiratorio y visual (N95, lentes) en personal expuesto a sospechas, y reporte inmediato.</p>
-                                </div>
-                                <div class="p-6 bg-white rounded-2xl border-l-4 border-brand-teal shadow-sm hover:shadow-md transition-all duration-300">
-                                    <span class="font-extrabold block mb-3 uppercase text-xs tracking-wider text-brand-dark flex items-center gap-2"><i class="fa-solid fa-microscope text-sm"></i> ¿Cómo actúa Lab?</span>
-                                    <p class="text-slate-600 leading-relaxed text-xs sm:text-sm">Toma de hisopado nasofaríngeo y orofaríngeo combinado en Medio de Transporte Viral (MTV). Mantener cadena de frío (2-8°C) y enviar de inmediato al INS.</p>
-                                </div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-400 font-extrabold text-[10px] uppercase mb-4 shadow-inner">
+                            <i class="fa-solid fa-calendar text-[10px]"></i> Publicado: 03 de Junio de 2026
+                        </div>
+
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6 font-medium">
+                            La Organización Panamericana de la Salud (OPS/OMS) insta a todos los países de las Américas a reforzar la vacunación de forma prioritaria debido al incremento exponencial de sarampión detectado, superando los 20,521 casos continentales en lo que va del año.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-[#101726] p-4 rounded-xl border border-slate-800">
+                                <span class="text-xs font-black text-amber-400 flex items-center gap-1.5 uppercase tracking-wide mb-2">
+                                    <i class="fa-solid fa-location-dot text-sm text-amber-500"></i> Foco y Regiones Afectadas
+                                </span>
+                                <p class="text-xs text-slate-300 leading-relaxed font-semibold">
+                                    México (10,920 casos), Guatemala (6,209), Estados Unidos (1,952), Canadá (1,018) y focos en el resto de América.
+                                </p>
                             </div>
+                            <div class="bg-[#101726] p-4 rounded-xl border border-slate-800">
+                                <span class="text-xs font-black text-amber-400 flex items-center gap-1.5 uppercase tracking-wide mb-2">
+                                    <i class="fa-solid fa-microscope text-sm text-amber-500"></i> Características y Diagnóstico
+                                </span>
+                                <p class="text-xs text-slate-300 leading-relaxed font-semibold">
+                                    Transmisión aérea sumamente veloz por microgotas. Coberturas nacionales inferiores al 95% aumentan significativamente el peligro de reintroducción en centros urbanos.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#0b212f] p-5 rounded-xl border border-[#164e63]/30">
+                            <span class="text-xs font-black text-cyan-400 flex items-center gap-1.5 uppercase tracking-wide mb-3">
+                                <i class="fa-solid fa-shield-virus text-sm text-cyan-400"></i> Recomendaciones de Laboratorio
+                            </span>
+                            <ul class="text-xs text-slate-300 space-y-2 list-disc list-inside font-semibold leading-relaxed">
+                                <li>Intensificar la búsqueda activa institucional y de laboratorio ante síndromes eruptivos febriles.</li>
+                                <li>Garantizar la toma rápida de suero e hisopado faríngeo/nasal dentro de los 5 días de iniciado el exantema.</li>
+                                <li>Ejecutar bloqueos de vacunación inmediata en un radio de acción ante sospecha confirmatoria.</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
 
-                <!-- PESTAÑA 2: CDC PERÚ -->
+                <!-- PESTAÑA 2: CDC PERÚ (NACIONAL) -->
                 <div id="tabContent-cdc" class="space-y-6 hidden">
-                    <div class="w-full">
-                        <div class="bg-slate-50/70 rounded-3xl p-6 md:p-8 border border-slate-200 relative shadow-sm hover:shadow transition-all flex flex-col gap-5">
-                            <div class="flex justify-between items-start">
-                                <h4 class="text-base font-extrabold text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                                    <span class="text-lg">🇵🇪</span> Dengue Grave (DENV-2) - Alerta de Vigilancia
-                                </h4>
-                                <span class="bg-rose-100 text-rose-700 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">Brote Activo</span>
+                    <!-- ALERTA DENGUE GRAVE -->
+                    <div class="bg-[#182235] p-6 rounded-2xl border border-rose-600/30 shadow-md relative">
+                        <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+                            <div>
+                                <span class="text-[10px] font-black tracking-widest text-rose-500 uppercase block mb-1">CDC PERÚ - ALERTA NACIONAL</span>
+                                <h4 class="text-base font-extrabold text-white leading-snug">Alerta por Incremento Exponencial de Dengue Grave (DENV-2 Genotipo Cosmopolita)</h4>
                             </div>
-                            <p class="text-sm text-slate-600 leading-relaxed max-w-4xl">Incremento sostenido de casos de Dengue grave con signos de alarma en el Callao. Se dispone prioridad de tamizaje a pacientes febriles de Pachacútec y Mi Perú.</p>
-                            
-                            <!-- CREDENCIAL DE FUENTE OFICIAL CON FECHA DE ACTIVACIÓN -->
-                            <div class="p-4 bg-slate-100/90 rounded-2xl border-l-4 border-rose-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs font-bold shadow-inner">
-                                <div class="flex items-center gap-3 text-slate-700">
-                                    <i class="fa-solid fa-building-shield text-rose-600 text-xl"></i>
-                                    <div>
-                                        <p class="uppercase leading-none text-slate-900 font-extrabold">Fuente Oficial: CDC Perú / MINSA</p>
-                                        <span class="text-[10px] text-slate-500 font-semibold uppercase block mt-1">Ref: Alerta Epidemiológica Nacional AE-CDC-008-2026</span>
-                                    </div>
-                                </div>
-                                <div class="flex flex-col items-end shrink-0">
-                                    <span class="bg-rose-600 text-white border border-rose-700 px-4 py-1.5 rounded-xl text-[10px] uppercase font-black tracking-wider animate-pulse flex items-center gap-1.5 shadow-sm">
-                                        <i class="fa-solid fa-clock-rotate-left"></i> ACTIVADA: 15 de Mayo de 2026
-                                    </span>
-                                </div>
-                            </div>
+                        </div>
 
-                            <!-- Ficha de Información de Acción Directa - ESPACIADO ANCHO PREMIUM -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-200/80">
-                                <div class="p-6 bg-white rounded-2xl border-l-4 border-teal-500 shadow-sm hover:shadow-md transition-all duration-300">
-                                    <span class="font-extrabold block mb-3 uppercase text-xs tracking-wider text-teal-700 flex items-center gap-2"><i class="fa-solid fa-location-dot text-sm"></i> ¿Dónde Afecta?</span>
-                                    <p class="text-slate-600 leading-relaxed text-xs sm:text-sm">Regiones declaradas en emergencia sanitaria nacional y distritos con elevados índices de infestación por el vector *Aedes aegypti* (regiones norte, oriente y Lima/Callao).</p>
-                                </div>
-                                <div class="p-6 bg-white rounded-2xl border-l-4 border-rose-500 shadow-sm hover:shadow-md transition-all duration-300">
-                                    <span class="font-extrabold block mb-3 uppercase text-xs tracking-wider text-rose-700 flex items-center gap-2"><i class="fa-solid fa-hand-holding-hand text-sm"></i> ¿Qué Hacer?</span>
-                                    <p class="text-slate-600 leading-relaxed text-xs sm:text-sm">Triaje clínico exhaustivo de febriles, monitoreo riguroso de signos de alarma (dolor abdominal severo, sangrado) y soporte de hidratación inmediata.</p>
-                                </div>
-                                <div class="p-6 bg-white rounded-2xl border-l-4 border-brand-teal shadow-sm hover:shadow-md transition-all duration-300">
-                                    <span class="font-extrabold block mb-3 uppercase text-xs tracking-wider text-brand-dark flex items-center gap-2"><i class="fa-solid fa-microscope text-sm"></i> ¿Cómo actúa Lab?</span>
-                                    <p class="text-slate-600 leading-relaxed text-xs sm:text-sm">Descarte rápido de antígeno NS1 (días 1-5). Vigilancia diaria de hemograma completo, controlando el descenso de plaquetas y hemoconcentración.</p>
-                                </div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 bg-rose-50/10 border border-rose-500/30 rounded-lg text-rose-400 font-extrabold text-[10px] uppercase mb-4">
+                            <i class="fa-solid fa-calendar text-[10px]"></i> Publicado: 15 de Mayo de 2026
+                        </div>
+
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6 font-medium">
+                            El CDC Perú reporta focos endémicos activos en regiones de la costa y selva, con riesgo de introducción masiva en el norte de Lima y la Provincia Constitucional del Callao ante factores climáticos.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-[#101726] p-4 rounded-xl border border-slate-800">
+                                <span class="text-xs font-black text-rose-400 flex items-center gap-1.5 uppercase tracking-wide mb-2">
+                                    <i class="fa-solid fa-location-dot text-sm text-rose-500"></i> Foco y Regiones Afectadas
+                                </span>
+                                <p class="text-xs text-slate-300 leading-relaxed font-semibold">
+                                    Piura, La Libertad, Ica, Lima Norte, y sectores periurbanos de Ventanilla y Mi Perú.
+                                </p>
                             </div>
+                            <div class="bg-[#101726] p-4 rounded-xl border border-slate-800">
+                                <span class="text-xs font-black text-rose-400 flex items-center gap-1.5 uppercase tracking-wide mb-2">
+                                    <i class="fa-solid fa-microscope text-sm text-rose-500"></i> Características y Diagnóstico
+                                </span>
+                                <p class="text-xs text-slate-300 leading-relaxed font-semibold">
+                                    Fiebre persistente, dolor retroocular severo y signos de alarma (dolor abdominal continuo, plaquetopenia progresiva).
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#241318] p-5 rounded-xl border border-rose-800/30">
+                            <span class="text-xs font-black text-rose-400 flex items-center gap-1.5 uppercase tracking-wide mb-3">
+                                <i class="fa-solid fa-shield-virus text-sm text-rose-400"></i> Recomendaciones de Laboratorio
+                            </span>
+                            <ul class="text-xs text-slate-300 space-y-2 list-disc list-inside font-semibold leading-relaxed">
+                                <li>Priorizar el procesamiento de antígeno NS1 en pacientes que cursan los primeros 5 días de sospecha febril.</li>
+                                <li>Monitoreo riguroso de hemogramas seriados y reporte inmediato de hematocritos con elevación abrupta.</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
 
-                <!-- PESTAÑA 3: REPUNTES EN LA REGION -->
+                <!-- PESTAÑA 3: PAÍSES VECINOS -->
                 <div id="tabContent-region" class="space-y-6 hidden">
-                    <div class="w-full">
-                        <div class="bg-slate-50/70 rounded-3xl p-6 md:p-8 border border-slate-200 relative shadow-sm hover:shadow transition-all flex flex-col gap-5">
-                            <div class="flex justify-between items-start">
-                                <h4 class="text-base font-extrabold text-slate-900 uppercase tracking-tight flex items-center gap-2">
-                                    <span class="text-lg">🇧🇷</span> Brasil (Min. Saúde) - Fiebre de Oropouche
-                                </h4>
-                                <span class="bg-rose-100 text-rose-700 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">Frontera Activa</span>
+                    <!-- BRASIL - OROPOUCHE -->
+                    <div class="bg-[#182235] p-6 rounded-2xl border border-blue-600/30 shadow-md relative">
+                        <div class="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
+                            <div>
+                                <span class="text-[10px] font-black tracking-widest text-blue-400 uppercase block mb-1">BRASIL - MINISTERIO DE SALUD</span>
+                                <h4 class="text-base font-extrabold text-white leading-snug">Vigilancia de Fiebre de Oropouche en Áreas Limítrofes y Frontera Amazónica</h4>
                             </div>
-                            <p class="text-sm text-slate-600 leading-relaxed max-w-4xl">Repunte crítico de transmisión en estados de Acre y Amazonas. Vigilancia especial de pacientes con nexo epidemiológico de viaje a zonas de selva fronteriza.</p>
-                            
-                            <!-- CREDENCIAL DE FUENTE OFICIAL CON FECHA DE ACTIVACIÓN -->
-                            <div class="p-4 bg-slate-100/90 rounded-2xl border-l-4 border-blue-600 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-xs font-bold shadow-inner">
-                                <div class="flex items-center gap-3 text-slate-700">
-                                    <i class="fa-solid fa-building-shield text-blue-600 text-xl"></i>
-                                    <div>
-                                        <p class="uppercase leading-none text-slate-900 font-extrabold">Fuente Oficial: Ministério da Saúde do Brasil</p>
-                                        <span class="text-[10px] text-slate-500 font-semibold uppercase block mt-1">Ref: Boletim Epidemiológico Vol. 57, N° 18 (Vigilância em Saúde, 2026)</span>
-                                    </div>
-                                </div>
-                                <div class="flex flex-col items-end shrink-0">
-                                    <span class="bg-rose-600 text-white border border-rose-700 px-4 py-1.5 rounded-xl text-[10px] uppercase font-black tracking-wider animate-pulse flex items-center gap-1.5 shadow-sm">
-                                        <i class="fa-solid fa-clock-rotate-left"></i> ACTIVADA: 02 de Junio de 2026
-                                    </span>
-                                </div>
-                            </div>
+                        </div>
 
-                            <!-- Ficha de Información de Acción Directa - ESPACIADO ANCHO PREMIUM -->
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-200/80">
-                                <div class="p-6 bg-white rounded-2xl border-l-4 border-teal-500 shadow-sm hover:shadow-md transition-all duration-300">
-                                    <span class="font-extrabold block mb-3 uppercase text-xs tracking-wider text-teal-700 flex items-center gap-2"><i class="fa-solid fa-location-dot text-sm"></i> ¿Dónde Afecta?</span>
-                                    <p class="text-slate-600 leading-relaxed text-xs sm:text-sm">Zonas de densa cobertura forestal, cuencas de ríos amazónicos y comunidades en la franja fronteriza con alta presencia del vector *Culicoides paraensis*.</p>
-                                </div>
-                                <div class="p-6 bg-white rounded-2xl border-l-4 border-rose-500 shadow-sm hover:shadow-md transition-all duration-300">
-                                    <span class="font-extrabold block mb-3 uppercase text-xs tracking-wider text-rose-700 flex items-center gap-2"><i class="fa-solid fa-hand-holding-hand text-sm"></i> ¿Qué Hacer?</span>
-                                    <p class="text-slate-600 leading-relaxed text-xs sm:text-sm">Registro de nexo de viaje, fomento de mosquiteros de malla muy fina, repelentes con DEET y aislamiento vectorial estricto de pacientes en fase aguda.</p>
-                                </div>
-                                <div class="p-6 bg-white rounded-2xl border-l-4 border-brand-teal shadow-sm hover:shadow-md transition-all duration-300">
-                                    <span class="font-extrabold block mb-3 uppercase text-xs tracking-wider text-brand-dark flex items-center gap-2"><i class="fa-solid fa-microscope text-sm"></i> ¿Cómo actúa Lab?</span>
-                                    <p class="text-slate-600 leading-relaxed text-xs sm:text-sm">Extracción de suero en tubos secos en los primeros 5 días. Centrifugar, alicuotar, refrigerar a 2-8°C y coordinar envío al INS para RT-PCR.</p>
-                                </div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1 bg-blue-50/10 border border-blue-500/30 rounded-lg text-blue-400 font-extrabold text-[10px] uppercase mb-4">
+                            <i class="fa-solid fa-calendar text-[10px]"></i> Publicado: 02 de Junio de 2026
+                        </div>
+
+                        <p class="text-xs sm:text-sm text-slate-300 leading-relaxed mb-6 font-medium">
+                            Incremento de diagnoses de Fiebre de Oropouche transmitida por vectores culicoides. Se recomienda un cerco de contención y estricta trazabilidad de viajes recientes.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-[#101726] p-4 rounded-xl border border-slate-800">
+                                <span class="text-xs font-black text-blue-400 flex items-center gap-1.5 uppercase tracking-wide mb-2">
+                                    <i class="fa-solid fa-location-dot text-sm text-blue-500"></i> Foco y Regiones Afectadas
+                                </span>
+                                <p class="text-xs text-slate-300 leading-relaxed font-semibold">
+                                    Estados brasileños de Acre, Amazonas y zonas limítrofes de Loreto y Madre de Dios en Perú.
+                                </p>
                             </div>
+                            <div class="bg-[#101726] p-4 rounded-xl border border-slate-800">
+                                <span class="text-xs font-black text-blue-400 flex items-center gap-1.5 uppercase tracking-wide mb-2">
+                                    <i class="fa-solid fa-microscope text-sm text-blue-500"></i> Características y Diagnóstico
+                                </span>
+                                <p class="text-xs text-slate-300 leading-relaxed font-semibold">
+                                    Inicio abrupto de fiebre alta, cefalea retroocular intensa, mialgias generalizadas y náuseas.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="bg-[#121a2e] p-5 rounded-xl border border-blue-800/30">
+                            <span class="text-xs font-black text-blue-400 flex items-center gap-1.5 uppercase tracking-wide mb-3">
+                                <i class="fa-solid fa-shield-virus text-sm text-blue-400"></i> Recomendaciones de Laboratorio
+                            </span>
+                            <ul class="text-xs text-slate-300 space-y-2 list-disc list-inside font-semibold leading-relaxed">
+                                <li>Realizar de forma mandatoria diagnóstico diferencial en pacientes febriles con PCR negativo para arbovirus conocidos.</li>
+                                <li>Envío obligatorio de suero sanguíneo en cadena fría al INS para confirmación molecular.</li>
+                            </ul>
                         </div>
                     </div>
                 </div>
 
             </div>
 
-            <!-- Acciones Recomendadas de Contingencia para el Laboratorio -->
-            <div class="bg-rose-50/50 border border-rose-100 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mt-2">
-                <div class="flex items-center gap-3">
-                    <div class="h-10 w-10 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center shrink-0 shadow-sm">
-                        <i class="fa-solid fa-shield-halved text-lg"></i>
-                    </div>
-                    <div>
-                        <span class="font-extrabold text-slate-800 uppercase text-xs block">Acción Médica Preventiva Obligatoria</span>
-                        <p class="text-[11px] text-slate-500 mt-0.5 leading-tight">Ante pacientes febriles con antecedentes de viaje internacional o zonas de frontera, aplicar descarte inmediato y coordinar con Epidemiología.</p>
-                    </div>
-                </div>
-                <button onclick="closeAlertsModal()" class="bg-rose-700 hover:bg-rose-800 text-white py-2.5 px-5 rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-md shrink-0 hover:scale-102">
-                    Aceptar y Cerrar
+            <!-- Pie del Modal -->
+            <div class="bg-[#0e1420] px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-slate-800">
+                <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-center sm:text-left">
+                    Fuentes en Vivo: <span class="text-slate-300">Google Search Grounding Sincronizado.</span>
+                </span>
+                <button onclick="closeAlertsModal()" class="bg-[#1e293b] hover:bg-[#334155] text-white font-extrabold text-xs px-6 py-2.5 rounded-lg uppercase tracking-wider transition-all shadow-sm">
+                    CERRAR VENTANA
                 </button>
             </div>
         </div>
@@ -337,6 +352,95 @@
     
     <!-- CUERPO PRINCIPAL DEL SISTEMA -->    
     <main class="flex-1 max-w-[1850px] w-full mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- ================= FORMULARIO INTERACTIVO DE NUEVA NOTIFICACIÓN (FICHA F-100) ================= -->
+        <section id="formCasoSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print">
+            <!-- CABECERA CLICABLE PARA EXPANDIR / COLAPSAR -->
+            <div onclick="toggleFormCaso()" class="bg-[#0b4d42] hover:bg-[#0d594d] transition-colors duration-200 text-white px-6 py-4 flex items-center justify-between shadow-sm border-b border-teal-900 cursor-pointer select-none">
+                <div class="flex items-center gap-3">
+                    <i id="chevronFormCaso" class="fa-solid fa-chevron-down text-emerald-400 text-sm transition-transform duration-200"></i>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-file-medical text-emerald-400 text-lg"></i>
+                        <h2 class="text-sm font-extrabold uppercase tracking-wider">Ficha de Notificación Interactiva de Casos</h2>
+                    </div>
+                </div>
+                <span class="bg-emerald-50/20 text-emerald-300 text-[10px] font-black px-3.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
+                    <span class="relative flex h-1.5 w-1.5">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                    </span>
+                    KARDEX CONECTADO
+                </span>
+            </div>
+            <!-- Cuerpo que inicia CERRADO -->
+            <div id="formCasoBody" class="hidden p-6 bg-slate-50/20 transition-all duration-300">
+                <form id="formNuevoCaso" onsubmit="registrarNuevoCaso(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs font-bold text-slate-600">
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Semana Epidemiológica (S.E.)</label>
+                        <input type="number" id="casoSE" required min="1" max="53" placeholder="Ej. 21" class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Fecha Notificación</label>
+                        <input type="date" id="casoFecha" required class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Apellidos y Nombres (Paciente)</label>
+                        <input type="text" id="casoPaciente" required placeholder="Ej. CASTRO REYES LUIS" class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2.5 uppercase focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Historia Clínica (H.C.)</label>
+                        <input type="text" id="casoHC" required placeholder="Ej. 208016" class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">DNI / Carnet Ext.</label>
+                        <input type="text" id="casoDNI" required placeholder="Ej. 74581290" class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tipo de Prueba (Reactivo Consumido)</label>
+                        <select id="casoPrueba" required class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                            <option value="Dengue" selected>Dengue (Consume Pruebas Dengue NS1)</option>
+                            <option value="Panel resp">Panel resp (Consume Hisopos Nasofaringeos)</option>
+                            <option value="Sarampion">Sarampion (Consume Kits ARN Molecular)</option>
+                            <option value="Arañazo de gato">Arañazo de gato (Consume Láminas Bartonella IFI)</option>
+                            <option value="Coqueluche">Coqueluche (Consume Lancetas / Reactivos)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Resultado Clínico</label>
+                        <select id="casoResultado" required class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                            <option value="POSITIVO">POSITIVO</option>
+                            <option value="NEGATIVO">NEGATIVO</option>
+                            <option value="PENDIENTE" selected>PENDIENTE</option>
+                            <option value="DESCARTADO">DESCARTADO</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Sector / Zona</label>
+                        <select id="casoSector" required class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                            <option value="Pachacútec" selected>Pachacútec / Proyecto Piloto</option>
+                            <option value="Mi Perú">Mi Perú</option>
+                            <option value="Ventanilla Alta">Ventanilla Alta / Centro</option>
+                            <option value="Ventanilla Baja">Ventanilla Baja / Naval</option>
+                            <option value="Villa Los Reyes">Villa Los Reyes</option>
+                            <option value="Angamos">Angamos</option>
+                            <option value="Otros">Otros Sectores / Sin Especificar</option>
+                        </select>
+                    </div>
+                    <div class="lg:col-span-2">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Observación / Detalle Clínico</label>
+                        <input type="text" id="casoObservacion" placeholder="Ej. Sintomático, fiebre persistente por 3 días" class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">
+                    </div>
+                    <div class="lg:col-span-5 flex justify-end gap-3 pt-2">
+                        <button type="reset" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-6 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-colors">
+                            Limpiar Formulario
+                        </button>
+                        <button type="submit" class="bg-[#0f4c43] hover:bg-teal-800 text-white px-8 py-2.5 rounded-lg text-xs font-black uppercase tracking-wider transition-all shadow-md hover:-translate-y-0.5 active:translate-y-0">
+                            <i class="fa-solid fa-cloud-arrow-up mr-1.5"></i> Integrar y Descontar Kardex
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
 
         <!-- ================= FILTRO DE CONTROL ================= -->
         <section class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print">
@@ -471,7 +575,7 @@
                     <i class="fa-solid fa-hourglass-half text-xl"></i>                
                 </div>            
             </div>
-            <!-- KPI 7: TASA DE POSITIVIDAD DINÁMICA CON SEMÁFORO -->
+            <!-- KPI 7 -->
             <div id="kpiTasaCard" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-md flex items-center justify-between min-h-[110px] transition-all duration-350">                
                 <div>                    
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tasa Positividad</p>                    
@@ -611,11 +715,12 @@
                             <th class="p-3.5 font-bold text-slate-700">Tipo de Prueba</th>                            
                             <th class="p-3.5 font-bold text-slate-700 text-center">Resultado</th>                            
                             <th class="p-3.5 font-bold text-slate-700 text-center">Observación</th>                        
+                            <th class="p-3.5 font-bold text-slate-700 text-center no-print">Acciones</th>
                         </tr>                    
                     </thead>                    
                     <tbody id="samplesTableBody" class="divide-y divide-slate-100 font-bold text-sm">                        
                         <tr>                            
-                            <td colspan="8" class="p-8 text-center text-slate-400 font-semibold">                                
+                            <td colspan="9" class="p-8 text-center text-slate-400 font-semibold">                                
                                 <i class="fa-solid fa-spinner animate-spin text-2xl mb-1 block text-teal-600"></i>                                
                                 Cargando historial...                            
                             </td>                        
@@ -649,7 +754,7 @@
             <form id="kardexForm" onsubmit="addInsumoStock(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 p-4 bg-slate-50/50 rounded-xl border border-slate-200/50 text-xs no-print">                
                 <div class="lg:col-span-6 flex justify-between items-center border-b border-slate-200 pb-2 mb-2">                    
                     <span id="kardexFormTitle" class="text-xs font-black text-brand-dark uppercase tracking-wider flex items-center gap-2">                        
-                        <i class="fa-solid fa-pen-to-square text-emerald-500"></i> Registrar Entrada de Insumos                    
+                        <i class="fa-solid fa-plus-circle text-emerald-500"></i> Registrar Entrada de Insumos                    
                     </span>                    
                     <button type="button" id="btnCancelEdit" onclick="cancelEditInsumo()" class="hidden bg-rose-100 hover:bg-rose-200 text-rose-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded transition-colors shadow-sm">                        
                         <i class="fa-solid fa-times-circle"></i> Cancelar Edición                    
@@ -720,10 +825,10 @@
 
     <!-- LOGICA JAVASCRIPT PRINCIPAL -->
     <script>
-        // Enlace CSV oficial de tu hoja de cálculo obtenido con output=csv
+        // Enlace oficial de tu Google Sheet (Published as CSV)
         const URL_GOOGLE_SHEET = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH-sGKVHNCt-kPiOoVv1BnmsTSE1onfi0f05kk0hh8Uc0l0kH3V8QzY22UdS23TjA9MCX8tDYwSNe7/pub?gid=1171051655&single=true&output=csv";
 
-        // Respaldos de Contingencia por si la red falla en el visor local
+        // Datos locales de respaldo / contingencia
         const DATOS_RESPALDO = [
             { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "22/05/2026", "APELLIDOS Y NOMBRES": "DIAZ MUÑOZ DYLAN JHEBECO (Pachacútec)", "H.C.": "208015", "DNI": "10008024", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "Muestra tomada en Pachacutec", "SECTOR": "Pachacútec" },
             { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "20/05/2026", "APELLIDOS Y NOMBRES": "CHAVEZ MOZOMBIRE EMILIA (Mi Perú)", "H.C.": "208013", "DNI": "10000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "Sector Mi Peru", "SECTOR": "Mi Perú" },
@@ -737,11 +842,13 @@
             { "SEMANA EPIDEMIOLÓGICA": "18", "FECHAS DE NOTIFICACIÓN": "10/05/2026", "APELLIDOS Y NOMBRES": "CORTEZ MEJIA ROSA ELIZIA", "H.C.": "208014", "DNI": "10000804", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "NEGATIVO", "OBSERVACION": "---", "SECTOR": "Mi Perú" }
         ];
 
-        // Estado Global de la Aplicación
-        let datosGlobales = [];
-        let datosFiltrados = [];
+        // DECLARACIÓN EXPLÍCITA DEL ESTADO GLOBAL (Evita ReferenceError)
+        let datosBaseDescargados = [];     // Caché local de los datos importados de Google Sheets
+        let datosLocalesAdicionales = []; // Casos agregados de forma interactiva localmente
+        let datosGlobales = [];           // Combinación unificada de ambos orígenes
+        let datosFiltrados = [];          // Set de datos filtrado mostrado actualmente
         
-        // Paginación del Historial
+        // Configuración de la paginación de la tabla de muestras
         let currentPage = 1;
         const recordsPerPage = 10;
 
@@ -751,12 +858,12 @@
         let chartPatogenosInstance = null;
         let chartResultadosInstance = null;
 
-        // Base de datos local inicial del Kardex (Se guardará en localStorage)
+        // Estructura del inventario inicial para el Kardex
         let inventarioKardex = [
             { id: 1, nombre: "Pruebas Rápidas Dengue NS1", ingresos: 500, lote: "DENG-2026-A1", vence: "31-Dic-2027", f_ingreso: "20-May-2026", prueba_asoc: "Dengue" },
             { id: 2, nombre: "Hisopos Nasofaringeos (Medio Viral)", ingresos: 450, lote: "NASO-2026-T2", vence: "15-Ago-2027", f_ingreso: "22-May-2026", prueba_asoc: "Panel resp" },
             { id: 3, nombre: "Kits de Extracción de ARN Molecular", ingresos: 250, lote: "extr-2026-R3", vence: "20-Mar-2028", f_ingreso: "23-May-2026", prueba_asoc: "Sarampion" },
-            { id: 4, fontAwesome: "Láminas Reactivas Bartonella IFI", nombre: "Láminas Reactivas Bartonella IFI", ingresos: 200, lote: "BART-2026-G8", vence: "10-May-2027", f_ingreso: "10-May-2026", prueba_asoc: "Arañazo de gato" },
+            { id: 4, nombre: "Láminas Reactivas Bartonella IFI", ingresos: 200, lote: "BART-2026-G8", vence: "10-May-2027", f_ingreso: "10-May-2026", prueba_asoc: "Arañazo de gato" },
             { id: 5, nombre: "Lancetas de Punción Periférica", ingresos: 100, lote: "LANC-2026-L5", vence: "01-Jun-2028", f_ingreso: "23-May-2026", prueba_asoc: "Todas" }
         ];
 
@@ -764,47 +871,57 @@
 
         // --- CONTROLADOR DE PESTAÑAS (TAB SWITCHER) ---
         function switchAlertTab(tabName) {
-            // Ocultar todos los paneles
             document.getElementById('tabContent-oms').classList.add('hidden');
             document.getElementById('tabContent-cdc').classList.add('hidden');
             document.getElementById('tabContent-region').classList.add('hidden');
             
-            // Remover estilos activos de todos los botones de pestañas
             const tabs = ['oms', 'cdc', 'region'];
             tabs.forEach(t => {
                 const btn = document.getElementById('tabBtn-' + t);
                 if (btn) {
-                    btn.classList.remove('border-brand-teal', 'text-brand-dark');
-                    btn.classList.add('border-transparent', 'text-slate-500');
+                    btn.className = "py-2.5 px-6 font-bold text-slate-400 hover:text-slate-200 transition-all duration-200 shrink-0 text-sm";
                 }
             });
             
-            // Mostrar panel activo y aplicar estilos de resalte
             document.getElementById('tabContent-' + tabName).classList.remove('hidden');
             const activeBtn = document.getElementById('tabBtn-' + tabName);
             if (activeBtn) {
-                activeBtn.classList.remove('border-transparent', 'text-slate-500');
-                activeBtn.classList.add('border-brand-teal', 'text-brand-dark');
+                activeBtn.className = "py-2.5 px-6 font-extrabold text-amber-500 bg-[#1e2a41] border border-amber-500/40 rounded-xl transition-all duration-200 shrink-0 text-sm shadow-md";
             }
         }
 
-        // Homologador Epidemiológico de Resultados Clínicos
+        // --- CONTROLADOR DE COLAPSO INTERACTIVO DE FICHA CASOS (F-100) ---
+        function toggleFormCaso() {
+            const body = document.getElementById("formCasoBody");
+            const chevron = document.getElementById("chevronFormCaso");
+            if (body.classList.contains("hidden")) {
+                body.classList.remove("hidden");
+                chevron.classList.remove("fa-chevron-down");
+                chevron.classList.add("fa-chevron-up");
+            } else {
+                body.classList.add("hidden");
+                chevron.classList.remove("fa-chevron-up");
+                chevron.classList.add("fa-chevron-down");
+            }
+        }
+
+        // Homologador de Resultados Clínicos
         function mapResultado(resStr) {
             if (!resStr) return "PENDIENTE";
             let clean = resStr.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
             if (clean.includes("POSITIVO") || clean === "POS" || clean === "CONFIRMADO" || clean === "SI" || clean === "+" || clean === "REACTIVO" || clean === "REACTIVE" || clean === "DETECTADO") {
                 return "POSITIVO";
             }
-            if (clean.includes("NEGATIVO") || clean === "NEG" || clean === "-" || clean.includes("NO REACTIVO") || clean === "NON-REACTIVE" || clean === "NO DETECTADO") {
+            if (clean.includes("NEGATIVO") || clean === "NEG" || clean === "-" || clean.includes("NO REACTIVO") || clean === "NO DETECTADO") {
                 return "NEGATIVO";
             }
-            if (clean.includes("DESCARTADO") || clean === "DES" || clean === "DESC" || clean === "RECHAZADO") {
+            if (clean.includes("DESCARTADO") || clean === "DESC") {
                 return "DESCARTADO";
             }
             return "PENDIENTE";
         }
 
-        // Extractor Universal de Año (Insensible a delimitadores de fecha)
+        // Extractor Universal de Año
         function extractYear(dateStr) {
             if (!dateStr || dateStr === "---") return "";
             const parts = dateStr.split(/[\/\-\s]+/);
@@ -834,7 +951,7 @@
             return weekStr.trim();
         }
 
-        // --- MOTOR INTELIGENTE DE NORMALIZACIÓN DE CABECERAS ---
+        // --- MOTOR INTELIGENTE DE NORMALIZACIÓN DE CABECERAS (Fuzzy Normalizer) ---
         function getRowValue(fila, possibleHeaders, defaultValue = "---") {
             if (!fila) return defaultValue;
             const keys = Object.keys(fila);
@@ -846,7 +963,6 @@
             
             const normalizedTargets = possibleHeaders.map(normalize);
             
-            // Intento 1: Coincidencia de cabecera normalizada exacta
             for (let key of keys) {
                 const normKey = normalize(key);
                 if (normalizedTargets.includes(normKey)) {
@@ -855,7 +971,6 @@
                 }
             }
 
-            // Intento 2: Coincidencia por proximidad de texto (Substring)
             for (let key of keys) {
                 const normKey = normalize(key);
                 for (let target of normalizedTargets) {
@@ -868,14 +983,14 @@
             return defaultValue;
         }
 
-        // --- MANEJO DE MODAL DE ALERTAS EPIDEMIOLÓGICAS ---
+        // --- MANEJO DE MODAL DE ALERTAS ---
         function openAlertsModal() {
             const modal = document.getElementById("alertsModal");
             if (modal) {
                 modal.classList.remove("opacity-0", "pointer-events-none");
                 modal.querySelector("div").classList.remove("scale-95");
                 modal.querySelector("div").classList.add("scale-100");
-                switchAlertTab('oms'); // Iniciar siempre en OMS para consistencia
+                switchAlertTab('oms'); 
             }
         }
 
@@ -889,129 +1004,160 @@
         }
 
         // --- HELPER ASÍNCRONO DE CONTROL DE TIEMPO DE ESPERA (TIMEOUT) ---
-        async function fetchConTimeout(resource, options = {}, timeout = 2500) {
+        function fetchConTimeout(resource, options = {}, timeout = 3000) {
             const controller = new AbortController();
             const id = setTimeout(() => controller.abort(), timeout);
-            const response = await fetch(resource, {
+            return fetch(resource, {
                 ...options,
                 signal: controller.signal
+            }).then(response => {
+                clearTimeout(id);
+                return response;
+            }).catch(err => {
+                clearTimeout(id);
+                throw err;
             });
-            clearTimeout(id);
-            return response;
         }
 
-        // --- SISTEMA DE CONEXIÓN DE DATOS ---
+        // --- SISTEMA DE CONEXIÓN DE DATOS CON FAILOVER SECUENCIAL GARANTIZADO ---
         async function conectarYDescargar() {
             actualizarEstadoVisualConexion("connecting");
             
-            // Intento 1: Fetch Directo
+            // Generar URL con Cache Buster dinámico contra caché
+            const cacheBuster = "&_cb=" + Date.now();
+            const sheetUrlWithBuster = URL_GOOGLE_SHEET + cacheBuster;
+            let csvText = null;
+            let canalExito = "fallback";
+
+            // Nivel 1: Conexión Directa al Servidor
             try {
-                console.log("Intento 1: Conexión directa al servidor de Google...");
-                const res = await fetchConTimeout(URL_GOOGLE_SHEET, {}, 2500);
+                console.log("Nivel 1: Conexión directa...");
+                const res = await fetchConTimeout(sheetUrlWithBuster, {}, 3000);
                 if (res.ok) {
-                    const text = await res.text();
-                    if (validarYProcesarCSV(text, "success")) return;
+                    csvText = await res.text();
+                    canalExito = "success";
                 }
             } catch (e) {
-                console.warn("Intento 1 bloqueado o excedió el tiempo de respuesta.");
+                console.warn("Nivel 1 falló por restricciones locales o de red.");
             }
 
-            // Intento 2: Proxy corsproxy.io
-            try {
-                console.log("Intento 2: Conexión cifrada vía corsproxy.io...");
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(URL_GOOGLE_SHEET)}`;
-                const res = await fetchConTimeout(proxyUrl, {}, 2500);
-                if (res.ok) {
-                    const text = await res.text();
-                    if (validarYProcesarCSV(text, "proxy")) return;
+            // Nivel 2: CORSProxy.io (con sintaxis estricta corrigiendo CORS)
+            if (!csvText) {
+                try {
+                    console.log("Nivel 2: CORSProxy.io...");
+                    const proxyUrl = `https://corsproxy.io/?url=${encodeURIComponent(sheetUrlWithBuster)}`;
+                    const res = await fetchConTimeout(proxyUrl, {}, 3000);
+                    if (res.ok) {
+                        csvText = await res.text();
+                        canalExito = "proxy";
+                    }
+                } catch (e) {
+                    console.warn("Nivel 2 falló o proxy congestionado.");
                 }
-            } catch (e) {
-                console.warn("Intento 2 falló o excedió el tiempo límite.");
             }
 
-            // Intento 3: Proxy AllOrigins
-            try {
-                console.log("Intento 3: Conexión alternativa vía allorigins...");
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(URL_GOOGLE_SHEET)}`;
-                const res = await fetchConTimeout(proxyUrl, {}, 2500);
-                if (res.ok) {
-                    const text = await res.text();
-                    if (validarYProcesarCSV(text, "proxy")) return;
+            // Nivel 3: AllOrigins Raw
+            if (!csvText) {
+                try {
+                    console.log("Nivel 3: AllOrigins...");
+                    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(sheetUrlWithBuster)}`;
+                    const res = await fetchConTimeout(proxyUrl, {}, 3000);
+                    if (res.ok) {
+                        csvText = await res.text();
+                        canalExito = "proxy";
+                    }
+                } catch (e) {
+                    console.warn("Nivel 3 inactivo.");
                 }
-            } catch (e) {
-                console.error("Todos los canales de red asíncronos fallaron.");
             }
 
-            // Fallback total inmediato: Modo Demostración Local
-            console.log("Cargando datos locales...");
-            cargarDatosEnDashboard(DATOS_RESPALDO);
+            // Nivel 4: ThingProxy
+            if (!csvText) {
+                try {
+                    console.log("Nivel 4: ThingProxy...");
+                    const proxyUrl = `https://thingproxy.freeboard.io/fetch/${encodeURIComponent(sheetUrlWithBuster)}`;
+                    const res = await fetchConTimeout(proxyUrl, {}, 3000);
+                    if (res.ok) {
+                        csvText = await res.text();
+                        canalExito = "proxy";
+                    }
+                } catch (e) {
+                    console.warn("Nivel 4 de contingencia inactivo.");
+                }
+            }
+
+            // PROCESAR TEXTO O ACTIVAR FALLBACK
+            if (csvText && !csvText.trim().startsWith("<!DOCTYPE") && !csvText.trim().startsWith("<html")) {
+                try {
+                    const resultados = Papa.parse(csvText.trim(), {
+                        header: true,
+                        skipEmptyLines: true,
+                        transformHeader: function(h) {
+                            return h.trim().replace(/^\uFEFF/, '').replace(/["']/g, '');
+                        }
+                    });
+
+                    if (resultados.data && resultados.data.length > 0) {
+                        console.log(`Carga exitosa desde Google Sheet vía ${canalExito}. Filas: ${resultados.data.length}`);
+                        fusionarYRefrescarDashboard(resultados.data);
+                        actualizarEstadoVisualConexion(canalExito);
+                        return;
+                    }
+                } catch (err) {
+                    console.error("Error al parsear el CSV descargado:", err);
+                }
+            }
+
+            // Fallback inmediato si no hay respuesta de la red
+            console.log("Activando contingencia de base de datos offline...");
+            fusionarYRefrescarDashboard(DATOS_RESPALDO);
             actualizarEstadoVisualConexion("fallback");
         }
 
-        function validarYProcesarCSV(texto, canal) {
-            if (texto.trim().startsWith("<!DOCTYPE") || texto.trim().startsWith("<html")) {
-                console.error("El enlace de Google Sheets apunta a la versión HTML.");
-                return false;
-            }
-
-            Papa.parse(texto, {
-                header: true,
-                skipEmptyLines: true,
-                transformHeader: function(h) {
-                    return h.trim().replace(/^\uFEFF/, '').replace(/["']/g, '');
-                },
-                complete: function(resultados) {
-                    try {
-                        if (resultados.data && resultados.data.length > 0) {
-                            cargarDatosEnDashboard(resultados.data);
-                            actualizarEstadoVisualConexion(canal);
-                        } else {
-                            cargarDatosEnDashboard(DATOS_RESPALDO);
-                            actualizarEstadoVisualConexion("fallback");
-                        }
-                    } catch (err) {
-                        console.error("Error al procesar datos: ", err);
-                        cargarDatosEnDashboard(DATOS_RESPALDO);
-                        actualizarEstadoVisualConexion("fallback");
-                    }
-                },
-                error: function() {
-                    cargarDatosEnDashboard(DATOS_RESPALDO);
-                    actualizarEstadoVisualConexion("fallback");
-                }
-            });
-            return true;
-        }
-
-        // CONTROL DINÁMICO DEL BLINK DE "MÓDULO ACTIVO" Y APERTURA DE POPUP DE BIENVENIDA
+        // CONTROL DINÁMICO DEL BLINK EN CABECERA
         function actualizarEstadoVisualConexion(estado) {
+            const badge = document.getElementById("connectionStatusBadge");
+            const text = document.getElementById("connectionText");
+            const ping = document.getElementById("connectionPing");
+            const dot = document.getElementById("connectionDot");
             const updateSuccessBadge = document.getElementById("updateSuccessBadge");
 
+            if (!badge || !text) return;
+
             if (estado === "connecting") {
-                if (updateSuccessBadge) {
-                    updateSuccessBadge.classList.add("hidden");
-                }
+                badge.className = "bg-yellow-500/20 text-yellow-300 text-xs px-4 py-2.5 rounded-xl border border-yellow-500/30 flex items-center gap-2.5 font-black select-none h-[38px] leading-none transition-all duration-300";
+                text.innerText = "CONECTANDO...";
+                if (ping) ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75";
+                if (dot) dot.className = "relative inline-flex rounded-full h-2 w-2 bg-yellow-500";
+                if (updateSuccessBadge) updateSuccessBadge.classList.add("hidden");
             } 
-            else if (estado === "success" || estado === "proxy") {
-                if (updateSuccessBadge) {
-                    updateSuccessBadge.classList.remove("hidden");
-                }
-                triggerWelcomeModal("¡Carga Exitosa!");
+            else if (estado === "success") {
+                badge.className = "bg-emerald-500/20 text-emerald-300 text-xs px-4 py-2.5 rounded-xl border border-emerald-500/30 flex items-center gap-2.5 font-black select-none h-[38px] leading-none transition-all duration-300";
+                text.innerText = "CONECTADO EN VIVO";
+                if (ping) ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+                if (dot) dot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+                if (updateSuccessBadge) updateSuccessBadge.classList.remove("hidden");
+                triggerWelcomeModal("Sincronización Exitosa");
+            } 
+            else if (estado === "proxy") {
+                badge.className = "bg-teal-500/20 text-teal-300 text-xs px-4 py-2.5 rounded-xl border border-teal-500/30 flex items-center gap-2.5 font-black select-none h-[38px] leading-none transition-all duration-300";
+                text.innerText = "CONECTADO (MÉTODO SEGURO)";
+                if (ping) ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75";
+                if (dot) dot.className = "relative inline-flex rounded-full h-2 w-2 bg-teal-500";
+                if (updateSuccessBadge) updateSuccessBadge.classList.remove("hidden");
+                triggerWelcomeModal("Sincronización Exitosa");
             } 
             else if (estado === "fallback") {
-                if (updateSuccessBadge) {
-                    updateSuccessBadge.classList.remove("hidden");
-                }
-                triggerWelcomeModal("¡Carga Exitosa! (Simulación)");
+                badge.className = "bg-rose-500/20 text-rose-300 text-xs px-4 py-2.5 rounded-xl border border-rose-500/30 flex items-center gap-2.5 font-black select-none h-[38px] leading-none transition-all duration-300";
+                text.innerText = "MODO OFFLINE / CONTINGENCIA";
+                if (ping) ping.className = "hidden";
+                if (dot) dot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500";
+                if (updateSuccessBadge) updateSuccessBadge.classList.remove("hidden");
+                triggerWelcomeModal("Carga Completada (Modo Local)");
             }
         }
 
         // --- PANTALLA DE BIENVENIDA ---
-        // Se cambió el nombre de la función a español para mantener consistencia científica de funciones
-        function inicializarOpcionesDeFiltros(datos) {
-            initializeOptionsOfFilters(datos);
-        }
-
         function triggerWelcomeModal(statusMessage) {
             const modal = document.getElementById("welcomeModal");
             const statusLabel = document.getElementById("welcomeStatusText");
@@ -1088,9 +1234,9 @@
             dialog.querySelector("div").classList.add("scale-95");
         }
 
-        // --- MAPEO DE COLUMNAS USANDO EL MOTOR DE NORMALIZACIÓN ULTRA FUZZY ---
-        function cargarDatosEnDashboard(datos) {
-            datosGlobales = datos.map(fila => {
+        // --- NORMALIZADOR DE DATOS DE ORIGEN ---
+        function normalizarDatosCrudos(datosRaw) {
+            return datosRaw.map(fila => {
                 return {
                     semana: normalizeWeek(getRowValue(fila, ["semana epidemiologica", "semana epidemiológica", "semana epi", "s.e.", "semana", "se", "epi week", "week", "n semana", "n° semana", "num semana", "numero de semana"], "---")),
                     fechaNoti: getRowValue(fila, ["fechas de notificacion", "fecha de notificacion", "fecha de notificación", "fechas de notificación", "fecha noti", "fechas", "fecha", "notificacion", "notificación", "f_noti", "f.noti", "fnoti", "fecha de registro", "fecha registro"], "---"),
@@ -1100,12 +1246,83 @@
                     prueba: getRowValue(fila, ["tipo de prueba", "prueba", "examen", "pruebas", "diagnostico", "analisis", "procedimiento", "examen solicitado", "prueba diagnostica", "patogeno", "patógeno", "enfermedad"], "No especificado"),
                     resultado: mapResultado(getRowValue(fila, ["resultado clinico", "resultado final", "clasificacion final", "resultado", "resultados", "diagnostico", "diagnostico final", "resultado de prueba", "estado", "clasificacion", "clasificación", "condicion"], "PENDIENTE")),
                     observacion: getRowValue(fila, ["observacion", "observación", "observaciones", "obser", "obs", "detalle", "comentario", "comentarios", "nota", "notas"], "---"),
-                    sector: getRowValue(fila, ["sector", "zona", "localidad", "distrito", "direccion", "dirección", "procedencia", "establecimiento", "e.s.", "lugar", "procedencia establecimiento", "jurisdiccion", "jurisdicción"], "---")
+                    sector: getRowValue(fila, ["sector", "zona", "localidad", "distrito", "direccion", "dirección", "procedencia", "establecimiento", "e.s.", "lugar", "procedencia establecimiento", "jurisdiccion", "jurisdicción"], "---"),
+                    isLocal: false
                 };
             });
+        }
 
-            inicializarOpcionesDeFiltros(datosGlobales);
+        // --- SISTEMA UNIFICADO DE FUSIÓN DE DATOS ---
+        function fusionarYRefrescarDashboard(datosSheetsRaw = null) {
+            if (datosSheetsRaw) {
+                datosBaseDescargados = normalizarDatosCrudos(datosSheetsRaw);
+            }
+
+            const guardadosLocales = localStorage.getItem("ventanilla_muestras_local");
+            if (guardadosLocales) {
+                datosLocalesAdicionales = JSON.parse(guardadosLocales);
+            } else {
+                datosLocalesAdicionales = [];
+            }
+
+            datosGlobales = [...datosLocalesAdicionales, ...datosBaseDescargados];
+
+            initializeOptionsOfFilters(datosGlobales);
             filtrarYRefrescarDashboard();
+        }
+
+        // REGISTRO DE NUEVO CASO (FICHA F-100)
+        function registrarNuevoCaso(event) {
+            event.preventDefault();
+
+            const se = document.getElementById("casoSE").value.trim();
+            const fechaVal = document.getElementById("casoFecha").value;
+            const fecha = formatDate(fechaVal);
+            const paciente = document.getElementById("casoPaciente").value.toUpperCase().trim();
+            const hc = document.getElementById("casoHC").value.trim();
+            const dni = document.getElementById("casoDNI").value.trim();
+            const prueba = document.getElementById("casoPrueba").value;
+            const resultado = document.getElementById("casoResultado").value;
+            const sector = document.getElementById("casoSector").value;
+            const observacion = document.getElementById("casoObservacion").value.trim() || "---";
+
+            const nuevoCaso = {
+                semana: se,
+                fechaNoti: fecha,
+                paciente: paciente,
+                hc: hc,
+                dni: dni,
+                prueba: prueba,
+                resultado: resultado,
+                observacion: observacion,
+                sector: sector,
+                isLocal: true, 
+                id: "case-" + Date.now() + "-" + Math.floor(Math.random() * 1000)
+            };
+
+            datosLocalesAdicionales.unshift(nuevoCaso);
+            localStorage.setItem("ventanilla_muestras_local", JSON.stringify(datosLocalesAdicionales));
+
+            fusionarYRefrescarDashboard();
+
+            document.getElementById("formNuevoCaso").reset();
+            setDefaultCasoDates();
+
+            mostrarAlertaDialog(
+                "Notificación Registrada exitosamente", 
+                `El paciente ${paciente} ha sido integrado al censo. Se ha recalculado el stock del Kardex de Insumos.`
+            );
+        }
+
+        // ELIMINAR CASO LOCAL
+        function eliminarCasoLocal(id) {
+            mostrarConfirmacionDialog("¿Seguro que desea eliminar esta muestra? El stock consumido del Kardex se recuperará de inmediato.", function() {
+                datosLocalesAdicionales = datosLocalesAdicionales.filter(x => x.id !== id);
+                localStorage.setItem("ventanilla_muestras_local", JSON.stringify(datosLocalesAdicionales));
+                
+                fusionarYRefrescarDashboard();
+                mostrarAlertaDialog("Caso Eliminado", "La muestra seleccionada ha sido borrada.");
+            });
         }
 
         function initializeOptionsOfFilters(datos) {
@@ -1150,7 +1367,6 @@
             filtrarYRefrescarDashboard();
         }
 
-        // FUNCIÓN REINICIAR FILTROS
         function resetFilters() {
             document.getElementById("filterWeek").value = "ALL";
             document.getElementById("filterYear").value = "ALL";
@@ -1173,7 +1389,7 @@
             filtrarYRefrescarDashboard();
         }
 
-        // MOTOR DE FILTRADO MULTIVARIABLE
+        // FILTRADO MULTIVARIABLE GENERAL
         function filtrarYRefrescarDashboard() {
             const filterWeek = document.getElementById("filterWeek").value;
             const filterYear = document.getElementById("filterYear").value;
@@ -1192,7 +1408,6 @@
 
                 if (filterTestType !== "ALL" && f.prueba !== filterTestType) return false;
 
-                // Filtrado por Sector de Ventanilla usando búsqueda cruzada de palabras clave
                 if (filterSector !== "ALL") {
                     const sectorObj = filterSector.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     const buscarEn = (f.paciente + " " + f.observacion + " " + f.sector).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -1242,7 +1457,6 @@
             actualizarExistenciasKardex();
         }
 
-        // --- KPIs DE ALTO IMPACTO COMPLETAMENTE SINCRONIZADOS ---
         function renderizarKPIs(datos) {
             let total = datos.length;
             let positivos = 0;
@@ -1253,7 +1467,6 @@
             const selectedTest = document.getElementById("filterTestType").value;
             let countPatogeno = 0;
 
-            // Determinar dinámicamente la semana para el KPI
             let selectedSE = document.getElementById("filterWeek").value;
             let displaySE = selectedSE;
             
@@ -1279,7 +1492,6 @@
                 else if (f.resultado === "DESCARTADO") descartados++;
                 else pendientes++;
 
-                // Conteos comparativos
                 if (selectedTest !== "ALL" && f.prueba.trim() === selectedTest.trim()) {
                     countPatogeno++;
                 }
@@ -1288,7 +1500,6 @@
                 }
             });
 
-            // TASA DE POSITIVIDAD CIENTÍFICAMENTE EXACTA
             let totalProcesados = positivos + negativos + descartados;
             let tasaNumerica = totalProcesados > 0 ? (positivos / totalProcesados) * 100 : 0;
             let tasaText = tasaNumerica.toFixed(1) + "%";
@@ -1296,11 +1507,10 @@
             document.getElementById("kpiTotal").innerText = total;
             document.getElementById("kpiTotalSub").innerText = `De ${datosGlobales.length} registros globales`;
             document.getElementById("kpiPositivos").innerText = positivos;
-            document.getElementById("kpiNegativos").innerText = negativos + descartados; // Agrupado para consistencia visual
+            document.getElementById("kpiNegativos").innerText = negativos + descartados;
             document.getElementById("kpiPendientes").innerText = pendientes;
             document.getElementById("kpiTasa").innerText = tasaText;
 
-            // Actualización dinámica del Semáforo de Riesgo (KPI 7)
             const cardTasa = document.getElementById("kpiTasaCard");
             const alertTasaText = document.getElementById("kpiTasaAlert");
             const iconTasaContainer = document.getElementById("kpiTasaIconContainer");
@@ -1329,7 +1539,6 @@
                 }
             }
 
-            // Sincronizar KPI de Patógeno Dinámico
             if (selectedTest !== "ALL") {
                 document.getElementById("kpiPatogeno").innerText = countPatogeno;
                 document.getElementById("kpiPatogenoSub").innerText = selectedTest;
@@ -1342,7 +1551,6 @@
             document.getElementById("kpiSEValue").innerText = countSE;
         }
 
-        // TABLA 1: RESUMEN EPIDEMIOLÓGICO DE PATÓGENOS VIGILADOS
         function renderizarTablaResumen(datos) {
             let agrupado = {};
 
@@ -1394,14 +1602,14 @@
             document.getElementById("summaryTableBody").innerHTML = html;
         }
 
-        // TABLA 2: HISTORIAL INTEGRADO DE MUESTRAS REGISTRADAS
+        // TABLA HISTORIAL DE REGISTROS
         function renderizarTablaHistorial(datos) {
             const tbody = document.getElementById("samplesTableBody");
             
             if (datos.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="p-8 text-center text-slate-400 font-semibold">
+                        <td colspan="9" class="p-8 text-center text-slate-400 font-semibold">
                             <i class="fa-solid fa-folder-open text-2xl mb-1 block text-slate-300"></i>
                             Base de datos vacía o ningún registro coincide con la búsqueda.
                         </td>
@@ -1435,6 +1643,21 @@
                     badgeClass = "bg-emerald-100 text-emerald-700 border border-emerald-200";
                 }
 
+                let actionHtml = "";
+                if (f.isLocal) {
+                    actionHtml = `
+                        <button onclick="eliminarCasoLocal('${f.id}')" class="text-rose-600 hover:text-rose-800 hover:scale-110 active:scale-90 transition-all p-1" title="Eliminar muestra interactiva">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    `;
+                } else {
+                    actionHtml = `
+                        <span class="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full uppercase font-black tracking-wider shadow-inner" title="Registro oficial sincronizado">
+                            Nube
+                        </span>
+                    `;
+                }
+
                 html += `
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="p-3.5 text-center text-slate-500 font-medium">${f.semana}</td>
@@ -1447,6 +1670,7 @@
                             <span class="px-2 py-1 rounded text-xs font-black ${badgeClass}">${displayRes}</span>
                         </td>
                         <td class="p-3.5 text-center text-slate-500 font-medium">${f.observacion}</td>
+                        <td class="p-3.5 text-center no-print">${actionHtml}</td>
                     </tr>
                 `;
             });
@@ -1605,9 +1829,14 @@
                 let countMuestras = 0;
                 
                 datosGlobales.forEach(fila => {
-                    if (ins.prueba_asoc === "Todas") {
+                    let filePrueba = (fila.prueba || "").toLowerCase();
+                    let insPrueba = (ins.prueba_asoc || "").toLowerCase();
+
+                    if (insPrueba === "todas") {
                         countMuestras++;
-                    } else if (fila.prueba.toLowerCase().includes(ins.prueba_asoc.toLowerCase())) {
+                    } else if (filePrueba.includes(insPrueba)) {
+                        countMuestras++;
+                    } else if (insPrueba === "panel resp" && filePrueba.includes("coqueluche")) {
                         countMuestras++;
                     }
                 });
@@ -1748,7 +1977,7 @@
             document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-plus"></i> Registrar Entrada`;
         }
 
-        // --- SISTEMA DE EXPORTACIÓN CLIENTE (EXCEL) ---
+        // --- EXPORTAR EXCEL ---
         function exportarExcel() {
             if (datosFiltrados.length === 0) {
                 mostrarAlertaDialog("Exportación Cancelada", "No hay registros disponibles para exportar con los filtros actuales.");
@@ -1775,7 +2004,7 @@
             }
         }
 
-        // --- FUNCIONES UTILITARIAS DE FECHA ---
+        // --- UTILIDADES ---
         function setDefaultDates() {
             const today = new Date();
             const yyyy = today.getFullYear();
@@ -1783,6 +2012,15 @@
             const dd = String(today.getDate()).padStart(2, '0');
             document.getElementById("kardexFechaIngreso").value = `${yyyy}-${mm}-${dd}`;
             document.getElementById("kardexFechaVence").value = `${yyyy + 2}-${mm}-${dd}`;
+        }
+
+        function setDefaultCasoDates() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            const el = document.getElementById("casoFecha");
+            if (el) el.value = `${yyyy}-${mm}-${dd}`;
         }
 
         function formatDate(dateStr) {
@@ -1815,9 +2053,9 @@
             }
             
             setDefaultDates();
+            setDefaultCasoDates();
             conectarYDescargar();
 
-            // Sincronizar automáticamente en segundo plano cada 5 minutos
             setInterval(() => {
                 conectarYDescargar();
             }, 5 * 60 * 1000);
