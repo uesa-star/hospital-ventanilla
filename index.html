@@ -498,7 +498,7 @@
             <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
                 <div>                    
                     <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">                        
-                        <h3 class="text-sm font-extrabold text-rose-800 bg-rose-50 px-2.5 py-1 rounded-full uppercase tracking-wide">Diagnósticos</h3>                        
+                        <h3 class="text-sm font-extrabold text-rose-855 bg-rose-50 px-2.5 py-1 rounded-full uppercase tracking-wide">Diagnósticos</h3>                        
                         <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Diagnósticos Clínicos</h3>                    
                     </div>                    
                     <div class="relative h-64 w-full flex items-center justify-center mt-2">                        
@@ -566,7 +566,7 @@
             <!-- Tabla de datos -->            
             <div class="overflow-x-auto custom-scrollbar">                
                 <table class="w-full text-xs text-left text-slate-600 font-bold">                    
-                    <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-150">                        
+                    <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">                        
                         <tr>                            
                             <th class="p-3.5 font-bold text-slate-700 text-center">Nº de Caso</th>                            
                             <th class="p-3.5 font-bold text-slate-700 text-center">S.E.</th>                            
@@ -779,7 +779,7 @@
                     referencia: "Ref: Boletim Epidemiológico Vol. 57, N° 18 (Vigilância em Saúde, 2026)",
                     fecha: "02 de Junio de 2026",
                     donde: "Zonas de densa cobertura forestal, cuencas de ríos amazónicos y comunidades en la franja fronteriza con alta presencia del vector *Culicoides paraensis*.",
-                    queHacer: "Registro riguroso de antecedentes de viaje, uso de mosquiteros finos de malla, repelentes con concentración de DEET y aislamiento físico en fase febril.",
+                    queHacer: "Registro riguroso de antecedentes de viaje, uso de mosquiteros finos de malla, repelentes con concentración de DEET and aislamiento físico en fase febril.",
                     lab: "Extracción de suero en tubos secos en los primeros 5 días. Centrifugar, alicuotar, mantener cadena de frío stable (2-8°C) y coordinar el envío de inmediato al INS para PCR molecular."
                 },
                 {
@@ -1342,10 +1342,10 @@
             let tiposPruebaSet = new Set();
 
             datos.forEach(f => {
-                if (f.semana && f.semana !== "" && f.semana !== "---") semanasSet.add(f.semana);
-                let anoExtraido = extractYear(f.fechaNoti);
+                if (f && f.semana && f.semana !== "" && f.semana !== "---") semanasSet.add(f.semana);
+                let anoExtraido = extractYear(f ? f.fechaNoti : "");
                 if (anoExtraido) anosSet.add(anoExtraido);
-                if (f.prueba && f.prueba !== "" && f.prueba !== "---") tiposPruebaSet.add(f.prueba.trim());
+                if (f && f.prueba && f.prueba !== "" && f.prueba !== "---") tiposPruebaSet.add(f.prueba.trim());
             });
 
             let semanas = Array.from(semanasSet).sort((a,b) => parseInt(a) - parseInt(b));
@@ -1502,48 +1502,83 @@
             let partes = clean.split('/');
             
             if (partes.length === 3) {
-                let dia = parseInt(partes[0], 10);
-                let mesStr = partes[1];
-                let anio = parseInt(partes[2], 10);
+                let first = parseInt(partes[0], 10);
+                let second = partes[1];
+                let third = parseInt(partes[2], 10);
                 
-                // Mapeador de meses textuales abreviados en español (ej: "May", "Dic")
-                const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-                let mesIdx = meses.indexOf(mesStr.toLowerCase());
-                if (mesIdx !== -1) {
-                    return new Date(anio, mesIdx, dia);
+                if (partes[0].length === 4) { // yyyy/mm/dd
+                    let anio = first;
+                    let dia = third;
+                    const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+                    let mesIdx = meses.indexOf(second.toLowerCase());
+                    let mes = (mesIdx !== -1) ? mesIdx : parseInt(second, 10) - 1;
+                    return new Date(anio, mes, dia);
+                } else { // dd/mm/yyyy
+                    let dia = first;
+                    let anio = third;
+                    const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+                    let mesIdx = meses.indexOf(second.toLowerCase());
+                    let mes = (mesIdx !== -1) ? mesIdx : parseInt(second, 10) - 1;
+                    return new Date(anio, mes, dia);
                 }
-                
-                // Si el mes es numérico
-                let mes = parseInt(partes[1], 10) - 1;
-                return new Date(anio, mes, dia);
             }
             
             let parsed = Date.parse(fechaStr);
             return isNaN(parsed) ? new Date(0) : new Date(parsed);
         }
 
-        // FILTRADO MULTIVARIABLE GENERAL Y ORDENAMIENTO CRONOLÓGICO DESCENDENTE (ÚLTIMO CASO PRIMERO)
+        // --- FUNCIÓN DE APLICACIÓN DE FILTROS (RESTAURADA) ---
+        function applyFilters() {
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+        }
+
+        // --- FUNCIÓN DE RESTABLECIMIENTO DE FILTROS (RESTAURADA) ---
+        function resetFilters() {
+            document.getElementById("filterWeek").value = "ALL";
+            document.getElementById("filterYear").value = "ALL";
+            document.getElementById("filterTestType").value = "ALL";
+            document.getElementById("filterSector").value = "ALL";
+            document.getElementById("filterResult").value = "ALL";
+            document.getElementById("buscadorPaciente").value = "";
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+        }
+
+        // FILTRADO MULTIVARIABLE GENERAL Y ORDENAMIENTO CRONOLÓGICO DESCENDENTE (CON ALGORITMO INTEGRAL ANTI-CRASHES DE CELDAS VACÍAS)
         function filtrarYRefrescarDashboard() {
-            const filterWeek = document.getElementById("filterWeek").value;
-            const filterYear = document.getElementById("filterYear").value;
-            const filterTestType = document.getElementById("filterTestType").value;
-            const filterSector = document.getElementById("filterSector").value;
-            const filterResult = document.getElementById("filterResult").value;
-            const searchVal = document.getElementById("buscadorPaciente").value.toLowerCase().trim();
+            const filterWeek = document.getElementById("filterWeek") ? document.getElementById("filterWeek").value : "ALL";
+            const filterYear = document.getElementById("filterYear") ? document.getElementById("filterYear").value : "ALL";
+            const filterTestType = document.getElementById("filterTestType") ? document.getElementById("filterTestType").value : "ALL";
+            const filterSector = document.getElementById("filterSector") ? document.getElementById("filterSector").value : "ALL";
+            const filterResult = document.getElementById("filterResult") ? document.getElementById("filterResult").value : "ALL";
+            const searchVal = document.getElementById("buscadorPaciente") ? document.getElementById("buscadorPaciente").value.toLowerCase().trim() : "";
 
             datosFiltrados = datosGlobales.filter(f => {
-                if (filterWeek !== "ALL" && f.semana !== filterWeek) return false;
+                if (!f) return false;
+
+                // 1. Filtro de Semana Epidemiológica (Epi Week)
+                if (filterWeek !== "ALL") {
+                    const semFila = (f.semana || "").toString().trim();
+                    if (semFila !== filterWeek.toString().trim()) return false;
+                }
                 
+                // 2. Filtro de Año
                 if (filterYear !== "ALL") {
-                    let anoFila = extractYear(f.fechaNoti);
-                    if (anoFila !== filterYear) return false;
+                    const anoFila = extractYear(f.fechaNoti || "").toString().trim();
+                    if (anoFila !== filterYear.toString().trim()) return false;
                 }
 
-                if (filterTestType !== "ALL" && f.prueba !== filterTestType) return false;
+                // 3. Filtro de Tipo de Prueba (Test Type)
+                if (filterTestType !== "ALL") {
+                    const pruebaFila = (f.prueba || "").toString().trim();
+                    if (pruebaFila !== filterTestType.toString().trim()) return false;
+                }
 
+                // 4. Filtro de Sector / Zona (Sector / Zone con algoritmo de protección de nulos)
                 if (filterSector !== "ALL") {
-                    const sectorObj = filterSector.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                    const buscarEn = (f.paciente + " " + f.observacion + " " + f.sector).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const sectorObj = filterSector.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+                    const buscarEn = ((f.paciente || "") + " " + (f.observacion || "") + " " + (f.sector || "")).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                     
                     if (sectorObj === "pachacutec") {
                         if (!buscarEn.includes("pachacutec") && !buscarEn.includes("piloto")) return false;
@@ -1563,21 +1598,26 @@
                     }
                 }
 
+                // 5. Filtro de Resultado Clínico
                 if (filterResult !== "ALL") {
-                    if (f.resultado !== filterResult) return false;
+                    const resultadoFila = (f.resultado || "").toString().trim();
+                    if (resultadoFila !== filterResult.toString().trim()) return false;
                 }
 
+                // 6. Buscador general de texto (Safe-Guard contra celdas incompletas)
                 if (searchVal !== "") {
-                    let term = searchVal;
-                    let pac = f.paciente.toLowerCase();
-                    let pru = f.prueba.toLowerCase();
-                    let res = f.resultado.toLowerCase();
-                    let hc_f = f.hc.toLowerCase();
-                    let dni_f = f.dni.toLowerCase();
-                    let sem_f = f.semana.toLowerCase();
-                    let sec_f = f.sector.toLowerCase();
+                    const term = searchVal;
+                    const pac = (f.paciente || "").toLowerCase();
+                    const pru = (f.prueba || "").toLowerCase();
+                    const res = (f.resultado || "").toLowerCase();
+                    const hc_f = (f.hc || "").toLowerCase();
+                    const dni_f = (f.dni || "").toLowerCase();
+                    const sem_f = (f.semana || "").toLowerCase();
+                    const sec_f = (f.sector || "").toLowerCase();
                     
-                    if (!pac.includes(term) && !pru.includes(term) && !res.includes(term) && !hc_f.includes(term) && !dni_f.includes(term) && !sem_f.includes(term) && !sec_f.includes(term)) return false;
+                    if (!pac.includes(term) && !pru.includes(term) && !res.includes(term) && !hc_f.includes(term) && !dni_f.includes(term) && !sem_f.includes(term) && !sec_f.includes(term)) {
+                        return false;
+                    }
                 }
 
                 return true;
@@ -1585,13 +1625,13 @@
 
             // ALGORITMO DE ORDENACIÓN: ÚLTIMO REGISTRO REGISTRADO PRIMERO (CRONOLÓGICO DESCENDENTE)
             datosFiltrados.sort((a, b) => {
-                let dateA = parseFecha(a.fechaNoti);
-                let dateB = parseFecha(b.fechaNoti);
+                const dateA = parseFecha(a.fechaNoti);
+                const dateB = parseFecha(b.fechaNoti);
                 
                 // Si la fecha es idéntica, ordenamos por número de semana de forma descendente
                 if (dateB - dateA === 0) {
-                    let semA = parseInt(a.semana) || 0;
-                    let semB = parseInt(b.semana) || 0;
+                    const semA = parseInt(a.semana) || 0;
+                    const semB = parseInt(b.semana) || 0;
                     return semB - semA;
                 }
                 return dateB - dateA;
@@ -1611,19 +1651,19 @@
             let pendientes = 0;
             let descartados = 0;
 
-            const selectedTest = document.getElementById("filterTestType").value;
+            const selectedTest = document.getElementById("filterTestType") ? document.getElementById("filterTestType").value : "ALL";
             let countPatogeno = 0;
 
-            let selectedSE = document.getElementById("filterWeek").value;
+            let selectedSE = document.getElementById("filterWeek") ? document.getElementById("filterWeek").value : "ALL";
             let displaySE = selectedSE;
             
             if (selectedSE === "ALL") {
                 const datosReferencia = datos.length > 0 ? datos : (datosGlobales.length > 0 ? datosGlobales : DATOS_RESPALDO);
-                let semanasValidas = datosReferencia.map(f => parseInt(f.semana)).filter(w => !isNaN(w));
+                let semanasValidas = datosReferencia.map(f => parseInt(f ? f.semana : 0)).filter(w => !isNaN(w));
                 if (semanasValidas.length > 0) {
                     displaySE = Math.max(...semanasValidas).toString();
                 } else {
-                    let semanasTexto = [...new Set(datosReferencia.map(f => f.semana).filter(s => s && s !== "---" && s !== ""))];
+                    let semanasTexto = [...new Set(datosReferencia.map(f => f ? f.semana : "").filter(s => s && s !== "---" && s !== ""))];
                     displaySE = semanasTexto.length > 0 ? semanasTexto[0] : "21"; 
                 }
             }
@@ -1639,10 +1679,10 @@
                 else if (f.resultado === "DESCARTADO") descartados++;
                 else pendientes++;
 
-                if (selectedTest !== "ALL" && f.prueba.trim() === selectedTest.trim()) {
+                if (selectedTest !== "ALL" && f.prueba && f.prueba.trim() === selectedTest.trim()) {
                     countPatogeno++;
                 }
-                if (f.semana.trim() === displaySE.trim() && f.semana !== "---" && f.semana !== "") {
+                if (f.semana && f.semana.trim() === displaySE.trim() && f.semana !== "---" && f.semana !== "") {
                     countSE++;
                 }
             });
@@ -1690,7 +1730,7 @@
                 document.getElementById("kpiPatogeno").innerText = countPatogeno;
                 document.getElementById("kpiPatogenoSub").innerText = selectedTest;
             } else {
-                let totalMuestrasEspecificadas = datos.filter(d => d.prueba && d.prueba !== "No especificado" && d.prueba !== "---").length;
+                let totalMuestrasEspecificadas = datos.filter(d => d && d.prueba && d.prueba !== "No especificado" && d.prueba !== "---").length;
                 document.getElementById("kpiPatogeno").innerText = totalMuestrasEspecificadas;
                 document.getElementById("kpiPatogenoSub").innerText = "Muestras de Patógenos";
             }
@@ -1702,7 +1742,7 @@
             let agrupado = {};
 
             datos.forEach(f => {
-                let p = f.prueba;
+                let p = f.prueba || "No especificado";
                 if (!agrupado[p]) {
                     agrupado[p] = { total: 0, pos: 0, neg: 0, pen: 0, des: 0 };
                 }
@@ -1812,14 +1852,14 @@
                 html += `
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="p-3.5 text-center text-slate-800 font-extrabold">${casoNum}</td>
-                        <td class="p-3.5 text-center text-slate-500 font-medium">${f.semana}</td>
-                        <td class="p-3.5 text-slate-700">${f.fechaNoti}</td>
-                        <td class="p-3.5 text-slate-900 uppercase">${f.paciente}</td>
-                        <td class="p-3.5 text-center text-slate-600">${f.hc}</td>
-                        <td class="p-3.5 text-slate-600">${f.dni}</td>
-                        <td class="p-3.5 text-brand-teal">${f.prueba}</td>
+                        <td class="p-3.5 text-center text-slate-500 font-medium">${f.semana || "---"}</td>
+                        <td class="p-3.5 text-slate-700">${f.fechaNoti || "---"}</td>
+                        <td class="p-3.5 text-slate-900 uppercase">${f.paciente || "---"}</td>
+                        <td class="p-3.5 text-center text-slate-600">${f.hc || "---"}</td>
+                        <td class="p-3.5 text-slate-600">${f.dni || "---"}</td>
+                        <td class="p-3.5 text-brand-teal">${f.prueba || "---"}</td>
                         <td class="p-3.5 text-center">
-                            <span class="px-2 py-1 rounded text-xs font-black ${badgeClass}">${displayRes}</span>
+                            <span class="px-2 py-1 rounded text-xs font-black ${badgeClass}">${displayRes || "PENDIENTE"}</span>
                         </td>
                         <td class="p-3.5 text-center no-print">${actionHtml}</td>
                     </tr>
@@ -1856,7 +1896,7 @@
             editInsumoId = id;
 
             document.getElementById("kardexFechaIngreso").value = parseDateToInputFormat(item.f_ingreso);
-            document.getElementById("kardexQuantity").value = item.ingresos;
+            document.getElementById("kardexCantidad").value = item.ingresos;
             document.getElementById("kardexLote").value = item.lote;
             document.getElementById("kardexFechaVence").value = parseDateToInputFormat(item.vence);
 
@@ -2079,7 +2119,7 @@
                 html += `
                     <tr class="hover:bg-slate-50 transition-colors">
                         <td class="p-3.5 text-slate-500">${ins.f_ingreso}</td>
-                        <td class="p-3.5 text-slate-950 font-extrabold">${ins.nombre}</td>
+                        <td class="p-3.5 text-slate-955 font-extrabold">${ins.nombre}</td>
                         <td class="p-3.5 text-center text-slate-600">${ins.ingresos} u.</td>
                         <td class="p-3.5 text-center text-rose-600 font-extrabold">${ins.consumo} u.</td>
                         <td class="p-3.5 text-center text-brand-teal bg-teal-50/50 font-black">${ins.stock} u.</td>
