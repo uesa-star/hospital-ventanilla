@@ -411,7 +411,7 @@
             <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
                 <div>                    
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Positivos (+)</p>                    
-                    <h3 id="kpiPositivos" class="text-2xl font-black text-rose-600 mt-1 leading-none">0</h3>                    
+                    <h3 id="kpiPositivos" class="text-2xl font-black text-rose-650 mt-1 leading-none">0</h3>                    
                     <p class="text-[10px] text-rose-500 mt-2 font-bold flex items-center gap-1"><i class="fa-solid fa-virus mr-0.5 animate-pulse"></i> Alerta Activa</p>                
                 </div>                
                 <div class="bg-rose-50 p-3 rounded-full text-rose-600 shrink-0 shadow-inner">                    
@@ -773,7 +773,7 @@
                 {
                     titulo: "Brasil (Min. Saúde) - Fiebre de Oropouche",
                     prioridad: "Frontera Activa",
-                    resumen: "Repunte crítico de transmisión en estados de Acre y Amazonas. Vigilancia epidemiológica especial de pacientes sospechosos con nexo de viaje internacional reciente.",
+                    resumen: "Repunte crítico de transmisión en estados de Acre and Amazonas. Vigilancia epidemiológica especial de pacientes sospechosos con nexo de viaje internacional reciente.",
                     fuente: "Ministério da Saúde do Brasil",
                     referencia: "Ref: Boletim Epidemiológico Vol. 57, N° 18 (Vigilância em Saúde, 2026)",
                     fecha: "02 de Junio de 2026",
@@ -1293,7 +1293,6 @@
             }
         }
 
-        // Se cambió el nombre de la función a español para mantener consistencia científica de funciones
         function closeWelcomeModal() {
             const modal = document.getElementById("welcomeModal");
             if (modal) {
@@ -1352,10 +1351,6 @@
             dialog.querySelector("div").classList.add("scale-100");
         }
 
-        function inicializarOpcionesDeFiltros(datos) {
-            initializeOptionsOfFilters(datos);
-        }
-
         function closeDialog() {
             const dialog = document.getElementById("customDialogModal");
             dialog.classList.add("opacity-0", "pointer-events-none");
@@ -1396,7 +1391,7 @@
 
             datosGlobales = [...datosLocalesAdicionales, ...datosBaseDescargados];
 
-            inicializarOpcionesDeFiltros(datosGlobales);
+            initializeOptionsOfFilters(datosGlobales);
             filtrarYRefrescarDashboard();
         }
 
@@ -1452,6 +1447,619 @@
                 fusionarYRefrescarDashboard();
                 mostrarAlertaDialog("Caso Eliminado", "La muestra seleccionada ha sido borrada.");
             });
+        }
+
+        // FILTRADO MULTIVARIABLE GENERAL
+        function filtrarYRefrescarDashboard() {
+            const filterWeek = document.getElementById("filterWeek").value;
+            const filterYear = document.getElementById("filterYear").value;
+            const filterTestType = document.getElementById("filterTestType").value;
+            const filterSector = document.getElementById("filterSector").value;
+            const filterResult = document.getElementById("filterResult").value;
+            const searchVal = document.getElementById("buscadorPaciente").value.toLowerCase().trim();
+
+            datosFiltrados = datosGlobales.filter(f => {
+                if (filterWeek !== "ALL" && f.semana !== filterWeek) return false;
+                
+                if (filterYear !== "ALL") {
+                    let anoFila = extractYear(f.fechaNoti);
+                    if (anoFila !== filterYear) return false;
+                }
+
+                if (filterTestType !== "ALL" && f.prueba !== filterTestType) return false;
+
+                if (filterSector !== "ALL") {
+                    const sectorObj = filterSector.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const buscarEn = (f.paciente + " " + f.observacion + " " + f.sector).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    
+                    if (sectorObj === "pachacutec") {
+                        if (!buscarEn.includes("pachacutec") && !buscarEn.includes("piloto")) return false;
+                    } else if (sectorObj === "mi peru") {
+                        if (!buscarEn.includes("mi peru") && !buscarEn.includes("miperu")) return false;
+                    } else if (sectorObj === "ventanilla alta") {
+                        if (!buscarEn.includes("alta") && !buscarEn.includes("centro")) return false;
+                    } else if (sectorObj === "ventanilla baja") {
+                        if (!buscarEn.includes("baja") && !buscarEn.includes("naval")) return false;
+                    } else if (sectorObj === "villa los reyes") {
+                        if (!buscarEn.includes("reyes") && !buscarEn.includes("villa los reyes")) return false;
+                    } else if (sectorObj === "angamos") {
+                        if (!buscarEn.includes("angamos")) return false;
+                    } else if (sectorObj === "otros") {
+                        const coincideConConocidos = ["pachacutec", "piloto", "mi peru", "miperu", "alta", "baja", "reyes", "angamos"].some(k => buscarEn.includes(k));
+                        if (coincideConConocidos) return false;
+                    }
+                }
+
+                if (filterResult !== "ALL") {
+                    if (f.resultado !== filterResult) return false;
+                }
+
+                if (searchVal !== "") {
+                    let term = searchVal;
+                    let pac = f.paciente.toLowerCase();
+                    let pru = f.prueba.toLowerCase();
+                    let res = f.resultado.toLowerCase();
+                    let hc_f = f.hc.toLowerCase();
+                    let dni_f = f.dni.toLowerCase();
+                    let sem_f = f.semana.toLowerCase();
+                    let sec_f = f.sector.toLowerCase();
+                    
+                    if (!pac.includes(term) && !pru.includes(term) && !res.includes(term) && !hc_f.includes(term) && !dni_f.includes(term) && !sem_f.includes(term) && !sec_f.includes(term)) return false;
+                }
+
+                return true;
+            });
+
+            renderizarKPIs(datosFiltrados);
+            renderizarTablaResumen(datosFiltrados);
+            renderizarTablaHistorial(datosFiltrados);
+            actualizarGraficos(datosFiltrados);
+            actualizarExistenciasKardex();
+        }
+
+        function renderizarKPIs(datos) {
+            let total = datos.length;
+            let positivos = 0;
+            let negativos = 0;
+            let pendientes = 0;
+            let descartados = 0;
+
+            const selectedTest = document.getElementById("filterTestType").value;
+            let countPatogeno = 0;
+
+            let selectedSE = document.getElementById("filterWeek").value;
+            let displaySE = selectedSE;
+            
+            if (selectedSE === "ALL") {
+                const datosReferencia = datos.length > 0 ? datos : (datosGlobales.length > 0 ? datosGlobales : DATOS_RESPALDO);
+                let semanasValidas = datosReferencia.map(f => parseInt(f.semana)).filter(w => !isNaN(w));
+                if (semanasValidas.length > 0) {
+                    displaySE = Math.max(...semanasValidas).toString();
+                } else {
+                    let semanasTexto = [...new Set(datosReferencia.map(f => f.semana).filter(s => s && s !== "---" && s !== ""))];
+                    displaySE = semanasTexto.length > 0 ? semanasTexto[0] : "21"; 
+                }
+            }
+            
+            const kpiSETitleElement = document.getElementById("kpiSETitle");
+            if (kpiSETitleElement) kpiSETitleElement.innerText = `Casos S.E. ${displaySE}`;
+            
+            let countSE = 0;
+
+            datos.forEach(f => {
+                if (f.resultado === "POSITIVO") positivos++;
+                else if (f.resultado === "NEGATIVO") negativos++;
+                else if (f.resultado === "DESCARTADO") descartados++;
+                else pendientes++;
+
+                if (selectedTest !== "ALL" && f.prueba.trim() === selectedTest.trim()) {
+                    countPatogeno++;
+                }
+                if (f.semana.trim() === displaySE.trim() && f.semana !== "---" && f.semana !== "") {
+                    countSE++;
+                }
+            });
+
+            let totalProcesados = positivos + negativos + descartados;
+            let tasaNumerica = totalProcesados > 0 ? (positivos / totalProcesados) * 100 : 0;
+            let tasaText = tasaNumerica.toFixed(1) + "%";
+
+            document.getElementById("kpiTotal").innerText = total;
+            document.getElementById("kpiTotalSub").innerText = `De ${datosGlobales.length} registros globales`;
+            document.getElementById("kpiPositivos").innerText = positivos;
+            document.getElementById("kpiNegativos").innerText = negativos + descartados;
+            document.getElementById("kpiPendientes").innerText = pendientes;
+            document.getElementById("kpiTasa").innerText = tasaText;
+
+            const cardTasa = document.getElementById("kpiTasaCard");
+            const alertTasaText = document.getElementById("kpiTasaAlert");
+            const iconTasaContainer = document.getElementById("kpiTasaIconContainer");
+
+            if (cardTasa && alertTasaText && iconTasaContainer) {
+                if (totalProcesados === 0) {
+                    cardTasa.className = "bg-white p-5 rounded-2xl border border-slate-200/80 shadow-md flex items-center justify-between min-h-[110px] transition-all";
+                    alertTasaText.innerText = "Sin Casos Procesados";
+                    alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-slate-500";
+                    iconTasaContainer.className = "bg-slate-100 p-3 rounded-full text-slate-600 shrink-0 shadow-inner";
+                } else if (tasaNumerica < 5.0) {
+                    cardTasa.className = "bg-emerald-50/70 p-5 rounded-2xl border border-emerald-200 shadow-md flex items-center justify-between min-h-[110px] transition-all";
+                    alertTasaText.innerText = `Riesgo Bajo ✔ (${totalProcesados} proc.)`;
+                    alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-emerald-700";
+                    iconTasaContainer.className = "bg-emerald-100 p-3 rounded-full text-emerald-600 shrink-0 shadow-inner";
+                } else if (tasaNumerica >= 5.0 && tasaNumerica <= 15.0) {
+                    cardTasa.className = "bg-amber-50/70 p-5 rounded-2xl border border-amber-200 shadow-md flex items-center justify-between min-h-[110px] transition-all";
+                    alertTasaText.innerText = `Riesgo Moderado ⚠ (${totalProcesados} proc.)`;
+                    alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-amber-700";
+                    iconTasaContainer.className = "bg-amber-100 p-3 rounded-full text-amber-600 shrink-0 shadow-inner";
+                } else {
+                    cardTasa.className = "bg-rose-50 p-5 rounded-2xl border border-rose-200 shadow-md flex items-center justify-between min-h-[110px] animate-pulse transition-all";
+                    alertTasaText.innerText = `ALERTA: Riesgo Alto 🚨 (${totalProcesados} proc.)`;
+                    alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-rose-700";
+                    iconTasaContainer.className = "bg-rose-100 p-3 rounded-full text-rose-600 shrink-0 shadow-inner";
+                }
+            }
+
+            if (selectedTest !== "ALL") {
+                document.getElementById("kpiPatogeno").innerText = countPatogeno;
+                document.getElementById("kpiPatogenoSub").innerText = selectedTest;
+            } else {
+                let totalMuestrasEspecificadas = datos.filter(d => d.prueba && d.prueba !== "No especificado" && d.prueba !== "---").length;
+                document.getElementById("kpiPatogeno").innerText = totalMuestrasEspecificadas;
+                document.getElementById("kpiPatogenoSub").innerText = "Muestras de Patógenos";
+            }
+
+            document.getElementById("kpiSEValue").innerText = countSE;
+        }
+
+        function renderizarTablaResumen(datos) {
+            let agrupado = {};
+
+            datos.forEach(f => {
+                let p = f.prueba;
+                if (!agrupado[p]) {
+                    agrupado[p] = { total: 0, pos: 0, neg: 0, pen: 0, des: 0 };
+                }
+                agrupado[p].total++;
+                if (f.resultado === "POSITIVO") agrupado[p].pos++;
+                else if (f.resultado === "NEGATIVO") agrupado[p].neg++;
+                else if (f.resultado === "DESCARTADO") agrupado[p].des++;
+                else agrupado[p].pen++;
+            });
+
+            let items = Object.keys(agrupado).map(key => {
+                let item = agrupado[key];
+                let totalConResultado = item.pos + item.neg + item.des;
+                let tasa = totalConResultado > 0 ? ((item.pos / totalConResultado) * 100).toFixed(1) : "0.0";
+                return {
+                    nombre: key,
+                    total: item.total,
+                    pos: item.pos,
+                    neg: item.neg,
+                    pen: item.pen,
+                    des: item.des,
+                    tasa: tasa
+                };
+            }).sort((a,b) => b.total - a.total);
+
+            let html = "";
+            if (items.length === 0) {
+                html = `<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">No hay datos que coincidan.</td></tr>`;
+            } else {
+                items.forEach(it => {
+                    html += `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-3.5 text-slate-800"><i class="fa-solid fa-virus text-teal-600 mr-2"></i> ${it.nombre}</td>
+                            <td class="p-3.5 text-center text-slate-900">${it.total}</td>
+                            <td class="p-3.5 text-center text-rose-600">${it.pos}</td>
+                            <td class="p-3.5 text-center text-emerald-600">${it.neg}</td>
+                            <td class="p-3.5 text-center text-amber-600">${it.pen}</td>
+                            <td class="p-3.5 text-center text-slate-500">${it.des}</td>
+                            <td class="p-3.5 text-center text-brand-dark bg-slate-50/50">${it.tasa}%</td>
+                        </tr>
+                    `;
+                });
+            }
+            document.getElementById("summaryTableBody").innerHTML = html;
+        }
+
+        // TABLA HISTORIAL DE REGISTROS
+        function renderizarTablaHistorial(datos) {
+            const tbody = document.getElementById("samplesTableBody");
+            if (!tbody) return;
+            
+            if (datos.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="p-8 text-center text-slate-400 font-semibold">
+                            <i class="fa-solid fa-folder-open text-2xl mb-1 block text-slate-300"></i>
+                            Base de datos vacía o ningún registro coincide con la búsqueda.
+                        </td>
+                    </tr>
+                `;
+                document.getElementById("paginationInfo").innerText = "Mostrando 0-0 de 0 registros";
+                document.getElementById("btnPrevPage").disabled = true;
+                document.getElementById("btnNextPage").disabled = true;
+                return;
+            }
+
+            const totalRecords = datos.length;
+            const totalPages = Math.ceil(totalRecords / recordsPerPage);
+            
+            if (currentPage > totalPages) currentPage = totalPages;
+            if (currentPage < 1) currentPage = 1;
+
+            const startIndex = (currentPage - 1) * recordsPerPage;
+            const endIndex = Math.min(startIndex + recordsPerPage, totalRecords);
+
+            const pageRecords = datos.slice(startIndex, endIndex);
+
+            let html = "";
+            pageRecords.forEach(f => {
+                let displayRes = f.resultado;
+                let badgeClass = "bg-amber-100 text-amber-700 border border-amber-200";
+                
+                if (displayRes === 'POSITIVO') {
+                    badgeClass = "bg-rose-100 text-rose-700 border border-rose-200";
+                } else if (displayRes === 'NEGATIVO' || displayRes === 'DESCARTADO') {
+                    badgeClass = "bg-emerald-100 text-emerald-700 border border-emerald-200";
+                }
+
+                let actionHtml = "";
+                if (f.isLocal) {
+                    actionHtml = `
+                        <button onclick="eliminarCasoLocal('${f.id}')" class="text-rose-600 hover:text-rose-800 hover:scale-110 active:scale-95 transition-all p-1" title="Eliminar muestra interactiva">
+                            <i class="fa-solid fa-trash-can text-sm"></i>
+                        </button>
+                    `;
+                } else {
+                    actionHtml = `
+                        <span class="text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full uppercase font-black tracking-wider shadow-inner" title="Registro oficial sincronizado">
+                            Nube
+                        </span>
+                    `;
+                }
+
+                html += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-3.5 text-center text-slate-500 font-medium">${f.semana}</td>
+                        <td class="p-3.5 text-slate-700">${f.fechaNoti}</td>
+                        <td class="p-3.5 text-slate-900 uppercase">${f.paciente}</td>
+                        <td class="p-3.5 text-center text-slate-600">${f.hc}</td>
+                        <td class="p-3.5 text-slate-600">${f.dni}</td>
+                        <td class="p-3.5 text-brand-teal">${f.prueba}</td>
+                        <td class="p-3.5 text-center">
+                            <span class="px-2 py-1 rounded text-xs font-black ${badgeClass}">${displayRes}</span>
+                        </td>
+                        <td class="p-3.5 text-center text-slate-500 font-medium">${f.observacion}</td>
+                        <td class="p-3.5 text-center no-print">${actionHtml}</td>
+                    </tr>
+                `;
+            });
+
+            tbody.innerHTML = html;
+
+            document.getElementById("paginationInfo").innerText = `Mostrando ${startIndex + 1}-${endIndex} de ${totalRecords} registros`;
+            document.getElementById("btnPrevPage").disabled = currentPage === 1;
+            document.getElementById("btnNextPage").disabled = currentPage === totalPages;
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderizarTablaHistorial(datosFiltrados);
+            }
+        }
+
+        function nextPage() {
+            const totalPages = Math.ceil(datosFiltrados.length / recordsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderizarTablaHistorial(datosFiltrados);
+            }
+        }
+
+        function filtrarTabla() {
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+        }
+
+        function clearSearch() {
+            document.getElementById("buscadorPaciente").value = "";
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+        }
+
+        // --- SISTEMA DE GRÁFICOS (CHART.JS) ---
+        function actualizarGraficos(datos) {
+            if (typeof Chart === "undefined") {
+                console.warn("Chart.js no cargó. Saltando renderizado visual.");
+                return;
+            }
+
+            let mesesMap = { "Ene":0, "Feb":0, "Mar":0, "Abr":0, "May":0, "Jun":0, "Jul":0, "Ago":0, "Sep":0, "Oct":0, "Nov":0, "Dic":0 };
+            let semanasConteo = {};
+            let patogenosConteo = {};
+            let resultadosConteo = { "POSITIVO": 0, "NEGATIVO": 0, "PENDIENTE": 0, "DESCARTADO": 0 };
+
+            datos.forEach(f => {
+                if (f.fechaNoti && f.fechaNoti !== "---") {
+                    const parts = f.fechaNoti.split(/[\/\-\s]+/);
+                    let mesIdx = -1;
+                    if (parts.length >= 2) {
+                        mesIdx = parseInt(parts[1]) - 1; 
+                    }
+                    let nombresMeses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                    if (mesIdx >= 0 && mesIdx < 12) {
+                        mesesMap[nombresMeses[mesIdx]]++;
+                    }
+                }
+
+                if (f.semana && f.semana !== "" && f.semana !== "---") {
+                    semanasConteo[f.semana] = (semanasConteo[f.semana] || 0) + 1;
+                }
+
+                if (f.prueba && f.prueba !== "" && f.prueba !== "---") {
+                    patogenosConteo[f.prueba] = (patogenosConteo[f.prueba] || 0) + 1;
+                }
+
+                if (resultadosConteo[f.resultado] !== undefined) {
+                    resultadosConteo[f.resultado]++;
+                }
+            });
+
+            let labelsMeses = Object.keys(mesesMap).filter(m => mesesMap[m] > 0);
+            if (labelsMeses.length === 0) labelsMeses = ["Mar", "Abr", "May", "Nov", "Dic"]; 
+            let datosMeses = labelsMeses.map(m => mesesMap[m] || 0);
+
+            try {
+                if (chartMensualInstance) chartMensualInstance.destroy();
+                chartMensualInstance = new Chart(document.getElementById('chartMensual'), {
+                    type: 'bar',
+                    data: {
+                        labels: labelsMeses,
+                        datasets: [{
+                            label: 'Muestras',
+                            data: datosMeses,
+                            backgroundColor: '#0f4c43',
+                            borderRadius: 6
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            } catch (err) { console.error("Error cargando gráfico mensual: ", err); }
+
+            let labelsSemanas = Object.keys(semanasConteo).sort((a,b) => parseInt(a) - parseInt(b));
+            let datosSemanas = labelsSemanas.map(s => semanasConteo[s]);
+            if (labelsSemanas.length === 0) {
+                labelsSemanas = ["11", "12", "13", "14", "15", "16", "17", "18", "19", "21"];
+                datosSemanas = [30, 2, 2, 2, 43, 10, 0, 1, 48, 7];
+            }
+
+            try {
+                if (chartSemanalInstance) chartSemanalInstance.destroy();
+                chartSemanalInstance = new Chart(document.getElementById('chartSemanal'), {
+                    type: 'line',
+                    data: {
+                        labels: labelsSemanas.map(s => "SE " + s),
+                        datasets: [{
+                            label: 'Volumen',
+                            data: datosSemanas,
+                            borderColor: '#0f4c43',
+                            backgroundColor: 'rgba(15, 76, 67, 0.08)',
+                            fill: true,
+                            tension: 0.3,
+                            pointBackgroundColor: '#10b981',
+                            borderWidth: 2
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                });
+            } catch (err) { console.error("Error cargando gráfico semanal: ", err); }
+
+            let labelsPatogenos = Object.keys(patogenosConteo).sort((a,b) => patogenosConteo[b] - patogenosConteo[a]).slice(0, 6);
+            let datosPatogenos = labelsPatogenos.map(p => patogenosConteo[p]);
+            if (labelsPatogenos.length === 0) {
+                labelsPatogenos = ["Dengue", "Panel resp", "Arañazo de gato", "Sarampion", "Leishmaniasis", "Leptospirosis"];
+                datosPatogenos = [59, 47, 35, 3, 2, 2];
+            }
+
+            try {
+                if (chartPatogenosInstance) chartPatogenosInstance.destroy();
+                chartPatogenosInstance = new Chart(document.getElementById('chartPatogenos'), {
+                    type: 'bar',
+                    data: {
+                        labels: labelsPatogenos,
+                        datasets: [{
+                            data: datosPatogenos,
+                            backgroundColor: '#115e54',
+                            borderRadius: 4
+                        }]
+                    },
+                    options: { 
+                        indexAxis: 'y',
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } } 
+                    }
+                });
+            } catch (err) { console.error("Error cargando gráfico patógenos: ", err); }
+
+            try {
+                if (chartResultadosInstance) chartResultadosInstance.destroy();
+                chartResultadosInstance = new Chart(document.getElementById('chartResultados'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Positivos', 'Negativos', 'Pendientes', 'Descartados'],
+                        datasets: [{
+                            data: [
+                                resultadosConteo["POSITIVO"] || 0, 
+                                resultadosConteo["NEGATIVO"] || 0, 
+                                resultadosConteo["PENDIENTE"] || 0, 
+                                resultadosConteo["DESCARTADO"] || 0
+                            ],
+                            backgroundColor: ['#ef4444', '#10b981', '#f59e0b', '#94a3b8']
+                        }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+                });
+            } catch (err) { console.error("Error cargando gráfico resultados: ", err); }
+        }
+
+        // --- SISTEMA DE GESTIÓN OPERATIVA KARDEX ---
+        function actualizarExistenciasKardex() {
+            const tableBody = document.getElementById("kardexTableBody");
+            if (!tableBody) return;
+            
+            inventarioKardex.forEach(ins => {
+                let countMuestras = 0;
+                
+                datosGlobales.forEach(fila => {
+                    let filePrueba = (fila.prueba || "").toLowerCase();
+                    let insPrueba = (ins.prueba_asoc || "").toLowerCase();
+
+                    if (insPrueba === "todas") {
+                        countMuestras++;
+                    } else if (filePrueba.includes(insPrueba)) {
+                        countMuestras++;
+                    } else if (insPrueba === "panel resp" && filePrueba.includes("coqueluche")) {
+                        countMuestras++;
+                    }
+                });
+
+                ins.consumo = countMuestras;
+                ins.stock = Math.max(0, ins.ingresos - ins.consumo);
+            });
+
+            let html = "";
+            inventarioKardex.forEach(ins => {
+                let statusClass = "bg-emerald-100 text-emerald-800";
+                let statusText = "Óptimo";
+
+                if (ins.stock <= 20) {
+                    statusClass = "bg-rose-100 text-rose-800 animate-pulse";
+                    statusText = "Crítico";
+                } else if (ins.stock <= 100) {
+                    statusClass = "bg-amber-100 text-amber-800";
+                    statusText = "Bajo";
+                }
+
+                html += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-3.5 text-slate-500">${ins.f_ingreso}</td>
+                        <td class="p-3.5 text-slate-950 font-extrabold">${ins.nombre}</td>
+                        <td class="p-3.5 text-center text-slate-600">${ins.ingresos} u.</td>
+                        <td class="p-3.5 text-center text-rose-600 font-extrabold">${ins.consumo} u.</td>
+                        <td class="p-3.5 text-center text-brand-teal bg-teal-50/50 font-black">${ins.stock} u.</td>
+                        <td class="p-3.5 text-slate-500">Hace 1 d.</td>
+                        <td class="p-3.5 text-slate-600">${ins.lote}</td>
+                        <td class="p-3.5 text-slate-600">${ins.vence}</td>
+                        <td class="p-3.5 text-center">
+                            <span class="px-2.5 py-1 rounded text-xs font-black uppercase tracking-wider ${statusClass}">${statusText}</span>
+                        </td>
+                        <td class="p-3.5 text-center no-print">
+                            <div class="flex items-center justify-center gap-2">
+                                <button onclick="startEditInsumo(${ins.id})" class="text-teal-600 hover:text-teal-800 transition-colors"><i class="fa-solid fa-edit"></i></button>
+                                <button onclick="deleteInsumoKardex(${ins.id})" class="text-rose-600 hover:text-rose-800 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableBody.innerHTML = html;
+            localStorage.setItem("ventanilla_kardex_db", JSON.stringify(inventarioKardex));
+        }
+
+        function addInsumoStock(event) {
+            event.preventDefault();
+
+            const f_ingreso = formatDate(document.getElementById("kardexFechaIngreso").value);
+            const selectElement = document.getElementById("kardexSelectInsumo");
+            const nombre = selectElement.options[selectElement.selectedIndex].text;
+            const cantidad = parseInt(document.getElementById("kardexCantidad").value);
+            const lote = document.getElementById("kardexLote").value;
+            const vence = formatDate(document.getElementById("kardexFechaVence").value);
+
+            let prueba_asoc = "Dengue";
+            if (nombre.includes("Hisopos")) prueba_asoc = "Panel resp";
+            else if (nombre.includes("ARN")) prueba_asoc = "Sarampion";
+            else if (nombre.includes("Láminas")) prueba_asoc = "Arañazo de gato";
+            else if (nombre.includes("Lancetas")) prueba_asoc = "Todas";
+
+            if (editInsumoId !== null) {
+                let item = inventarioKardex.find(x => x.id === editInsumoId);
+                if (item) {
+                    item.f_ingreso = f_ingreso;
+                    item.nombre = nombre;
+                    item.ingresos = cantidad;
+                    item.lote = lote;
+                    item.vence = vence;
+                    item.prueba_asoc = prueba_asoc;
+                }
+                editInsumoId = null;
+                document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-plus-circle text-emerald-500"></i> Registrar Entrada de Insumos`;
+                document.getElementById("btnCancelEdit").classList.add("hidden");
+                document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-plus"></i> Registrar Entrada`;
+                mostrarAlertaDialog("Actualización Exitosa", "Los cambios en el insumo fueron guardados correctamente.");
+            } else {
+                const nuevoId = inventarioKardex.length > 0 ? Math.max(...inventarioKardex.map(x => x.id)) + 1 : 1;
+                inventarioKardex.push({
+                    id: nuevoId,
+                    f_ingreso: f_ingreso,
+                    nombre: nombre,
+                    ingresos: cantidad,
+                    lote: lote,
+                    vence: vence,
+                    prueba_asoc: prueba_asoc
+                });
+                mostrarAlertaDialog("Registro Exitoso", "Se ha agregado una nueva entrada de stock de forma exitosa.");
+            }
+
+            document.getElementById("kardexForm").reset();
+            setDefaultDates();
+            actualizarExistenciasKardex();
+        }
+
+        function deleteInsumoKardex(id) {
+            mostrarConfirmacionDialog("¿Seguro que desea eliminar esta entrada del Kardex de existencias?", function() {
+                inventarioKardex = inventarioKardex.filter(x => x.id !== id);
+                actualizarExistenciasKardex();
+                mostrarAlertaDialog("Operación Completada", "La entrada seleccionada ha sido eliminada del inventario.");
+            });
+        }
+
+        function startEditInsumo(id) {
+            const item = inventarioKardex.find(x => x.id === id);
+            if (!item) return;
+
+            editInsumoId = id;
+
+            document.getElementById("kardexFechaIngreso").value = parseDateToInputFormat(item.f_ingreso);
+            document.getElementById("kardexCantidad").value = item.ingresos;
+            document.getElementById("kardexLote").value = item.lote;
+            document.getElementById("kardexFechaVence").value = parseDateToInputFormat(item.vence);
+
+            const selectElement = document.getElementById("kardexSelectInsumo");
+            for (let i = 0; i < selectElement.options.length; i++) {
+                if (selectElement.options[i].text === item.nombre) {
+                    selectElement.selectedIndex = i;
+                    break;
+                }
+            }
+
+            document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-edit text-amber-500"></i> Modificar Entrada de Insumo`;
+            document.getElementById("btnCancelEdit").classList.remove("hidden");
+            document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-save"></i> Guardar Cambios`;
+            document.getElementById("kardexForm").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEditInsumo() {
+            editInsumoId = null;
+            document.getElementById("kardexForm").reset();
+            setDefaultDates();
+            document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-plus-circle text-emerald-500"></i> Registrar Entrada de Insumos`;
+            document.getElementById("btnCancelEdit").classList.add("hidden");
+            document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-plus"></i> Registrar Entrada`;
         }
 
         function initializeOptionsOfFilters(datos) {
