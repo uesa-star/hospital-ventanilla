@@ -802,7 +802,7 @@
             { id: 1, nombre: "Pruebas Rápidas Dengue NS1", ingresos: 500, lote: "DENG-2026-A1", vence: "31-Dic-2027", f_ingreso: "20-May-2026", prueba_asoc: "Dengue" },
             { id: 2, nombre: "Hisopos Nasofaringeos (Medio Viral)", ingresos: 450, lote: "NASO-2026-T2", vence: "15-Ago-2027", f_ingreso: "22-May-2026", prueba_asoc: "Panel resp" },
             { id: 3, nombre: "Kits de Extracción de ARN Molecular", ingresos: 250, lote: "extr-2026-R3", vence: "20-Mar-2028", f_ingreso: "23-May-2026", prueba_asoc: "Sarampion" },
-            { id: 4, nombre: "Láminas Reactivas Bartonella IFI", ingresos: 200, lote: "BART-2026-G8", vence: "10-May-2027", f_ingreso: "10-May-2026", prueba_asoc: "Arañazo de gato" },
+            { id: 4, fontAwesome: "Láminas Reactivas Bartonella IFI", nombre: "Láminas Reactivas Bartonella IFI", ingresos: 200, lote: "BART-2026-G8", vence: "10-May-2027", f_ingreso: "10-May-2026", prueba_asoc: "Arañazo de gato" },
             { id: 5, nombre: "Lancetas de Punción Periférica", ingresos: 100, lote: "LANC-2026-L5", vence: "01-Jun-2028", f_ingreso: "23-May-2026", prueba_asoc: "Todas" }
         ];
 
@@ -1321,6 +1321,46 @@
             }
         }
 
+        // --- FUNCIÓN DE INICIALIZACIÓN DE OPCIONES DE FILTROS (RESTAURADA) ---
+        function initializeOptionsOfFilters(datos) {
+            const selectWeek = document.getElementById("filterWeek");
+            const selectYear = document.getElementById("filterYear");
+            const selectTestType = document.getElementById("filterTestType");
+
+            if (!selectWeek || !selectYear || !selectTestType) return;
+
+            const currentWeek = selectWeek.value;
+            const currentYear = selectYear.value;
+            const currentTest = selectTestType.value;
+
+            let semanasSet = new Set();
+            let anosSet = new Set();
+            let tiposPruebaSet = new Set();
+
+            datos.forEach(f => {
+                if (f.semana && f.semana !== "" && f.semana !== "---") semanasSet.add(f.semana);
+                let anoExtraido = extractYear(f.fechaNoti);
+                if (anoExtraido) anosSet.add(anoExtraido);
+                if (f.prueba && f.prueba !== "" && f.prueba !== "---") tiposPruebaSet.add(f.prueba.trim());
+            });
+
+            let semanas = Array.from(semanasSet).sort((a,b) => parseInt(a) - parseInt(b));
+            selectWeek.innerHTML = '<option value="ALL">Todas</option>';
+            semanas.forEach(s => selectWeek.innerHTML += `<option value="${s}">Semana ${s}</option>`);
+
+            let anos = Array.from(anosSet).sort((a,b) => parseInt(b) - parseInt(a));
+            selectYear.innerHTML = '<option value="ALL">Todos los Años</option>';
+            anos.forEach(a => selectYear.innerHTML += `<option value="${a}">${a}</option>`);
+
+            let pruebas = Array.from(tiposPruebaSet).sort();
+            selectTestType.innerHTML = '<option value="ALL">Todas las Pruebas</option>';
+            pruebas.forEach(p => selectTestType.innerHTML += `<option value="${p}">${p}</option>`);
+
+            if (Array.from(selectWeek.options).some(o => o.value === currentWeek)) selectWeek.value = currentWeek;
+            if (Array.from(selectYear.options).some(o => o.value === currentYear)) selectYear.value = currentYear;
+            if (Array.from(selectTestType.options).some(o => o.value === currentTest)) selectTestType.value = currentTest;
+        }
+
         function mostrarConfirmacionDialog(mensaje, callback) {
             const dialog = document.getElementById("customDialogModal");
             const dialogMsg = document.getElementById("customDialogMessage");
@@ -1449,7 +1489,36 @@
             });
         }
 
-        // FILTRADO MULTIVARIABLE GENERAL
+        // --- AUXILIAR DE ANALISIS CLÍNICO DE FECHAS PARA ORDENAMIENTO CRONOLÓGICO ---
+        function parseFecha(fechaStr) {
+            if (!fechaStr || fechaStr === "---") return new Date(0);
+            
+            // Reemplazar guiones por barras para unificar formatos
+            let clean = fechaStr.replace(/-/g, '/');
+            let partes = clean.split('/');
+            
+            if (partes.length === 3) {
+                let dia = parseInt(partes[0], 10);
+                let mesStr = partes[1];
+                let anio = parseInt(partes[2], 10);
+                
+                // Mapeador de meses textuales abreviados en español (ej: "May", "Dic")
+                const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+                let mesIdx = meses.indexOf(mesStr.toLowerCase());
+                if (mesIdx !== -1) {
+                    return new Date(anio, mesIdx, dia);
+                }
+                
+                // Si el mes es numérico
+                let mes = parseInt(partes[1], 10) - 1;
+                return new Date(anio, mes, dia);
+            }
+            
+            let parsed = Date.parse(fechaStr);
+            return isNaN(parsed) ? new Date(0) : new Date(parsed);
+        }
+
+        // FILTRADO MULTIVARIABLE GENERAL Y ORDENAMIENTO CRONOLÓGICO DESCENDENTE (ÚLTIMO CASO PRIMERO)
         function filtrarYRefrescarDashboard() {
             const filterWeek = document.getElementById("filterWeek").value;
             const filterYear = document.getElementById("filterYear").value;
@@ -1508,6 +1577,20 @@
                 }
 
                 return true;
+            });
+
+            // ALGORITMO DE ORDENACIÓN: ÚLTIMO REGISTRO REGISTRADO PRIMERO (CRONOLÓGICO DESCENDENTE)
+            datosFiltrados.sort((a, b) => {
+                let dateA = parseFecha(a.fechaNoti);
+                let dateB = parseFecha(b.fechaNoti);
+                
+                // Si la fecha es idéntica, ordenamos por número de semana de forma descendente
+                if (dateB - dateA === 0) {
+                    let semA = parseInt(a.semana) || 0;
+                    let semB = parseInt(b.semana) || 0;
+                    return semB - semA;
+                }
+                return dateB - dateA;
             });
 
             renderizarKPIs(datosFiltrados);
@@ -1748,6 +1831,49 @@
                 currentPage--;
                 renderizarTablaHistorial(datosFiltrados);
             }
+        }
+
+        // --- ACCIONES DE ELIMINACIÓN Y EDICIÓN DEL KARDEX (RESTAURADAS) ---
+        function deleteInsumoKardex(id) {
+            mostrarConfirmacionDialog("¿Seguro que desea eliminar esta entrada del Kardex de existencias?", function() {
+                inventarioKardex = inventarioKardex.filter(x => x.id !== id);
+                actualizarExistenciasKardex();
+                mostrarAlertaDialog("Operación Completada", "La entrada seleccionada ha sido eliminada del inventario.");
+            });
+        }
+
+        function startEditInsumo(id) {
+            const item = inventarioKardex.find(x => x.id === id);
+            if (!item) return;
+
+            editInsumoId = id;
+
+            document.getElementById("kardexFechaIngreso").value = parseDateToInputFormat(item.f_ingreso);
+            document.getElementById("kardexCantidad").value = item.ingresos;
+            document.getElementById("kardexLote").value = item.lote;
+            document.getElementById("kardexFechaVence").value = parseDateToInputFormat(item.vence);
+
+            const selectElement = document.getElementById("kardexSelectInsumo");
+            for (let i = 0; i < selectElement.options.length; i++) {
+                if (selectElement.options[i].text === item.nombre) {
+                    selectElement.selectedIndex = i;
+                    break;
+                }
+            }
+
+            document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-edit text-amber-500"></i> Modificar Entrada de Insumo`;
+            document.getElementById("btnCancelEdit").classList.remove("hidden");
+            document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-save"></i> Guardar Cambios`;
+            document.getElementById("kardexForm").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEditInsumo() {
+            editInsumoId = null;
+            document.getElementById("kardexForm").reset();
+            setDefaultDates();
+            document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-plus-circle text-emerald-500"></i> Registrar Entrada de Insumos`;
+            document.getElementById("btnCancelEdit").classList.add("hidden");
+            document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-plus"></i> Registrar Entrada`;
         }
 
         function nextPage() {
@@ -2018,103 +2144,6 @@
             document.getElementById("kardexForm").reset();
             setDefaultDates();
             actualizarExistenciasKardex();
-        }
-
-        function deleteInsumoKardex(id) {
-            mostrarConfirmacionDialog("¿Seguro que desea eliminar esta entrada del Kardex de existencias?", function() {
-                inventarioKardex = inventarioKardex.filter(x => x.id !== id);
-                actualizarExistenciasKardex();
-                mostrarAlertaDialog("Operación Completada", "La entrada seleccionada ha sido eliminada del inventario.");
-            });
-        }
-
-        function startEditInsumo(id) {
-            const item = inventarioKardex.find(x => x.id === id);
-            if (!item) return;
-
-            editInsumoId = id;
-
-            document.getElementById("kardexFechaIngreso").value = parseDateToInputFormat(item.f_ingreso);
-            document.getElementById("kardexCantidad").value = item.ingresos;
-            document.getElementById("kardexLote").value = item.lote;
-            document.getElementById("kardexFechaVence").value = parseDateToInputFormat(item.vence);
-
-            const selectElement = document.getElementById("kardexSelectInsumo");
-            for (let i = 0; i < selectElement.options.length; i++) {
-                if (selectElement.options[i].text === item.nombre) {
-                    selectElement.selectedIndex = i;
-                    break;
-                }
-            }
-
-            document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-edit text-amber-500"></i> Modificar Entrada de Insumo`;
-            document.getElementById("btnCancelEdit").classList.remove("hidden");
-            document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-save"></i> Guardar Cambios`;
-            document.getElementById("kardexForm").scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function cancelEditInsumo() {
-            editInsumoId = null;
-            document.getElementById("kardexForm").reset();
-            setDefaultDates();
-            document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-plus-circle text-emerald-500"></i> Registrar Entrada de Insumos`;
-            document.getElementById("btnCancelEdit").classList.add("hidden");
-            document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-plus"></i> Registrar Entrada`;
-        }
-
-        function initializeOptionsOfFilters(datos) {
-            const selectWeek = document.getElementById("filterWeek");
-            const selectYear = document.getElementById("filterYear");
-            const selectTestType = document.getElementById("filterTestType");
-
-            if (!selectWeek || !selectYear || !selectTestType) return;
-
-            const currentWeek = selectWeek.value;
-            const currentYear = selectYear.value;
-            const currentTest = selectTestType.value;
-
-            let semanasSet = new Set();
-            let anosSet = new Set();
-            let tiposPruebaSet = new Set();
-
-            datos.forEach(f => {
-                if (f.semana && f.semana !== "" && f.semana !== "---") semanasSet.add(f.semana);
-                let anoExtraido = extractYear(f.fechaNoti);
-                if (anoExtraido) anosSet.add(anoExtraido);
-                if (f.prueba && f.prueba !== "" && f.prueba !== "---") tiposPruebaSet.add(f.prueba.trim());
-            });
-
-            let semanas = Array.from(semanasSet).sort((a,b) => parseInt(a) - parseInt(b));
-            selectWeek.innerHTML = '<option value="ALL">Todas</option>';
-            semanas.forEach(s => selectWeek.innerHTML += `<option value="${s}">Semana ${s}</option>`);
-
-            let anos = Array.from(anosSet).sort((a,b) => parseInt(b) - parseInt(a));
-            selectYear.innerHTML = '<option value="ALL">Todos los Años</option>';
-            anos.forEach(a => selectYear.innerHTML += `<option value="${a}">${a}</option>`);
-
-            let pruebas = Array.from(tiposPruebaSet).sort();
-            selectTestType.innerHTML = '<option value="ALL">Todas las Pruebas</option>';
-            pruebas.forEach(p => selectTestType.innerHTML += `<option value="${p}">${p}</option>`);
-
-            if (Array.from(selectWeek.options).some(o => o.value === currentWeek)) selectWeek.value = currentWeek;
-            if (Array.from(selectYear.options).some(o => o.value === currentYear)) selectYear.value = currentYear;
-            if (Array.from(selectTestType.options).some(o => o.value === currentTest)) selectTestType.value = currentTest;
-        }
-
-        function applyFilters() {
-            currentPage = 1;
-            filtrarYRefrescarDashboard();
-        }
-
-        function resetFilters() {
-            document.getElementById("filterWeek").value = "ALL";
-            document.getElementById("filterYear").value = "ALL";
-            document.getElementById("filterTestType").value = "ALL";
-            document.getElementById("filterSector").value = "ALL";
-            document.getElementById("filterResult").value = "ALL";
-            document.getElementById("buscadorPaciente").value = "";
-            currentPage = 1;
-            filtrarYRefrescarDashboard();
         }
 
         // --- UTILIDADES ---
