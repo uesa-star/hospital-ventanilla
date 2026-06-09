@@ -408,7 +408,7 @@
                 <div>                    
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
                         <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Exámenes</h3>                        
-                        <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full uppercase">Barras H.</span>                    
+                        <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2.5 py-0.5 rounded-full uppercase">Barras H.</span>                    
                     </div>                    
                     <div class="relative h-56 w-full flex items-center justify-center mt-2">                        
                         <canvas id="chartPatogenos"></canvas>                    
@@ -419,9 +419,9 @@
             <!-- GRÁFICO 4: Diagnósticos Clínicos (CÍRCULO/DOUGHNUT) -->            
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
                 <div>                    
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
-                        <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Resultados</h3>                        
-                        <span class="text-[9px] font-bold text-rose-855 bg-rose-50 px-2 py-0.5 rounded-full uppercase">Círculo</span>                    
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">                        
+                        <h3 class="text-xs font-extrabold text-rose-855 bg-rose-50 px-2.5 py-1 rounded-full uppercase tracking-wide">Resultados</h3>                        
+                        <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Resultados Clínicos</h3>                    
                     </div>                    
                     <div class="relative h-56 w-full flex items-center justify-center mt-2">                        
                         <canvas id="chartResultados"></canvas>                    
@@ -477,12 +477,12 @@
             </div>
         </section>
 
-        <!-- ================= 5. FICHA DE NOTIFICACION INTEGRAL DE CASOS (ABIERTO POR DEFECTO CON SU FLECHA) ================= -->
+        <!-- ================= 5. FICHA DE NOTIFICACION INTEGRAL DE CASOS (SITUADA ABAJO DE LA TABLA RESUMEN - COLAPSADA POR DEFECTO CON SU FLECHA) ================= -->
         <section id="formCasoSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print animate-fade-in">
             <!-- CABECERA CLICABLE PARA EXPANDIR / COLAPSAR CON CHEVRON -->
             <div onclick="toggleFormCaso()" class="bg-[#0b4d42] hover:bg-[#0d594d] transition-colors duration-200 text-white px-6 py-4 flex items-center justify-between shadow-sm border-b border-teal-900 cursor-pointer select-none">
                 <div class="flex items-center gap-3">
-                    <i id="chevronFormCaso" class="fa-solid fa-chevron-up text-emerald-400 text-sm transition-transform duration-200"></i>
+                    <i id="chevronFormCaso" class="fa-solid fa-chevron-down text-emerald-400 text-sm transition-transform duration-200"></i>
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-file-medical text-emerald-400 text-lg"></i>
                         <h2 class="text-sm font-extrabold uppercase tracking-wider">FICHA DE NOTIFICACION INTEGRAL DE CASOS</h2>
@@ -496,8 +496,8 @@
                     KARDEX CONECTADO
                 </span>
             </div>
-            <!-- Cuerpo de la ficha que inicia ABIERTO de forma segura -->
-            <div id="formCasoBody" class="p-6 bg-slate-50/20 transition-all duration-300">
+            <!-- Cuerpo de la ficha que inicia CERRADO de forma segura -->
+            <div id="formCasoBody" class="hidden p-6 bg-slate-50/20 transition-all duration-300">
                 <form id="formNuevoCaso" onsubmit="registrarNuevoCaso(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs font-bold text-slate-600">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Semana Epidemiológica (S.E.)</label>
@@ -583,7 +583,7 @@
             <!-- CUERPO DE LA TABLA Y BUSCADOR QUE INICIA CERRADO POR DEFECTO -->
             <div id="historialBody" class="hidden transition-all duration-300">
                 <!-- BUSCADOR CON FILTRADO MULTIVARIABLE Y BOTONES DE CONTROL (NO-PRINT) -->                
-                <div class="p-6 border-b border-slate-150 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50/20">                
+                <div class="p-6 border-b border-slate-155 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50/20">                
                     <div class="space-y-1">
                         <p class="text-[11px] text-slate-400 font-semibold text-teal-800">Censo de Vigilancia General - Hospital de Ventanilla (Tabla General)</p>                
                     </div>                                
@@ -637,82 +637,89 @@
             </div>
         </section>
 
-        <!-- ================= 7. MÓDULO DE GESTIÓN DE INSUMOS (KARDEX OPERATIVO) ================= -->        
-        <section class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-md space-y-6 hover:shadow-lg transition-all duration-300">            
-            <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-slate-100 pb-4 gap-4">                
-                <div>                    
-                    <h2 class="text-base font-extrabold text-slate-700 uppercase tracking-wider"><i class="fa-solid fa-boxes-stacked text-brand-teal mr-2"></i> Kardex de Control de Insumos Críticos</h2>                    
-                    <p class="text-[11px] text-slate-400">Monitoreo operativo de stock de reactivos y consumibles (Sincronizado permanentemente con la base de datos cargada)</p>                
+        <!-- ================= 7. KARDEX DE CONTROL DE INSUMOS CRÍTICOS (COLAPSADO POR DEFECTO CON SU FLECHA) ================= -->        
+        <section id="kardexSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print animate-fade-in">            
+            <!-- CABECERA CLICABLE PARA EXPANDIR / COLAPSAR CON CHEVRON DE KARDEX (INICIA COLAPSADO APUNTANDO HACIA ABAJO) -->
+            <div onclick="toggleKardex()" class="bg-[#0b4d42]/10 hover:bg-[#0b4d42]/15 transition-colors duration-200 px-6 py-4 flex items-center justify-between border-b border-slate-200 cursor-pointer select-none">                
+                <div class="flex items-center gap-3">                    
+                    <i id="chevronKardex" class="fa-solid fa-chevron-down text-brand-teal text-sm transition-transform duration-200"></i>                    
+                    <div class="flex items-center gap-2">                        
+                        <i class="fa-solid fa-boxes-stacked text-brand-teal text-lg"></i>                        
+                        <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Kardex de Control de Insumos Críticos</h2>                    
+                    </div>                
                 </div>                
-                <div class="flex items-center gap-2 no-print">                    
-                    <span class="bg-emerald-50 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full border border-emerald-150 uppercase"><i class="fa-solid fa-check-double mr-1"></i> Stock Sincronizado</span>                
-                </div>            
+                <span class="bg-emerald-50 text-emerald-700 text-[10px] font-black px-3 py-1.5 rounded-full border border-emerald-150 uppercase"><i class="fa-solid fa-check-double mr-1"></i> Stock Sincronizado</span>                
             </div>
-            
-            <!-- Formulario de Entrada Rápida de Insumo (NO-PRINT) -->            
-            <form id="kardexForm" onsubmit="addInsumoStock(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 p-4 bg-slate-50/50 rounded-xl border border-slate-200/50 text-xs no-print">                
-                <div class="lg:col-span-6 flex justify-between items-center border-b border-slate-200 pb-2 mb-2">                    
-                    <span id="kardexFormTitle" class="text-xs font-black text-brand-dark uppercase tracking-wider flex items-center gap-2">                        
-                        <i class="fa-solid fa-plus-circle text-emerald-500"></i> Registrar Entrada de Insumos                    
-                    </span>                    
-                    <button type="button" id="btnCancelEdit" onclick="cancelEditInsumo()" class="hidden bg-rose-100 hover:bg-rose-200 text-rose-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded transition-colors shadow-sm">                        
-                        <i class="fa-solid fa-times-circle"></i> Cancelar Edición                    
-                    </button>                
-                </div>                
-                <div>                    
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Fecha de Ingreso</label>                    
-                    <input type="date" id="kardexFechaIngreso" required class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">                
-                </div>                
-                <div>                    
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Insumo a Recargar</label>                    
-                    <select id="kardexSelectInsumo" required class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">                        
-                        <option value="1" selected>Pruebas Rápidas Dengue NS1</option>                        
-                        <option value="2">Hisopos Nasofaringeos (Medio Viral)</option>                        
-                        <option value="3">Kits de Extracción de ARN Molecular</option>                        
-                        <option value="4">Láminas Reactivas Bartonella IFI</option>                        
-                        <option value="5">Lancetas de Punción Periférica</option>                    
-                    </select>                
-                </div>                
-                <div>                    
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Cantidad de Entrada (+)</label>                    
-                    <input type="number" id="kardexCantidad" required min="1" placeholder="Ej. 100" class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">                
-                </div>                
-                <div>                    
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nº de Lote / Guía</label>                    
-                    <input type="text" id="kardexLote" required placeholder="Ej. LOT-2026-X" class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">                
-                </div>                
-                <div>                    
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Fecha de Vencimiento</label>                    
-                    <input type="date" id="kardexFechaVence" required class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">                
-                </div>                
-                <div class="flex items-end">                    
-                    <button type="submit" id="btnSubmitKardex" class="w-full bg-brand-teal hover:bg-brand-dark text-white px-5 py-2.5 rounded-lg text-xs font-black transition-all shadow-md uppercase tracking-wider h-[38px] flex items-center justify-center gap-1.5">                        
-                        <i class="fa-solid fa-plus"></i> Registrar Entrada                    
-                    </button>                
-                </div>            
-            </form>
 
-            <!-- Tabla Kardex de Existencias -->
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-xs text-left text-slate-600 font-bold">
-                    <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
-                        <tr>
-                            <th class="p-3.5">F. Ingreso</th>
-                            <th class="p-3.5">Insumo del Almacén</th>
-                            <th class="p-3.5 text-center">Ingresos Totales</th>
-                            <th class="p-3.5 text-center text-rose-600">Consumo (Muestras)</th>
-                            <th class="p-3.5 text-center text-brand-dark bg-teal-50 font-black">Stock Disponible</th>
-                            <th class="p-3.5">Último Uso</th>
-                            <th class="p-3.5">Lote Activo</th>
-                            <th class="p-3.5">F. Vencimiento</th>
-                            <th class="p-3.5 text-center">Alerta de Stock</th>
-                            <th class="p-3.5 text-center no-print">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="kardexTableBody" class="divide-y divide-slate-100 font-bold text-sm">
-                        <!-- Llenado automático vía JS -->
-                    </tbody>
-                </table>
+            <!-- CUERPO DEL KARDEX QUE INICIA CERRADO POR DEFECTO -->
+            <div id="kardexBody" class="hidden p-6 space-y-6 bg-slate-50/20 transition-all duration-300">
+                <p class="text-[11px] text-slate-400 font-medium">Monitoreo operativo de stock de reactivos y consumibles (Sincronizado permanentemente con la base de datos cargada)</p>                
+                
+                <!-- Formulario de Entrada Rápida de Insumo (NO-PRINT) -->            
+                <form id="kardexForm" onsubmit="addInsumoStock(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 p-4 bg-white rounded-xl border border-slate-200/50 text-xs no-print shadow-sm">                
+                    <div class="lg:col-span-6 flex justify-between items-center border-b border-slate-200 pb-2 mb-2">                    
+                        <span id="kardexFormTitle" class="text-xs font-black text-brand-dark uppercase tracking-wider flex items-center gap-2">                        
+                            <i class="fa-solid fa-plus-circle text-emerald-500"></i> Registrar Entrada de Insumos                    
+                        </span>                    
+                        <button type="button" id="btnCancelEdit" onclick="cancelEditInsumo()" class="hidden bg-rose-100 hover:bg-rose-200 text-rose-700 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded transition-colors shadow-sm">                        
+                            <i class="fa-solid fa-times-circle"></i> Cancelar Edición                    
+                        </button>                
+                    </div>                
+                    <div>                    
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Fecha de Ingreso</label>                    
+                        <input type="date" id="kardexFechaIngreso" required class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">                
+                    </div>                
+                    <div>                    
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Insumo a Recargar</label>                    
+                        <select id="kardexSelectInsumo" required class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">                        
+                            <option value="1" selected>Pruebas Rápidas Dengue NS1</option>                        
+                            <option value="2">Hisopos Nasofaringeos (Medio Viral)</option>                        
+                            <option value="3">Kits de Extracción de ARN Molecular</option>                        
+                            <option value="4">Láminas Reactivas Bartonella IFI</option>                        
+                            <option value="5">Lancetas de Punción Periférica</option>                    
+                        </select>                
+                    </div>                
+                    <div>                    
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Cantidad de Entrada (+)</label>                    
+                        <input type="number" id="kardexCantidad" required min="1" placeholder="Ej. 100" class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">                
+                    </div>                
+                    <div>                    
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Nº de Lote / Guía</label>                    
+                        <input type="text" id="kardexLote" required placeholder="Ej. LOT-2026-X" class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">                
+                    </div>                
+                    <div>                    
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">Fecha de Vencimiento</label>                    
+                        <input type="date" id="kardexFechaVence" required class="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">                
+                    </div>                
+                    <div class="flex items-end">                    
+                        <button type="submit" id="btnSubmitKardex" class="w-full bg-brand-teal hover:bg-brand-dark text-white px-5 py-2.5 rounded-lg text-xs font-black transition-all shadow-md uppercase tracking-wider h-[38px] flex items-center justify-center gap-1.5">                        
+                            <i class="fa-solid fa-plus"></i> Registrar Entrada                    
+                        </button>                
+                    </div>            
+                </form>
+
+                <!-- Tabla Kardex de Existencias -->
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-xs text-left text-slate-600 font-bold">
+                        <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="p-3.5">F. Ingreso</th>
+                                <th class="p-3.5">Insumo del Almacén</th>
+                                <th class="p-3.5 text-center">Ingresos Totales</th>
+                                <th class="p-3.5 text-center text-rose-600">Consumo (Muestras)</th>
+                                <th class="p-3.5 text-center text-brand-dark bg-teal-50 font-black">Stock Disponible</th>
+                                <th class="p-3.5">Último Uso</th>
+                                <th class="p-3.5">Lote Activo</th>
+                                <th class="p-3.5">F. Vencimiento</th>
+                                <th class="p-3.5 text-center">Alerta de Stock</th>
+                                <th class="p-3.5 text-center no-print">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="kardexTableBody" class="divide-y divide-slate-100 font-bold text-sm">
+                            <!-- Llenado automático vía JS -->
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
     </main>
@@ -732,7 +739,7 @@
             { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "22/05/2026", "APELLIDOS Y NOMBRES": "DIAZ MUÑOZ DYLAN JHEBECO (Pachacútec)", "H.C.": "208015", "DNI": "10008024", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "Muestra tomada en Pachacutec", "SECTOR": "Pachacútec" },
             { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "20/05/2026", "APELLIDOS Y NOMBRES": "CHAVEZ MOZOMBIRE EMILIA (Mi Perú)", "H.C.": "208013", "DNI": "10000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "Sector Mi Peru", "SECTOR": "Mi Perú" },
             { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "25/05/2026", "APELLIDOS Y NOMBRES": "DOMINGUEZ REQUE DEYBI STEVEN (Angamos)", "H.C.": "208014", "DNI": "1000814", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "AA.HH. Angamos", "SECTOR": "Angamos" },
-            { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "24/05/2026", "APELLIDOSY NOMBRES": "BARRIOS NICOSUP MARIA INCOMA (Ventanilla Alta)", "H.C.": "208013", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---", "SECTOR": "Ventanilla Alta" },
+            { "SEMANAN EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "24/05/2026", "APELLIDOSY NOMBRES": "BARRIOS NICOSUP MARIA INCOMA (Ventanilla Alta)", "H.C.": "208013", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---", "SECTOR": "Ventanilla Alta" },
             { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "23/05/2026", "APELLIDOS Y NOMBRES": "ARTEAGA VIVAS JUAN JACK (Villa Los Reyes)", "H.C.": "208012", "DNI": "1000811", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---", "SECTOR": "Villa Los Reyes" },
             { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "22/05/2026", "APELLIDOS Y NOMBRES": "LAZARO MILAGROS STEFANNY (Dengue 2)", "H.C.": "208015", "DNI": "10008024", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---", "SECTOR": "Pachacútec" },
             { "SEMANA EPIDEMIOLÓGICA": "21", "FECHAS DE NOTIFICACIÓN": "21/05/2026", "APELLIDOS Y NOMBRES": "GOMEZ MOSQUEIRA JUAN PAULINO (Dengue 1)", "H.C.": "208013", "DNI": "10000810", "TIPO DE PRUEBA": "Dengue", "RESULTADO CLÍNICO": "POSITIVO", "OBSERVACION": "---", "SECTOR": "Ventanilla Alta" },
@@ -1128,6 +1135,21 @@
             }
         }
 
+        // --- CONTROLADOR DE COLAPSO DE KARDEX ---
+        function toggleKardex() {
+            const body = document.getElementById("kardexBody");
+            const chevron = document.getElementById("chevronKardex");
+            if (body.classList.contains("hidden")) {
+                body.classList.remove("hidden");
+                chevron.classList.remove("fa-chevron-down");
+                chevron.classList.add("fa-chevron-up");
+            } else {
+                body.classList.add("hidden");
+                chevron.classList.remove("fa-chevron-up");
+                chevron.className = "fa-solid fa-chevron-down text-brand-teal text-sm transition-transform duration-200";
+            }
+        }
+
         // Homologador de Resultados Clínicos
         function mapResultado(resStr) {
             if (!resStr) return "PENDIENTE";
@@ -1448,31 +1470,6 @@
             dialog.querySelector("div").classList.add("scale-100");
         }
 
-        function closeDialog() {
-            const dialog = document.getElementById("customDialogModal");
-            dialog.classList.add("opacity-0", "pointer-events-none");
-            dialog.querySelector("div").classList.remove("scale-100");
-            dialog.querySelector("div").classList.add("scale-95");
-        }
-
-        // --- NORMALIZADOR DE DATOS DE ORIGEN ---
-        function normalizarDatosCrudos(datosRaw) {
-            return datosRaw.map(fila => {
-                return {
-                    semana: normalizeWeek(getRowValue(fila, ["semana epidemiologica", "semana epidemiológica", "semana epi", "s.e.", "semana", "se", "epi week", "week", "n semana", "n° semana", "num semana", "numero de semana"], "---")),
-                    fechaNoti: getRowValue(fila, ["fechas de notificacion", "fecha de notificacion", "fecha de notificación", "fechas de notificación", "fecha noti", "fechas", "fecha", "notificacion", "notificación", "f_noti", "f.noti", "fnoti", "fecha de registro", "fecha registro"], "---"),
-                    paciente: getRowValue(fila, ["apellidos y nombres", "paciente", "nombres", "apellidos", "pacientes", "nombre", "nombre completo", "sujeto", "nombre del paciente", "nombres y apellidos"], "Paciente Anónimo"),
-                    hc: getRowValue(fila, ["h.c.", "hc", "historia clinica", "historia clínica", "historia", "historia clinica n°", "n° historia clinica", "n° hc", "nro hc", "nro historia", "numero de historia"], "---"),
-                    dni: getRowValue(fila, ["dni", "documento", "identificacion", "identificación", "cedula", "n° documento", "nro documento", "num documento", "documento de identidad", "doc"], "---"),
-                    prueba: getRowValue(fila, ["tipo de prueba", "prueba", "examen", "pruebas", "diagnostico", "analisis", "procedimiento", "examen solicitado", "prueba diagnostica", "patogeno", "patógeno", "enfermedad"], "No especificado"),
-                    resultado: mapResultado(getRowValue(fila, ["resultado clinico", "resultado final", "clasificacion final", "resultado", "resultados", "diagnostico", "diagnostico final", "resultado de prueba", "estado", "clasificacion", "clasificación", "condicion"], "PENDIENTE")),
-                    observacion: getRowValue(fila, ["observacion", "observación", "observaciones", "obser", "obs", "detalle", "comentario", "comentarios", "nota", "notas"], "---"),
-                    sector: getRowValue(fila, ["sector", "zona", "localidad", "distrito", "direccion", "dirección", "procedencia", "establecimiento", "e.s.", "lugar", "procedencia establecimiento", "jurisdiccion", "jurisdicción"], "---"),
-                    isLocal: false
-                };
-            });
-        }
-
         // --- SISTEMA UNIFICADO DE FUSIÓN DE DATOS ---
         function fusionarYRefrescarDashboard(datosSheetsRaw = null) {
             if (datosSheetsRaw) {
@@ -1492,58 +1489,29 @@
             filtrarYRefrescarDashboard();
         }
 
-        // REGISTRO DE NUEVO CASO (FICHA F-100)
-        function registrarNuevoCaso(event) {
-            event.preventDefault();
-
-            const se = document.getElementById("casoSE").value.trim();
-            const fechaVal = document.getElementById("casoFecha").value;
-            const fecha = formatDate(fechaVal);
-            const paciente = document.getElementById("casoPaciente").value.toUpperCase().trim();
-            const hc = document.getElementById("casoHC").value.trim();
-            const dni = document.getElementById("casoDNI").value.trim();
-            const prueba = document.getElementById("casoPrueba").value;
-            const resultado = document.getElementById("casoResultado").value;
-            const sector = document.getElementById("casoSector").value;
-            const observacion = document.getElementById("casoObservacion").value.trim() || "---";
-
-            const nuevoCaso = {
-                semana: se,
-                fechaNoti: fecha,
-                paciente: paciente,
-                hc: hc,
-                dni: dni,
-                prueba: prueba,
-                resultado: resultado,
-                observacion: observacion,
-                sector: sector,
-                isLocal: true, 
-                id: "case-" + Date.now() + "-" + Math.floor(Math.random() * 1000)
-            };
-
-            datosLocalesAdicionales.unshift(nuevoCaso);
-            localStorage.setItem("ventanilla_muestras_local", JSON.stringify(datosLocalesAdicionales));
-
-            fusionarYRefrescarDashboard();
-
-            document.getElementById("formNuevoCaso").reset();
-            setDefaultCasoDates();
-
-            mostrarAlertaDialog(
-                "Notificación Registrada exitosamente", 
-                `El paciente ${paciente} ha sido integrado al censo. Se ha recalculado el stock del Kardex de Insumos.`
-            );
+        // --- FUNCIÓN DE APLICACIÓN DE FILTROS ---
+        function applyFilters() {
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
         }
 
-        // ELIMINAR CASO LOCAL
-        function eliminarCasoLocal(id) {
-            mostrarConfirmacionDialog("¿Seguro que desea eliminar esta muestra? El stock consumido del Kardex se recuperará de inmediato.", function() {
-                datosLocalesAdicionales = datosLocalesAdicionales.filter(x => x.id !== id);
-                localStorage.setItem("ventanilla_muestras_local", JSON.stringify(datosLocalesAdicionales));
-                
-                fusionarYRefrescarDashboard();
-                mostrarAlertaDialog("Caso Eliminado", "La muestra seleccionada ha sido borrada.");
-            });
+        // --- FUNCIÓN DE RESTABLECIMIENTO DE FILTROS ---
+        function resetFilters() {
+            document.getElementById("filterWeek").value = "ALL";
+            document.getElementById("filterYear").value = "ALL";
+            document.getElementById("filterTestType").value = "ALL";
+            document.getElementById("filterSector").value = "ALL";
+            document.getElementById("filterResult").value = "ALL";
+            document.getElementById("buscadorPaciente").value = "";
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+        }
+
+        function closeDialog() {
+            const dialog = document.getElementById("customDialogModal");
+            dialog.classList.add("opacity-0", "pointer-events-none");
+            dialog.querySelector("div").classList.remove("scale-100");
+            dialog.querySelector("div").classList.add("scale-95");
         }
 
         // --- AUXILIAR DE ANALISIS CLÍNICO DE FECHAS PARA ORDENAMIENTO CRONOLÓGICO ---
@@ -1578,24 +1546,6 @@
             
             let parsed = Date.parse(fechaStr);
             return isNaN(parsed) ? new Date(0) : new Date(parsed);
-        }
-
-        // --- FUNCIÓN DE APLICACIÓN DE FILTROS ---
-        function applyFilters() {
-            currentPage = 1;
-            filtrarYRefrescarDashboard();
-        }
-
-        // --- FUNCIÓN DE RESTABLECIMIENTO DE FILTROS ---
-        function resetFilters() {
-            document.getElementById("filterWeek").value = "ALL";
-            document.getElementById("filterYear").value = "ALL";
-            document.getElementById("filterTestType").value = "ALL";
-            document.getElementById("filterSector").value = "ALL";
-            document.getElementById("filterResult").value = "ALL";
-            document.getElementById("buscadorPaciente").value = "";
-            currentPage = 1;
-            filtrarYRefrescarDashboard();
         }
 
         // FILTRADO MULTIVARIABLE GENERAL Y ORDENAMIENTO CRONOLÓGICO DESCENDENTE (CON ALGORITMO INTEGRAL ANTI-CRASHES DE CELDAS VACÍAS)
@@ -1819,7 +1769,7 @@
             }
         }
 
-        // --- FUNCIÓN DE RENDERIZACIÓN DE TABLA RESUMEN DE EXÁMENES ---
+        // --- FUNCIÓN DE RENDERIZACIÓN DE TABLA RESUMEN DE EXÁMENES (CORREGIDA CON BLINDAJE DE NULOS EN EL ELEMENTO HTML) ---
         function renderizarTablaResumen(datos) {
             let agrupado = {};
 
@@ -1959,13 +1909,6 @@
             document.getElementById("btnNextPage").disabled = currentPage === totalPages;
         }
 
-        function prevPage() {
-            if (currentPage > 1) {
-                currentPage--;
-                renderizarTablaHistorial(datosFiltrados);
-            }
-        }
-
         // --- ACCIONES DE ELIMINACIÓN Y EDICIÓN DEL KARDEX (RESTAURADAS) ---
         function deleteInsumoKardex(id) {
             mostrarConfirmacionDialog("¿Seguro que desea eliminar esta entrada del Kardex de existencias?", function() {
@@ -2018,12 +1961,6 @@
         }
 
         function filtrarTabla() {
-            currentPage = 1;
-            filtrarYRefrescarDashboard();
-        }
-
-        function clearSearch() {
-            document.getElementById("buscadorPaciente").value = "";
             currentPage = 1;
             filtrarYRefrescarDashboard();
         }
@@ -2375,8 +2312,3 @@
             // Auto-recarga automática configurada a 1 Minuto de ciclo rápido (60 segundos)
             setInterval(() => {
                 conectarYDescargar();
-            }, 60 * 1000);
-        };
-    </script>
-</body>
-</html>
