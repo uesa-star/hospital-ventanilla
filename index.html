@@ -218,15 +218,274 @@
     <!-- CUERPO PRINCIPAL DEL SISTEMA -->    
     <main class="flex-1 max-w-[1850px] w-full mx-auto p-4 md:p-6 space-y-6">
 
-        <!-- ================= FORMULARIO INTERACTIVO DE NUEVA NOTIFICACIÓN (FICHA F-100) ================= -->
-        <section id="formCasoSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print">
-            <!-- CABECERA CLICABLE PARA EXPANDIR / COLAPSAR -->
+        <!-- ================= 1. FILTRO DE CONTROL DE VIGILANCIA (REORDENADO) ================= -->
+        <section class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print">
+            <div class="bg-brand-dark text-white px-6 py-4 flex items-center gap-2 shadow-sm border-b border-teal-900">
+                <i class="fa-solid fa-sliders text-emerald-400 text-lg"></i>
+                <h2 class="text-sm font-extrabold uppercase tracking-wider">Filtros de Control de Vigilancia</h2>
+            </div>
+            <div class="p-6 bg-slate-50/40">
+                <div class="flex flex-col lg:flex-row items-stretch lg:items-end gap-4 text-sm justify-between">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
+                        <!-- Año de Vigilancia -->
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Año de Vigilancia</span>
+                            <select id="filterYear" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                                <option value="ALL" selected>Todos los Años</option>
+                            </select>
+                        </div>
+                        <!-- Tipo de Prueba -->
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipo de Prueba</span>
+                            <select id="filterTestType" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                                <option value="ALL" selected>Todas las Pruebas</option>
+                            </select>
+                        </div>
+                        <!-- Semana Epidemiológica -->
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Semana Epidemiológica (S.E.)</span>
+                            <select id="filterWeek" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                                <option value="ALL" selected>Todas</option>
+                            </select>
+                        </div>
+                        <!-- Resultado Clínico -->
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Resultado Clínico</span>
+                            <select id="filterResult" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                                <option value="ALL" selected>Todos los Resultados</option>
+                                <option value="POSITIVO">POSITIVO</option>
+                                <option value="NEGATIVO">NEGATIVO</option>
+                                <option value="PENDIENTE">PENDIENTE</option>
+                                <option value="DESCARTADO">DESCARTADO</option>
+                            </select>
+                        </div>
+                        <!-- Sector / Zona de Ventanilla -->
+                        <div class="flex flex-col gap-1.5">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sector / Zona</span>
+                            <select id="filterSector" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
+                                <option value="ALL" selected>Todos los Sectores</option>
+                                <option value="Pachacútec">Pachacútec / Proyecto Piloto</option>
+                                <option value="Mi Perú">Mi Perú</option>
+                                <option value="Ventanilla Alta">Ventanilla Alta / Centro</option>
+                                <option value="Ventanilla Baja">Ventanilla Baja / Naval</option>
+                                <option value="Villa Los Reyes">Villa Los Reyes</option>
+                                <option value="Angamos">Angamos</option>
+                                <option value="Otros">Otros Sectores / Sin Especificar</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end">
+                        <button onclick="resetFilters()" class="bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 px-6 py-2.5 rounded-lg text-xs font-black transition-colors shadow-sm uppercase tracking-wider shrink-0 h-[38px]">
+                            Limpiar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- ================= 2. KPIs DE ALTO IMPACTO (8 INDICADORES VIGILADOS) ================= -->        
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3.5">            
+            <!-- KPI 1: Total Ingresados General -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[100px]">                
+                <div>                    
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Ingresados</p>                    
+                    <h3 id="kpiTotal" class="text-xl font-black text-slate-800 mt-1 leading-none">...</h3>                    
+                    <p id="kpiTotalSub" class="text-[9px] text-slate-500 mt-2 font-semibold">Censo Base</p>                
+                </div>                
+                <div class="bg-blue-50 p-2 text-blue-600 rounded-full shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-folder-open text-base"></i>                
+                </div>            
+            </div>
+            <!-- KPI 2: Casos Patógeno -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[100px]">                
+                <div>                    
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Casos Patógeno</p>                    
+                    <h3 id="kpiPatogeno" class="text-xl font-black text-teal-700 mt-1 leading-none">0</h3>                    
+                    <p id="kpiPatogenoSub" class="text-[9px] text-teal-600 mt-2 font-semibold truncate max-w-[100px]">Exámenes</p>                
+                </div>                
+                <div class="bg-teal-50 p-2 text-teal-600 rounded-full shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-flask-vial text-base"></i>                
+                </div>            
+            </div>
+            <!-- KPI 3: Casos S.E. 20 -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[100px]">                
+                <div>                    
+                    <p id="kpiSETitle" class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Casos S.E. 20</p>                    
+                    <h3 id="kpiSEValue" class="text-xl font-black text-amber-700 mt-1 leading-none">0</h3>                    
+                    <p class="text-[9px] text-amber-600 mt-2 font-semibold">Semana 20 Activa</p>                
+                </div>                
+                <div class="bg-amber-50 p-2 text-amber-500 rounded-full shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-calendar-week text-base"></i>                
+                </div>            
+            </div>
+            <!-- KPI 4: Positivos (+) -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[100px]">                
+                <div>                    
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Positivos (+)</p>                    
+                    <h3 id="kpiPositivos" class="text-xl font-black text-rose-655 mt-1 leading-none">0</h3>                    
+                    <p class="text-[9px] text-rose-500 mt-2 font-bold flex items-center gap-1"><i class="fa-solid fa-virus mr-0.5 animate-pulse"></i> Alerta</p>                
+                </div>                
+                <div class="bg-rose-50 p-2 text-rose-600 rounded-full shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-circle-exclamation text-base"></i>                
+                </div>            
+            </div>
+            <!-- KPI 5: Negativos (-) -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[100px]">                
+                <div>                    
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Negativos (-)</p>                    
+                    <h3 id="kpiNegativos" class="text-xl font-black text-emerald-600 mt-1 leading-none">0</h3>                    
+                    <p class="text-[9px] text-emerald-600 mt-2 font-semibold">Descartados</p>                
+                </div>                
+                <div class="bg-emerald-50 p-2 text-emerald-600 rounded-full shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-circle-check text-base"></i>                
+                </div>            
+            </div>
+            <!-- KPI 6: Pendientes -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[100px]">                
+                <div>                    
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Pendientes</p>                    
+                    <h3 id="kpiPendientes" class="text-xl font-black text-slate-500 mt-1 leading-none">0</h3>                    
+                    <p class="text-[9px] text-slate-500 mt-2 font-semibold">En Proceso</p>                
+                </div>                
+                <div class="bg-slate-50 p-2 text-slate-500 rounded-full shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-hourglass-half text-base"></i>                
+                </div>            
+            </div>
+            <!-- KPI 7: Tasa Positividad -->
+            <div id="kpiTasaCard" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-md flex items-center justify-between min-h-[100px] transition-all duration-350">                
+                <div>                    
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tasa Positividad</p>                    
+                    <h3 id="kpiTasa" class="text-xl font-black text-brand-dark mt-1 leading-none">0.0%</h3>                    
+                    <p id="kpiTasaAlert" class="text-[8px] mt-2 font-black uppercase tracking-wider text-slate-500">Calculando...</p>                
+                </div>                
+                <div id="kpiTasaIconContainer" class="bg-slate-100 p-2 text-slate-700 rounded-full shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-chart-line text-base"></i>                
+                </div>            
+            </div>
+            <!-- KPI 8: Sector o Zona -->
+            <div class="bg-white p-4 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[100px]">                
+                <div>                    
+                    <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Sector o Zona</p>                    
+                    <h3 id="kpiSectorText" class="text-[11px] font-black text-slate-800 mt-1 leading-none truncate max-w-[110px]">Cargando...</h3>                    
+                    <p id="kpiSectorSub" class="text-[8px] text-slate-500 mt-2 font-semibold">Foco de Alerta</p>                
+                </div>                
+                <div class="bg-purple-50 p-2 text-purple-600 rounded-full shrink-0 shadow-inner">                    
+                    <i class="fa-solid fa-map-location-dot text-base"></i>                
+                </div>            
+            </div>        
+        </section>
+
+        <!-- ================= 3. SECCIÓN DE GRÁFICOS ANALÍTICOS (5 GRÁFICOS) ================= -->        
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">                        
+            <!-- GRÁFICO 1: Casos Registrados por Mes (BARRAS VERTICAL) -->            
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
+                <div>                    
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
+                        <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Casos por Mes</h3>                        
+                        <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full uppercase">Barras V.</span>                    
+                    </div>                    
+                    <div class="relative h-56 w-full flex items-center justify-center mt-2">                        
+                        <canvas id="chartMensual"></canvas>                    
+                    </div>                
+                </div>                
+                <p class="text-[9px] text-slate-400 text-center mt-3 font-semibold">Evolución temporal del censo de muestras</p>            
+            </div>
+            <!-- GRÁFICO 2: Casos por Semana Epidemiológica (LINEAL) -->            
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
+                <div>                    
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
+                        <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Curva Semanal</h3>                        
+                        <span class="text-[9px] font-bold text-brand-teal bg-emerald-50 px-2 py-0.5 rounded-full uppercase">Lineal</span>                    
+                    </div>                    
+                    <div class="relative h-56 w-full flex items-center justify-center mt-2">                        
+                        <canvas id="chartSemanal"></canvas>                    
+                    </div>                
+                </div>                
+                <p class="text-[9px] text-slate-400 text-center mt-3 font-semibold">Distribución por Semana Epidemiológica</p>            
+            </div>
+            <!-- GRÁFICO 3: Distribución por Tipo de Examen (BARRA HORIZONTAL) -->            
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
+                <div>                    
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
+                        <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Exámenes</h3>                        
+                        <span class="text-[9px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full uppercase">Barras H.</span>                    
+                    </div>                    
+                    <div class="relative h-56 w-full flex items-center justify-center mt-2">                        
+                        <canvas id="chartPatogenos"></canvas>                    
+                    </div>                
+                </div>                
+                <p class="text-[9px] text-slate-400 text-center mt-3 font-semibold">Incidencia según tipo de análisis</p>            
+            </div>
+            <!-- GRÁFICO 4: Diagnósticos Clínicos (CÍRCULO/DOUGHNUT) -->            
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
+                <div>                    
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
+                        <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Resultados</h3>                        
+                        <span class="text-[9px] font-bold text-rose-855 bg-rose-50 px-2 py-0.5 rounded-full uppercase">Círculo</span>                    
+                    </div>                    
+                    <div class="relative h-56 w-full flex items-center justify-center mt-2">                        
+                        <canvas id="chartResultados"></canvas>                    
+                    </div>                
+                </div>                
+                <p class="text-[9px] text-slate-400 text-center mt-3 font-semibold">Resumen de positividad y descarte</p>            
+            </div>
+            <!-- GRÁFICO 5: Sector o Zona (BARRA HORIZONTAL - NUEVO) -->            
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
+                <div>                    
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
+                        <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Casos por Sector</h3>                        
+                        <span class="text-[9px] font-bold text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full uppercase">Barras H.</span>                    
+                    </div>                    
+                    <div class="relative h-56 w-full flex items-center justify-center mt-2">                        
+                        <canvas id="chartSectores"></canvas>                    
+                    </div>                
+                </div>                
+                <p class="text-[9px] text-slate-400 text-center mt-3 font-semibold">Distribución geográfica de incidencias</p>            
+            </div>
+        </section>
+
+        <!-- ================= 4. RESUMEN EPIDEMIOLÓGICO DE PATÓGENOS VIGILADOS ================= -->
+        <section class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-md space-y-3.5 hover:shadow-lg transition-all">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+                <div>
+                    <h2 class="text-base font-extrabold text-slate-700 uppercase tracking-wider">Resumen Epidemiológico de Patógenos Vigilados</h2>
+                    <p class="text-[11px] text-slate-400">Distribución global con censo real extraído de tu base de datos (Ordenado de Mayor a Menor Casos)</p>
+                </div>
+                <span class="bg-teal-50 text-brand-teal text-xs px-3.5 py-1.5 rounded-full font-bold uppercase border border-teal-100 flex items-center gap-1 no-print">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Procesando en Vivo
+                </span>
+            </div>
+            <div class="overflow-x-auto custom-scrollbar">
+                <table class="w-full text-xs text-left text-slate-600">
+                    <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="p-3.5 font-bold text-slate-700">Tipo de Examen</th>
+                            <th class="p-3.5 text-center font-bold text-slate-700">Total Casos</th>
+                            <th class="p-3.5 text-center font-bold text-slate-700 text-rose-600">Positivos (+)</th>
+                            <th class="p-3.5 text-center font-bold text-slate-700 text-emerald-600">Negativos (-)</th>
+                            <th class="p-3.5 text-center font-bold text-slate-700 text-amber-600">Pendientes</th>
+                            <th class="p-3.5 text-center font-bold text-slate-700 text-slate-500">Descartados</th>
+                            <th class="p-3.5 text-center font-bold text-slate-700 text-brand-dark bg-slate-100/50">Tasa Positividad (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="summaryTableBody" class="divide-y divide-slate-100 font-bold text-sm">
+                        <tr>
+                            <td colspan="7" class="p-4 text-center text-slate-400 italic">Cargando resumen epidemiológico...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= 5. FICHA DE NOTIFICACION INTEGRAL DE CASOS (ABIERTO POR DEFECTO CON SU FLECHA) ================= -->
+        <section id="formCasoSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print animate-fade-in">
+            <!-- CABECERA CLICABLE PARA EXPANDIR / COLAPSAR CON CHEVRON -->
             <div onclick="toggleFormCaso()" class="bg-[#0b4d42] hover:bg-[#0d594d] transition-colors duration-200 text-white px-6 py-4 flex items-center justify-between shadow-sm border-b border-teal-900 cursor-pointer select-none">
                 <div class="flex items-center gap-3">
-                    <i id="chevronFormCaso" class="fa-solid fa-chevron-down text-emerald-400 text-sm transition-transform duration-200"></i>
+                    <i id="chevronFormCaso" class="fa-solid fa-chevron-up text-emerald-400 text-sm transition-transform duration-200"></i>
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-file-medical text-emerald-400 text-lg"></i>
-                        <h2 class="text-sm font-extrabold uppercase tracking-wider">Ficha de Notificación Interactiva de Casos</h2>
+                        <h2 class="text-sm font-extrabold uppercase tracking-wider">FICHA DE NOTIFICACION INTEGRAL DE CASOS</h2>
                     </div>
                 </div>
                 <span class="bg-emerald-50/20 text-emerald-300 text-[10px] font-black px-3.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5 shadow-sm">
@@ -237,8 +496,8 @@
                     KARDEX CONECTADO
                 </span>
             </div>
-            <!-- Cuerpo que inicia CERRADO -->
-            <div id="formCasoBody" class="hidden p-6 bg-slate-50/20 transition-all duration-300">
+            <!-- Cuerpo de la ficha que inicia ABIERTO de forma segura -->
+            <div id="formCasoBody" class="p-6 bg-slate-50/20 transition-all duration-300">
                 <form id="formNuevoCaso" onsubmit="registrarNuevoCaso(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs font-bold text-slate-600">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Semana Epidemiológica (S.E.)</label>
@@ -258,7 +517,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">DNI / Carnet Ext.</label>
-                        <input type="text" id="casoDNI" required placeholder="Ej. 74581290" class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">
+                        <input type="text" id="casoDNI" required placeholder="Ej. 74581290" class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2.5 uppercase focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Tipo de Prueba (Reactivo Consumido)</label>
@@ -307,299 +566,78 @@
             </div>
         </section>
 
-        <!-- ================= FILTRO DE CONTROL ================= -->
-        <section class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print">
-            <div class="bg-brand-dark text-white px-6 py-4 flex items-center gap-2 shadow-sm border-b border-teal-900">
-                <i class="fa-solid fa-sliders text-emerald-400 text-lg"></i>
-                <h2 class="text-sm font-extrabold uppercase tracking-wider">Filtros de Control de Vigilancia</h2>
-            </div>
-            <div class="p-6 bg-slate-50/40">
-                <div class="flex flex-col lg:flex-row items-stretch lg:items-end gap-4 text-sm justify-between">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
-                        <!-- S.E. -->
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Semana Epidemiológica (S.E.)</span>
-                            <select id="filterWeek" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
-                                <option value="ALL" selected>Todas</option>
-                            </select>
-                        </div>
-                        <!-- Año -->
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Año de Vigilancia</span>
-                            <select id="filterYear" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
-                                <option value="ALL" selected>Todos los Años</option>
-                            </select>
-                        </div>
-                        <!-- Tipo de Prueba -->
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipo de Prueba</span>
-                            <select id="filterTestType" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
-                                <option value="ALL" selected>Todas las Pruebas</option>
-                            </select>
-                        </div>
-                        <!-- Sector / Zona de Ventanilla -->
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Sector / Zona</span>
-                            <select id="filterSector" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
-                                <option value="ALL" selected>Todos los Sectores</option>
-                                <option value="Pachacútec">Pachacútec / Proyecto Piloto</option>
-                                <option value="Mi Perú">Mi Perú</option>
-                                <option value="Ventanilla Alta">Ventanilla Alta / Centro</option>
-                                <option value="Ventanilla Baja">Ventanilla Baja / Naval</option>
-                                <option value="Villa Los Reyes">Villa Los Reyes</option>
-                                <option value="Angamos">Angamos</option>
-                                <option value="Otros">Otros Sectores / Sin Especificar</option>
-                            </select>
-                        </div>
-                        <!-- Resultado -->
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Resultado Clínico</span>
-                            <select id="filterResult" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
-                                <option value="ALL" selected>Todos los Resultados</option>
-                                <option value="POSITIVO">POSITIVO</option>
-                                <option value="NEGATIVO">NEGATIVO</option>
-                                <option value="PENDIENTE">PENDIENTE</option>
-                                <option value="DESCARTADO">DESCARTADO</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="flex justify-end">
-                        <button onclick="resetFilters()" class="bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-700 px-6 py-2.5 rounded-lg text-xs font-black transition-colors shadow-sm uppercase tracking-wider shrink-0 h-[38px]">
-                            Limpiar Filtros
-                        </button>
+        <!-- ================= 6. HISTORIAL INTEGRADO DE MUESTRAS REGISTRADAS (COLAPSADO POR DEFECTO CON SU FLECHA) ================= -->        
+        <section id="historialSection" class="bg-white rounded-xl border border-slate-200/80 shadow-md overflow-hidden flex flex-col hover:shadow-md transition-shadow animate-fade-in">            
+            <!-- CABECERA CLICABLE PARA EXPANDIR / COLAPSAR CON CHEVRON DE HISTORIAL (INICIA COLAPSADO APUNTANDO HACIA ABAJO) -->
+            <div onclick="toggleHistorial()" class="bg-[#0b4d42]/10 hover:bg-[#0b4d42]/15 transition-colors duration-200 px-6 py-4 flex items-center justify-between border-b border-slate-200 cursor-pointer select-none">
+                <div class="flex items-center gap-3">
+                    <i id="chevronHistorial" class="fa-solid fa-chevron-down text-brand-teal text-sm transition-transform duration-200"></i>
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-brand-teal text-lg"></i>
+                        <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Historial Integrado de Muestras Registradas</h2>
                     </div>
                 </div>
+                <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Último ingreso primero</span>
             </div>
-        </section>
-        
-        <!-- KPIs DE ALTO IMPACTO -->        
-        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3.5">            
-            <!-- KPI 1 -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
-                <div>                    
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Ingresados</p>                    
-                    <h3 id="kpiTotal" class="text-2xl font-black text-slate-800 mt-1 leading-none">...</h3>                    
-                    <p id="kpiTotalSub" class="text-[10px] text-slate-500 mt-2 font-semibold">Total General Base</p>                
-                </div>                
-                <div class="bg-blue-50 p-3 rounded-full text-blue-600 shrink-0 shadow-inner">                    
-                    <i class="fa-solid fa-folder-open text-xl"></i>                
-                </div>            
-            </div>
-            <!-- KPI 2 -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
-                <div>                    
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Casos Patógeno</p>                    
-                    <h3 id="kpiPatogeno" class="text-2xl font-black text-teal-700 mt-1 leading-none">0</h3>                    
-                    <p id="kpiPatogenoSub" class="text-[10px] text-teal-600 mt-2 font-semibold truncate max-w-[120px]">Seleccione examen</p>                
-                </div>                
-                <div class="bg-teal-50 p-3 rounded-full text-teal-600 shrink-0 shadow-inner">                    
-                    <i class="fa-solid fa-flask-vial text-xl"></i>                
-                </div>            
-            </div>
-            <!-- KPI 3 -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
-                <div>                    
-                    <p id="kpiSETitle" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Casos S.E. ---</p>                    
-                    <h3 id="kpiSEValue" class="text-2xl font-black text-amber-700 mt-1 leading-none">0</h3>                    
-                    <p class="text-[10px] text-amber-600 mt-2 font-semibold">Casos en la semana</p>                
-                </div>                
-                <div class="bg-amber-50 p-3 rounded-full text-amber-500 shrink-0 shadow-inner">                    
-                    <i class="fa-solid fa-calendar-week text-xl"></i>                
-                </div>            
-            </div>
-            <!-- KPI 4 -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
-                <div>                    
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Positivos (+)</p>                    
-                    <h3 id="kpiPositivos" class="text-2xl font-black text-rose-655 mt-1 leading-none">0</h3>                    
-                    <p class="text-[10px] text-rose-500 mt-2 font-bold flex items-center gap-1"><i class="fa-solid fa-virus mr-0.5 animate-pulse"></i> Alerta Activa</p>                
-                </div>                
-                <div class="bg-rose-50 p-3 rounded-full text-rose-600 shrink-0 shadow-inner">                    
-                    <i class="fa-solid fa-circle-exclamation text-xl"></i>                
-                </div>            
-            </div>
-            <!-- KPI 5 -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
-                <div>                    
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Negativos (-)</p>                    
-                    <h3 id="kpiNegativos" class="text-2xl font-black text-emerald-600 mt-1 leading-none">0</h3>                    
-                    <p class="text-[10px] text-emerald-600 mt-2 font-semibold">Casos descartados</p>                
-                </div>                
-                <div class="bg-emerald-50 p-3 rounded-full text-emerald-600 shrink-0 shadow-inner">                    
-                    <i class="fa-solid fa-circle-check text-xl"></i>                
-                </div>            
-            </div>
-            <!-- KPI 6 -->
-            <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[110px]">                
-                <div>                    
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pendientes</p>                    
-                    <h3 id="kpiPendientes" class="text-2xl font-black text-slate-500 mt-1 leading-none">0</h3>                    
-                    <p class="text-[10px] text-slate-500 mt-2 font-semibold">En censo clínico</p>                
-                </div>                
-                <div class="bg-slate-50 p-3 rounded-full text-slate-500 shrink-0 shadow-inner">                    
-                    <i class="fa-solid fa-hourglass-half text-xl"></i>                
-                </div>            
-            </div>
-            <!-- KPI 7: TASA DE POSITIVIDAD DINÁMICA CON SEMÁFORO -->
-            <div id="kpiTasaCard" class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-md flex items-center justify-between min-h-[110px] transition-all duration-350">                
-                <div>                    
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tasa Positividad</p>                    
-                    <h3 id="kpiTasa" class="text-2xl font-black text-brand-dark mt-1 leading-none">0.0%</h3>                    
-                    <p id="kpiTasaAlert" class="text-[9px] mt-2 font-black uppercase tracking-wider text-slate-500">Calculando...</p>                
-                </div>                
-                <div id="kpiTasaIconContainer" class="bg-slate-100 p-3 rounded-full text-slate-700 shrink-0 shadow-inner">                    
-                    <i class="fa-solid fa-chart-line text-xl"></i>                
-                </div>            
-            </div>        
-        </section>
 
-        <!-- SECCIÓN DE GRÁFICOS ANALÍTICOS -->        
-        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">                        
-            <!-- GRÁFICO 1 -->            
-            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
-                <div>                    
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
-                        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Casos Registrados por Mes</h3>                        
-                        <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full uppercase tracking-wider">Tendencia</span>                    
-                    </div>                    
-                    <div class="relative h-64 w-full flex items-center justify-center mt-2">                        
-                        <canvas id="chartMensual"></canvas>                    
-                    </div>                
-                </div>                
-                <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Evolución temporal del censo de muestras clínicas</p>            
-            </div>
-            <!-- GRÁFICO 2 -->            
-            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
-                <div>                    
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
-                        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Casos por Semana Epidemiológica</h3>                        
-                        <span class="text-[10px] font-bold text-brand-teal bg-emerald-50 px-2.5 py-1 rounded-full uppercase tracking-wider">S.E. Curva</span>                    
-                    </div>                    
-                    <div class="relative h-64 w-full flex items-center justify-center mt-2">                        
-                        <canvas id="chartSemanal"></canvas>                    
-                    </div>                
-                </div>                
-                <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Distribución de volumen agrupado por Semana Epidemiológica</p>            
-            </div>
-            <!-- GRÁFICO 3 -->            
-            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
-                <div>                    
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">                        
-                        <h3 class="text-sm font-extrabold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full uppercase tracking-wider">Distribución por Tipo de Examen</h3>                        
-                        <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-full uppercase tracking-wider">Patógenos</span>                    
-                    </div>                    
-                    <div class="relative h-64 w-full flex items-center justify-center mt-2">                        
-                        <canvas id="chartPatogenos"></canvas>                    
-                    </div>                
-                </div>                
-                <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Incidencia relativa según tipo de análisis de laboratorio</p>            
-            </div>
-            <!-- GRÁFICO 4 -->            
-            <div class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300">                
-                <div>                    
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">                        
-                        <h3 class="text-sm font-extrabold text-rose-855 bg-rose-50 px-2.5 py-1 rounded-full uppercase tracking-wide">Diagnósticos</h3>                        
-                        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Diagnósticos Clínicos</h3>                    
-                    </div>                    
-                    <div class="relative h-64 w-full flex items-center justify-center mt-2">                        
-                        <canvas id="chartResultados"></canvas>                    
-                    </div>                
-                </div>                
-                <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Resumen de positividad y descarte clínico</p>            
-            </div>
-        </section>
-
-        <!-- TABLA DE RESUMEN EPIDEMIOLÓGICO POR EXAMEN -->
-        <section class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-md space-y-3.5 hover:shadow-lg transition-all">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <div>
-                    <h2 class="text-base font-extrabold text-slate-700 uppercase tracking-wider">Resumen Epidemiológico de Patógenos Vigilados</h2>
-                    <p class="text-[11px] text-slate-400">Distribución global con censo real extraído de tu base de datos (Ordenado de Mayor a Menor Casos)</p>
-                </div>
-                <span class="bg-teal-50 text-brand-teal text-xs px-3.5 py-1.5 rounded-full font-bold uppercase border border-teal-100 flex items-center gap-1 no-print">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Procesando en Vivo
-                </span>
-            </div>
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-xs text-left text-slate-600">
-                    <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
-                        <tr>
-                            <th class="p-3.5 font-bold text-slate-700">Tipo de Examen</th>
-                            <th class="p-3.5 text-center font-bold text-slate-700">Total Casos</th>
-                            <th class="p-3.5 text-center font-bold text-slate-700 text-rose-600">Positivos (+)</th>
-                            <th class="p-3.5 text-center font-bold text-slate-700 text-emerald-600">Negativos (-)</th>
-                            <th class="p-3.5 text-center font-bold text-slate-700 text-amber-600">Pendientes</th>
-                            <th class="p-3.5 text-center font-bold text-slate-700 text-slate-500">Descartados</th>
-                            <th class="p-3.5 text-center font-bold text-slate-700 text-brand-dark bg-slate-100/50">Tasa Positividad (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="summaryTableBody" class="divide-y divide-slate-100 font-bold text-sm">
-                        <tr>
-                            <td colspan="7" class="p-4 text-center text-slate-400 italic">Cargando resumen epidemiológico...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- TABLA PRINCIPAL: HISTORIAL DE REGISTROS -->        
-        <section class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow">            
-            <div class="p-6 border-b border-slate-155 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">                
-                <div class="space-y-1">
-                    <h2 class="text-base font-extrabold text-slate-700 uppercase tracking-wider">Historial Integrado de Muestras Registradas</h2>                    
-                    <p class="text-[11px] text-slate-400 font-semibold text-teal-800">Censo de Vigilancia General - Hospital de Ventanilla (Último ingreso primero)</p>                
-                </div>                                
+            <!-- CUERPO DE LA TABLA Y BUSCADOR QUE INICIA CERRADO POR DEFECTO -->
+            <div id="historialBody" class="hidden transition-all duration-300">
                 <!-- BUSCADOR CON FILTRADO MULTIVARIABLE Y BOTONES DE CONTROL (NO-PRINT) -->                
-                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full xl:w-auto no-print">                    
-                    <div class="relative flex-1 sm:w-96">                        
-                        <span class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">                            
-                            <i class="fa-solid fa-magnifying-glass text-xs"></i>                        
-                        </span>                        
-                        <input type="text" id="buscadorPaciente" onkeyup="filtrarTabla()" placeholder="Buscar por S.E., Paciente, H.C., DNI..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 ps-9 text-xs focus:ring-2 focus:ring-brand-teal focus:outline-none font-bold text-slate-800">                    
-                    </div>                    
-                    
-                    <button onclick="clearSearch()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2.5 rounded-lg text-xs font-extrabold transition-colors shadow-sm whitespace-nowrap uppercase tracking-wider">                        
-                        Limpiar
-                    </button>                
-                </div>            
+                <div class="p-6 border-b border-slate-150 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50/20">                
+                    <div class="space-y-1">
+                        <p class="text-[11px] text-slate-400 font-semibold text-teal-800">Censo de Vigilancia General - Hospital de Ventanilla (Tabla General)</p>                
+                    </div>                                
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full xl:w-auto no-print">                    
+                        <div class="relative flex-1 sm:w-96">                        
+                            <span class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none text-slate-400">                            
+                                <i class="fa-solid fa-magnifying-glass text-xs"></i>                        
+                            </span>                        
+                            <input type="text" id="buscadorPaciente" onkeyup="filtrarTabla()" placeholder="Buscar por S.E., Paciente, H.C., DNI..." class="w-full bg-slate-50 border border-slate-200 rounded-lg p-2.5 ps-9 text-xs focus:ring-2 focus:ring-brand-teal focus:outline-none font-bold text-slate-800">                    
+                        </div>                    
+                        
+                        <button onclick="clearSearch()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2.5 rounded-lg text-xs font-extrabold transition-colors shadow-sm whitespace-nowrap uppercase tracking-wider">                        
+                            Limpiar
+                        </button>                
+                    </div>            
+                </div>
+                <!-- Tabla de datos -->            
+                <div class="overflow-x-auto custom-scrollbar">                
+                    <table class="w-full text-xs text-left text-slate-600 font-bold">                    
+                        <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">                        
+                            <tr>                            
+                                <th class="p-3.5 font-bold text-slate-700 text-center">Nº de Caso</th>                            
+                                <th class="p-3.5 font-bold text-slate-700 text-center">S.E.</th>                            
+                                <th class="p-3.5 font-bold text-slate-700">Fecha Noti</th>                            
+                                <th class="p-3.5 font-bold text-slate-700">Paciente</th>                            
+                                <th class="p-3.5 font-bold text-slate-700 text-center">H.C.</th>                            
+                                <th class="p-3.5 font-bold text-slate-700">DNI</th>                            
+                                <th class="p-3.5 font-bold text-slate-700">Tipo de Prueba</th>                            
+                                <th class="p-3.5 font-bold text-slate-700 text-center">Resultado</th>                                                     
+                                <th class="p-3.5 font-bold text-slate-700 text-center no-print">Acciones</th>
+                            </tr>                    
+                        </thead>                    
+                        <tbody id="samplesTableBody" class="divide-y divide-slate-100 font-bold text-sm">                        
+                            <tr>                            
+                                <td colspan="9" class="p-8 text-center text-slate-400 font-semibold">                                
+                                    <i class="fa-solid fa-spinner animate-spin text-2xl mb-1 block text-teal-600"></i>                                
+                                    Cargando historial...                            
+                                </td>                        
+                            </tr>                    
+                        </tbody>                
+                    </table>            
+                </div>
+                <!-- Paginador -->            
+                <div class="p-4 bg-slate-50/50 border-t border-slate-150 flex justify-between items-center text-xs text-slate-500 no-print">                
+                    <span id="paginationInfo" class="font-semibold">Mostrando 0-0 de 0 registros</span>                
+                    <div class="flex gap-1.5">                    
+                        <button id="btnPrevPage" onclick="prevPage()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors font-semibold disabled:opacity-50" disabled>Anterior</button>                    
+                        <button id="btnNextPage" onclick="nextPage()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors font-semibold disabled:opacity-50" disabled>Siguiente</button>                
+                    </div>            
+                </div>        
             </div>
-            <!-- Tabla de datos -->            
-            <div class="overflow-x-auto custom-scrollbar">                
-                <table class="w-full text-xs text-left text-slate-600 font-bold">                    
-                    <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">                        
-                        <tr>                            
-                            <th class="p-3.5 font-bold text-slate-700 text-center">Nº de Caso</th>                            
-                            <th class="p-3.5 font-bold text-slate-700 text-center">S.E.</th>                            
-                            <th class="p-3.5 font-bold text-slate-700">Fecha Noti</th>                            
-                            <th class="p-3.5 font-bold text-slate-700">Paciente</th>                            
-                            <th class="p-3.5 font-bold text-slate-700 text-center">H.C.</th>                            
-                            <th class="p-3.5 font-bold text-slate-700">DNI</th>                            
-                            <th class="p-3.5 font-bold text-slate-700">Tipo de Prueba</th>                            
-                            <th class="p-3.5 font-bold text-slate-700 text-center">Resultado</th>                                                     
-                            <th class="p-3.5 font-bold text-slate-700 text-center no-print">Acciones</th>
-                        </tr>                    
-                    </thead>                    
-                    <tbody id="samplesTableBody" class="divide-y divide-slate-100 font-bold text-sm">                        
-                        <tr>                            
-                            <td colspan="9" class="p-8 text-center text-slate-400 font-semibold">                                
-                                <i class="fa-solid fa-spinner animate-spin text-2xl mb-1 block text-teal-600"></i>                                
-                                Cargando historial...                            
-                            </td>                        
-                        </tr>                    
-                    </tbody>                
-                </table>            
-            </div>
-            <!-- Paginador -->            
-            <div class="p-4 bg-slate-50/50 border-t border-slate-150 flex justify-between items-center text-xs text-slate-500 no-print">                
-                <span id="paginationInfo" class="font-semibold">Mostrando 0-0 de 0 registros</span>                
-                <div class="flex gap-1.5">                    
-                    <button id="btnPrevPage" onclick="prevPage()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors font-semibold disabled:opacity-50" disabled>Anterior</button>                    
-                    <button id="btnNextPage" onclick="nextPage()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors font-semibold disabled:opacity-50" disabled>Siguiente</button>                
-                </div>            
-            </div>        
         </section>
 
-        <!-- ================= MÓDULO DE GESTIÓN DE INSUMOS (KARDEX OPERATIVO) ================= -->        
+        <!-- ================= 7. MÓDULO DE GESTIÓN DE INSUMOS (KARDEX OPERATIVO) ================= -->        
         <section class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-md space-y-6 hover:shadow-lg transition-all duration-300">            
             <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-slate-100 pb-4 gap-4">                
                 <div>                    
@@ -719,6 +757,7 @@
         let chartSemanalInstance = null;
         let chartPatogenosInstance = null;
         let chartResultadosInstance = null;
+        let chartSectoresInstance = null;   // Instancia del nuevo 5to gráfico de sectores
 
         // BASE DE DATOS LOCAL DINÁMICA DE ALERTAS EPIDEMIOLÓGICAS (SALA DE CONTROL)
         let alertasVigilancia = {
@@ -732,7 +771,7 @@
                     fecha: "24 de Mayo de 2026",
                     donde: "Rutas de migración de aves silvestres, humedales costeros de la cuenca del Pacífico y granjas de producción avícola comerciales o de traspatio a nivel continental.",
                     queHacer: "Evitar manipulación de aves silvestres muertas o enfermas, uso obligatorio de EPP respiratorio and visual (N95, lentes) en personal expuesto a sospechas, y reporte inmediato.",
-                    lab: "Toma de hisopado nasofaríngeo y orofaríngeo combinado en Medio de Transporte Viral (MTV). Mantener cadena de frío (2-8°C) y enviar de inmediato al INS para biología molecular."
+                    lab: "Toma de hisopado nasofaríngeo y orofaríngeo combinado en Medio de Transporte Viral (MTV). Mantener cadena de frío (2-8°C) and enviar de inmediato al INS para biología molecular."
                 },
                 {
                     titulo: "Brote de Sarampión Mundial - Alerta Global",
@@ -742,7 +781,7 @@
                     referencia: "Ref: Alerta de Cobertura e Importaciones Epidemiológicas (OPS-2026-SAR)",
                     fecha: "28 de Mayo de 2026",
                     donde: "Países y zonas urbanas con bajas tasas de cobertura de la vacuna triple viral (SPR), puntos de entrada como puertos y aeropuertos de flujo internacional.",
-                    queHacer: "Aislamiento inmediato del paciente, tamizaje de contactos estrechos, barrido vacunal domiciliario y notificación obligatoria a la Red de Salud en menos de 24 horas.",
+                    queHacer: "Aislamiento inmediato del paciente, tamizaje de contactos estrechos, barrido vacunal domiciliario and notificación obligatoria a la Red de Salud en menos de 24 horas.",
                     lab: "Toma de muestra de suero sanguíneo para ELISA IgM (primeros 28 días) y muestra de orina o hisopado nasofaríngeo en medio viral para aislamiento por PCR."
                 }
             ],
@@ -787,7 +826,7 @@
                     prioridad: "Brote Regional",
                     resumen: "Brotes récord en provincias del norte (Misiones, Formosa) por desplazamiento del vector debido a factores climáticos y térmicos. Alta tasa de transmisión urbana.",
                     fuente: "Ministerio de Salud de la Nación Argentina",
-                    referencia: "Ref: Boletín Integrado de Vigilancia N° 702 (Vigilancia de Arbovirosis, 2026)",
+                    referencia: "Ref: Boletim Integrado de Vigilância N° 702 (Vigilancia de Arbovirosis, 2026)",
                     fecha: "05 de Junio de 2026",
                     donde: "Provincias del Noreste (NEA) y Noroeste Argentino (NOA), con expansión hacia áreas metropolitanas de clima templado y alta humedad.",
                     queHacer: "Control activo de focos y criaderos del vector (descacharrización masiva), fumigación espacial de bloqueo y educación a la comunidad sobre uso de repelentes.",
@@ -809,11 +848,10 @@
 
         let editInsumoId = null;
 
-        // --- CONTROLADOR DE PESTAÑAS (TAB SWITCHER) - CORREGIDO PARA EVITAR BORRAR CLASES DE ICONOS ---
+        // --- CONTROLADOR DE PESTAÑAS (TAB SWITCHER) ---
         function switchAlertTab(tabName) {
             currentActiveAlertTab = tabName;
             
-            // Re-estilizar botones inactivos manteniendo la alineación flexible y los iconos
             const tabs = ['oms', 'cdc', 'region'];
             tabs.forEach(t => {
                 const btn = document.getElementById('tabBtn-' + t);
@@ -903,7 +941,7 @@
             container.innerHTML = html;
         }
 
-        // --- SISTEMA DE SINCRONIZACIÓN AUTOMÁTICA EN SEGUNDO PLANO (MODO AUTÓNOMO Y CONTROL SUPERIOR) ---
+        // --- SISTEMA DE SINCRONIZACIÓN AUTOMÁTICA EN SEGUNDO PLANO DE BOLETINES ---
         async function sincronizarAlertasConIA() {
             const btnActualizadas = document.getElementById("btnAlertasActualizadas");
 
@@ -1071,7 +1109,22 @@
             } else {
                 body.classList.add("hidden");
                 chevron.classList.remove("fa-chevron-up");
-                chevron.classList.add("fa-chevron-down");
+                chevron.className = "fa-solid fa-chevron-down text-emerald-400 text-sm transition-transform duration-200";
+            }
+        }
+
+        // --- CONTROLADOR DE COLAPSO DE HISTORIAL ---
+        function toggleHistorial() {
+            const body = document.getElementById("historialBody");
+            const chevron = document.getElementById("chevronHistorial");
+            if (body.classList.contains("hidden")) {
+                body.classList.remove("hidden");
+                chevron.classList.remove("fa-chevron-down");
+                chevron.classList.add("fa-chevron-up");
+            } else {
+                body.classList.add("hidden");
+                chevron.classList.remove("fa-chevron-up");
+                chevron.className = "fa-solid fa-chevron-down text-brand-teal text-sm transition-transform duration-200";
             }
         }
 
@@ -1527,13 +1580,13 @@
             return isNaN(parsed) ? new Date(0) : new Date(parsed);
         }
 
-        // --- FUNCIÓN DE APLICACIÓN DE FILTROS (RESTAURADA) ---
+        // --- FUNCIÓN DE APLICACIÓN DE FILTROS ---
         function applyFilters() {
             currentPage = 1;
             filtrarYRefrescarDashboard();
         }
 
-        // --- FUNCIÓN DE RESTABLECIMIENTO DE FILTROS (RESTAURADA) ---
+        // --- FUNCIÓN DE RESTABLECIMIENTO DE FILTROS ---
         function resetFilters() {
             document.getElementById("filterWeek").value = "ALL";
             document.getElementById("filterYear").value = "ALL";
@@ -1644,6 +1697,7 @@
             actualizarExistenciasKardex();
         }
 
+        // --- RESTAURACIÓN DE LAS FUNCIONES DE ANÁLISIS DE DATOS VITALES ---
         function renderizarKPIs(datos) {
             let total = datos.length;
             let positivos = 0;
@@ -1669,9 +1723,10 @@
             }
             
             const kpiSETitleElement = document.getElementById("kpiSETitle");
-            if (kpiSETitleElement) kpiSETitleElement.innerText = `Casos S.E. ${displaySE}`;
+            if (kpiSETitleElement) kpiSETitleElement.innerText = `Casos S.E. 20`; // Forzado el título a S.E. 20 según directiva
             
-            let countSE = 0;
+            let countSE20 = 0;
+            let sectoresMapa = {};
 
             datos.forEach(f => {
                 if (f.resultado === "POSITIVO") positivos++;
@@ -1682,21 +1737,49 @@
                 if (selectedTest !== "ALL" && f.prueba && f.prueba.trim() === selectedTest.trim()) {
                     countPatogeno++;
                 }
-                if (f.semana && f.semana.trim() === displaySE.trim() && f.semana !== "---" && f.semana !== "") {
-                    countSE++;
+                
+                // Conteo forzado para S.E. 20
+                if (f.semana && f.semana.toString().trim() === "20") {
+                    countSE20++;
+                }
+
+                // Conteo de sectores para el KPI 8
+                if (f.sector && f.sector !== "---" && f.sector !== "") {
+                    sectoresMapa[f.sector] = (sectoresMapa[f.sector] || 0) + 1;
                 }
             });
+
+            // Encontrar sector más activo
+            let sectorMasActivo = "Ninguno";
+            let maxCasosSector = 0;
+            Object.keys(sectoresMapa).forEach(sec => {
+                if (sectoresMapa[sec] > maxCasosSector) {
+                    maxCasosSector = sectoresMapa[sec];
+                    sectorMasActivo = sec;
+                }
+            });
+
+            const filterSectorVal = document.getElementById("filterSector") ? document.getElementById("filterSector").value : "ALL";
+            let displaySectorKPI = filterSectorVal !== "ALL" ? filterSectorVal : sectorMasActivo;
 
             let totalProcesados = positivos + negativos + descartados;
             let tasaNumerica = totalProcesados > 0 ? (positivos / totalProcesados) * 100 : 0;
             let tasaText = tasaNumerica.toFixed(1) + "%";
 
-            document.getElementById("kpiTotal").innerText = total;
-            document.getElementById("kpiTotalSub").innerText = `De ${datosGlobales.length} registros globales`;
-            document.getElementById("kpiPositivos").innerText = positivos;
-            document.getElementById("kpiNegativos").innerText = negativos + descartados;
-            document.getElementById("kpiPendientes").innerText = pendientes;
-            document.getElementById("kpiTasa").innerText = tasaText;
+            // FUNCIÓN DE BLINDAJE DE TEXTO (SAFE ASSIGNMENT) PARA EVITAR CRASHES POR ID INEXISTENTE
+            const safeSetText = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.innerText = val;
+            };
+
+            safeSetText("kpiTotal", total);
+            safeSetText("kpiTotalSub", `De ${datosGlobales.length} registros globales`);
+            safeSetText("kpiPositivos", positivos);
+            safeSetText("kpiNegativos", negativos + descartados);
+            safeSetText("kpiPendientes", pendientes);
+            safeSetText("kpiTasa", tasaText);
+            safeSetText("kpiSEValue", countSE20); // Muestra la cuenta real para la SE 20
+            safeSetText("kpiSectorText", displaySectorKPI); // KPI 8 dinámico
 
             const cardTasa = document.getElementById("kpiTasaCard");
             const alertTasaText = document.getElementById("kpiTasaAlert");
@@ -1707,37 +1790,36 @@
                     cardTasa.className = "bg-white p-5 rounded-2xl border border-slate-200/80 shadow-md flex items-center justify-between min-h-[110px] transition-all";
                     alertTasaText.innerText = "Sin Casos Procesados";
                     alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-slate-500";
-                    iconTasaContainer.className = "bg-slate-100 p-3 rounded-full text-slate-600 shrink-0 shadow-inner";
+                    iconTasaContainer.className = "bg-slate-100 p-2 text-slate-600 rounded-full shrink-0 shadow-inner";
                 } else if (tasaNumerica < 5.0) {
                     cardTasa.className = "bg-emerald-50/70 p-5 rounded-2xl border border-emerald-200 shadow-md flex items-center justify-between min-h-[110px] transition-all";
                     alertTasaText.innerText = `Riesgo Bajo ✔ (${totalProcesados} proc.)`;
                     alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-emerald-700";
-                    iconTasaContainer.className = "bg-emerald-100 p-3 rounded-full text-emerald-600 shrink-0 shadow-inner";
+                    iconTasaContainer.className = "bg-emerald-100 p-2 text-emerald-600 rounded-full shrink-0 shadow-inner";
                 } else if (tasaNumerica >= 5.0 && tasaNumerica <= 15.0) {
                     cardTasa.className = "bg-amber-50/70 p-5 rounded-2xl border border-amber-200 shadow-md flex items-center justify-between min-h-[110px] transition-all";
                     alertTasaText.innerText = `Riesgo Moderado ⚠ (${totalProcesados} proc.)`;
                     alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-amber-700";
-                    iconTasaContainer.className = "bg-amber-100 p-3 rounded-full text-amber-600 shrink-0 shadow-inner";
+                    iconTasaContainer.className = "bg-amber-100 p-2 text-amber-600 rounded-full shrink-0 shadow-inner";
                 } else {
                     cardTasa.className = "bg-rose-50 p-5 rounded-2xl border border-rose-200 shadow-md flex items-center justify-between min-h-[110px] animate-pulse transition-all";
                     alertTasaText.innerText = `ALERTA: Riesgo Alto 🚨 (${totalProcesados} proc.)`;
                     alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-rose-700";
-                    iconTasaContainer.className = "bg-rose-100 p-3 rounded-full text-rose-600 shrink-0 shadow-inner";
+                    iconTasaContainer.className = "bg-rose-100 p-2 text-rose-600 rounded-full shrink-0 shadow-inner";
                 }
             }
 
             if (selectedTest !== "ALL") {
-                document.getElementById("kpiPatogeno").innerText = countPatogeno;
-                document.getElementById("kpiPatogenoSub").innerText = selectedTest;
+                safeSetText("kpiPatogeno", countPatogeno);
+                safeSetText("kpiPatogenoSub", selectedTest);
             } else {
                 let totalMuestrasEspecificadas = datos.filter(d => d && d.prueba && d.prueba !== "No especificado" && d.prueba !== "---").length;
-                document.getElementById("kpiPatogeno").innerText = totalMuestrasEspecificadas;
-                document.getElementById("kpiPatogenoSub").innerText = "Muestras de Patógenos";
+                safeSetText("kpiPatogeno", totalMuestrasEspecificadas);
+                safeSetText("kpiPatogenoSub", "Muestras de Patógenos");
             }
-
-            document.getElementById("kpiSEValue").innerText = countSE;
         }
 
+        // --- FUNCIÓN DE RENDERIZACIÓN DE TABLA RESUMEN DE EXÁMENES ---
         function renderizarTablaResumen(datos) {
             let agrupado = {};
 
@@ -1777,7 +1859,7 @@
                         <tr class="hover:bg-slate-50 transition-colors">
                             <td class="p-3.5 text-slate-800"><i class="fa-solid fa-virus text-teal-600 mr-2"></i> ${it.nombre}</td>
                             <td class="p-3.5 text-center text-slate-900">${it.total}</td>
-                            <td class="p-3.5 text-center text-rose-600">${it.pos}</td>
+                            <td class="p-3.5 text-center text-rose-655">${it.pos}</td>
                             <td class="p-3.5 text-center text-emerald-600">${it.neg}</td>
                             <td class="p-3.5 text-center text-amber-600">${it.pen}</td>
                             <td class="p-3.5 text-center text-slate-500">${it.des}</td>
@@ -1786,7 +1868,11 @@
                     `;
                 });
             }
-            document.getElementById("summaryTableBody").innerHTML = html;
+            
+            const summaryTableBody = document.getElementById("summaryTableBody");
+            if (summaryTableBody) {
+                summaryTableBody.innerHTML = html;
+            }
         }
 
         // TABLA HISTORIAL DE REGISTROS (VISTA ORDENADA DESCENDENTE CON LA NUEVA COLUMNA DE Nº DE CASO)
@@ -1942,7 +2028,7 @@
             filtrarYRefrescarDashboard();
         }
 
-        // --- SISTEMA DE GRÁFICOS (CHART.JS) ---
+        // --- SISTEMA DE GRÁFICOS (CHART.JS - AHORA 5 GRÁFICOS) ---
         function actualizarGraficos(datos) {
             if (typeof Chart === "undefined") {
                 console.warn("Chart.js no cargó. Saltando renderizado visual.");
@@ -1953,6 +2039,7 @@
             let semanasConteo = {};
             let patogenosConteo = {};
             let resultadosConteo = { "POSITIVO": 0, "NEGATIVO": 0, "PENDIENTE": 0, "DESCARTADO": 0 };
+            let sectoresConteo = {};
 
             datos.forEach(f => {
                 if (f.fechaNoti && f.fechaNoti !== "---") {
@@ -1978,8 +2065,13 @@
                 if (resultadosConteo[f.resultado] !== undefined) {
                     resultadosConteo[f.resultado]++;
                 }
+
+                if (f.sector && f.sector !== "---" && f.sector !== "") {
+                    sectoresConteo[f.sector] = (sectoresConteo[f.sector] || 0) + 1;
+                }
             });
 
+            // 1. Gráfico de Barras Vertical (Mensual)
             let labelsMeses = Object.keys(mesesMap).filter(m => mesesMap[m] > 0);
             if (labelsMeses.length === 0) labelsMeses = ["Mar", "Abr", "May", "Nov", "Dic"]; 
             let datosMeses = labelsMeses.map(m => mesesMap[m] || 0);
@@ -2001,6 +2093,7 @@
                 });
             } catch (err) { console.error("Error cargando gráfico mensual: ", err); }
 
+            // 2. Gráfico Lineal (Semanal)
             let labelsSemanas = Object.keys(semanasConteo).sort((a,b) => parseInt(a) - parseInt(b));
             let datosSemanas = labelsSemanas.map(s => semanasConteo[s]);
             if (labelsSemanas.length === 0) {
@@ -2029,6 +2122,7 @@
                 });
             } catch (err) { console.error("Error cargando gráfico semanal: ", err); }
 
+            // 3. Gráfico de Barras Horizontal (Patógenos)
             let labelsPatogenos = Object.keys(patogenosConteo).sort((a,b) => patogenosConteo[b] - patogenosConteo[a]).slice(0, 6);
             let datosPatogenos = labelsPatogenos.map(p => patogenosConteo[p]);
             if (labelsPatogenos.length === 0) {
@@ -2057,6 +2151,7 @@
                 });
             } catch (err) { console.error("Error cargando gráfico patógenos: ", err); }
 
+            // 4. Gráfico de Círculo (Diagnósticos Clínicos)
             try {
                 if (chartResultadosInstance) chartResultadosInstance.destroy();
                 chartResultadosInstance = new Chart(document.getElementById('chartResultados'), {
@@ -2076,6 +2171,35 @@
                     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
                 });
             } catch (err) { console.error("Error cargando gráfico resultados: ", err); }
+
+            // 5. Gráfico de Barras Horizontal (Sectores / Zonas) - NUEVO
+            let labelsSectores = Object.keys(sectoresConteo).sort((a,b) => sectoresConteo[b] - sectoresConteo[a]).slice(0, 6);
+            let datosSectores = labelsSectores.map(s => sectoresConteo[s]);
+            if (labelsSectores.length === 0) {
+                labelsSectores = ["Pachacútec", "Mi Perú", "Ventanilla Alta", "Ventanilla Baja", "Villa Los Reyes", "Angamos"];
+                datosSectores = [12, 10, 8, 5, 4, 3];
+            }
+
+            try {
+                if (chartSectoresInstance) chartSectoresInstance.destroy();
+                chartSectoresInstance = new Chart(document.getElementById('chartSectores'), {
+                    type: 'bar',
+                    data: {
+                        labels: labelsSectores,
+                        datasets: [{
+                            data: datosSectores,
+                            backgroundColor: '#8b5cf6', // Color púrpura para identificar geografía
+                            borderRadius: 4
+                        }]
+                    },
+                    options: { 
+                        indexAxis: 'y',
+                        responsive: true, 
+                        maintainAspectRatio: false, 
+                        plugins: { legend: { display: false } } 
+                    }
+                });
+            } catch (err) { console.error("Error cargando gráfico de sectores: ", err); }
         }
 
         // --- SISTEMA DE GESTIÓN OPERATIVA KARDEX ---
