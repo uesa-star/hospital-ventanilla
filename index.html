@@ -54,6 +54,9 @@
 </head>
 <body class="min-h-screen text-slate-800 flex flex-col bg-slate-50 relative">
     
+    <!-- CONTENEDOR DE TOASTS SILENCIOSOS (NO INTRUSIVO) -->
+    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none no-print"></div>
+
     <!-- CABECERA PRINCIPAL -->    
     <header class="bg-brand-dark text-white px-6 py-5 shadow-md shrink-0">        
         <div class="max-w-[1850px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">            
@@ -105,24 +108,7 @@
         </button>    
     </section>
 
-    <!-- PANTALLA FLOTANTE DE BIENVENIDA (MODAL) -->
-    <div id="welcomeModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center z-50 transition-all duration-500 opacity-0 pointer-events-none">
-        <div class="bg-white rounded-3xl p-8 max-w-md w-full mx-4 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-500 flex flex-col items-center text-center">
-            <div class="bg-emerald-100 text-emerald-600 p-5 rounded-full mb-4 animate-bounce">
-                <i class="fa-solid fa-circle-check text-4xl"></i>
-            </div>
-            <h3 class="text-xl font-extrabold text-slate-800 uppercase tracking-tight">¡Bienvenido!</h3>
-            <p id="welcomeStatusText" class="text-emerald-600 font-extrabold text-sm mt-1 uppercase tracking-wide">Carga Exitosa</p>
-            <p class="text-xs text-slate-500 mt-3 leading-relaxed">
-                El sistema de vigilancia epidemiológica del Hospital de Ventanilla se ha cargado correctamente y está listo para operar.
-            </p>
-            <button onclick="closeWelcomeModal()" class="mt-6 w-full bg-brand-dark hover:bg-brand-teal text-white py-3 px-6 rounded-xl font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-brand-teal/10 hover:-translate-y-0.5 active:translate-y-0">
-                Entrar al Módulo
-            </button>
-        </div>
-    </div>
-
-    <!-- MODAL DE ALERTAS DETALLADAS CON PESTAÑAS CENTRADAS RECONSTRUIDAS (MODO OSCURO PREMIUM - SIN "IA SINCRONIZADA") -->
+    <!-- MODAL DE ALERTAS DETALLADAS CON PESTAÑAS CENTRADAS RECONSTRUIDAS (MODO OSCURO PREMIUM) -->
     <div id="alertsModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
         <div class="bg-[#111827] rounded-3xl p-6 md:p-8 max-w-6xl w-full mx-4 max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-800 flex flex-col transform scale-95 transition-all duration-350 gap-6 custom-scrollbar text-slate-100">
             
@@ -407,7 +393,7 @@
                 <div>                    
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
                         <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Comparativa por Semana Epidem.</h3>                        
-                        <span class="text-[9px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full uppercase">3 Líneas (S.E.)</span>                    
+                        <span class="text-[9px] font-bold text-amber-600 bg-amber-50 px-2.5 py-0.5 rounded-full uppercase">3 Líneas (S.E.)</span>                    
                     </div>                    
                     <div class="relative h-56 w-full flex items-center justify-center mt-2">                        
                         <canvas id="chartSemanalComparativo"></canvas>                    
@@ -1159,22 +1145,7 @@
             } 
             else if (estado === "success" || estado === "proxy" || estado === "fallback") {
                 updateSuccessBadge.classList.remove("hidden");
-                triggerWelcomeModal("Sincronización Completada");
-            }
-        }
-
-        // --- PANTALLA DE BIENVENIDA (ÚNICA VEZ AL CARGAR) ---
-        function triggerWelcomeModal(statusMessage) {
-            if (welcomeModalShown) return; // Si ya se mostró una vez en esta sesión, ignorar recargas de fondo
-            
-            const modal = document.getElementById("welcomeModal");
-            const statusLabel = document.getElementById("welcomeStatusText");
-            if (modal) {
-                if (statusLabel) statusLabel.innerText = statusMessage;
-                modal.classList.remove("opacity-0", "pointer-events-none");
-                modal.querySelector("div").classList.remove("scale-95");
-                modal.querySelector("div").classList.add("scale-100");
-                welcomeModalShown = true; // Sellar estado de bienvenida mostrada
+                // Modificado para guardar de manera silenciosa sin modals de bienvenida invasivos
             }
         }
 
@@ -1194,71 +1165,6 @@
                     isLocal: false
                 };
             });
-        }
-
-        function closeWelcomeModal() {
-            const modal = document.getElementById("welcomeModal");
-            if (modal) {
-                modal.classList.add("opacity-0", "pointer-events-none");
-                modal.querySelector("div").classList.remove("scale-100");
-                modal.querySelector("div").classList.add("scale-95");
-            }
-        }
-
-        // --- DIÁLOGOS Y ALERTAS PERSONALIZADOS ---
-        function mostrarAlertaDialog(titulo, mensaje) {
-            const dialog = document.getElementById("customDialogModal");
-            const dialogMsg = document.getElementById("customDialogMessage");
-            const confirmBtn = document.getElementById("customDialogConfirmBtn");
-            const cancelBtn = document.getElementById("customDialogCancelBtn");
-
-            if (dialog && dialogMsg) {
-                dialog.querySelector("h4").innerText = titulo;
-                dialogMsg.innerText = mensaje;
-                cancelBtn.classList.add("hidden"); 
-                confirmBtn.innerText = "Entendido";
-                confirmBtn.onclick = function() {
-                    closeDialog();
-                };
-                openDialog();
-            }
-        }
-
-        function mostrarConfirmacionDialog(mensaje, callback) {
-            const dialog = document.getElementById("customDialogModal");
-            const dialogMsg = document.getElementById("customDialogMessage");
-            const confirmBtn = document.getElementById("customDialogConfirmBtn");
-            const cancelBtn = document.getElementById("customDialogCancelBtn");
-
-            if (dialog && dialogMsg) {
-                dialog.querySelector("h4").innerText = "¿Confirmar Operación?";
-                dialogMsg.innerText = mensaje;
-                cancelBtn.classList.remove("hidden");
-                confirmBtn.innerText = "Confirmar";
-                
-                cancelBtn.onclick = function() {
-                    closeDialog();
-                };
-                confirmBtn.onclick = function() {
-                    callback();
-                    closeDialog();
-                };
-                openDialog();
-            }
-        }
-
-        function openDialog() {
-            const dialog = document.getElementById("customDialogModal");
-            dialog.classList.remove("opacity-0", "pointer-events-none");
-            dialog.querySelector("div").classList.remove("scale-95");
-            dialog.querySelector("div").classList.add("scale-100");
-        }
-
-        function closeDialog() {
-            const dialog = document.getElementById("customDialogModal");
-            dialog.classList.add("opacity-0", "pointer-events-none");
-            dialog.querySelector("div").classList.remove("scale-100");
-            dialog.querySelector("div").classList.add("scale-95");
         }
 
         // --- SISTEMA UNIFICADO DE FUSIÓN DE DATOS ---
@@ -1317,10 +1223,7 @@
             document.getElementById("formNuevoCaso").reset();
             setDefaultCasoDates();
 
-            mostrarAlertaDialog(
-                "Notificación Registrada exitosamente", 
-                `El paciente ${paciente} ha sido integrado al censo. Se ha recalculado el stock del Kardex de Insumos.`
-            );
+            showToast(`Paciente ${paciente} registrado de forma exitosa.`, "success");
         }
 
         // ELIMINAR CASO LOCAL
@@ -1330,8 +1233,42 @@
                 localStorage.setItem("ventanilla_muestras_local", JSON.stringify(datosLocalesAdicionales));
                 
                 fusionarYRefrescarDashboard();
-                mostrarAlertaDialog("Caso Eliminado", "La muestra seleccionada ha sido borrada.");
+                showToast("Registro eliminado del historial local.", "success");
             });
+        }
+
+        // --- PARSEADOR CLÍNICO DE FECHAS ---
+        function parseFecha(fechaStr) {
+            if (!fechaStr || fechaStr === "---") return new Date(0);
+            
+            // Reemplazar guiones por barras para unificar formatos
+            let clean = fechaStr.replace(/-/g, '/');
+            let partes = clean.split('/');
+            
+            if (partes.length === 3) {
+                let first = parseInt(partes[0], 10);
+                let second = partes[1];
+                let third = parseInt(partes[2], 10);
+                
+                const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+                
+                if (partes[0].length === 4) { // yyyy/mm/dd o yyyy/Mes/dd
+                    let anio = first;
+                    let dia = third;
+                    let mesIdx = meses.indexOf(second.toLowerCase());
+                    let mes = (mesIdx !== -1) ? mesIdx : parseInt(second, 10) - 1;
+                    return new Date(anio, mes, dia);
+                } else { // dd/mm/yyyy o dd/Mes/yyyy
+                    let dia = first;
+                    let anio = third;
+                    let mesIdx = meses.indexOf(second.toLowerCase());
+                    let mes = (mesIdx !== -1) ? mesIdx : parseInt(second, 10) - 1;
+                    return new Date(anio, mes, dia);
+                }
+            }
+            
+            let parsed = Date.parse(fechaStr);
+            return isNaN(parsed) ? new Date(0) : new Date(parsed);
         }
 
         // --- FUNCIÓN DE APLICACIÓN DE FILTROS ---
@@ -1449,40 +1386,6 @@
             renderizarTablaHistorial(datosFiltrados);
             actualizarGraficos(datosFiltrados);
             actualizarExistenciasKardex();
-        }
-
-        // --- PARSEADOR CLÍNICO DE FECHAS ---
-        function parseFecha(fechaStr) {
-            if (!fechaStr || fechaStr === "---") return new Date(0);
-            
-            // Reemplazar guiones por barras para unificar formatos
-            let clean = fechaStr.replace(/-/g, '/');
-            let partes = clean.split('/');
-            
-            if (partes.length === 3) {
-                let first = parseInt(partes[0], 10);
-                let second = partes[1];
-                let third = parseInt(partes[2], 10);
-                
-                const meses = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-                
-                if (partes[0].length === 4) { // yyyy/mm/dd o yyyy/Mes/dd
-                    let anio = first;
-                    let dia = third;
-                    let mesIdx = meses.indexOf(second.toLowerCase());
-                    let mes = (mesIdx !== -1) ? mesIdx : parseInt(second, 10) - 1;
-                    return new Date(anio, mes, dia);
-                } else { // dd/mm/yyyy o dd/Mes/yyyy
-                    let dia = first;
-                    let anio = third;
-                    let mesIdx = meses.indexOf(second.toLowerCase());
-                    let mes = (mesIdx !== -1) ? mesIdx : parseInt(second, 10) - 1;
-                    return new Date(anio, mes, dia);
-                }
-            }
-            
-            let parsed = Date.parse(fechaStr);
-            return isNaN(parsed) ? new Date(0) : new Date(parsed);
         }
 
         // --- RESTAURACIÓN DE LAS FUNCIONES DE ANÁLISIS DE DATOS VITALES ---
@@ -1759,7 +1662,7 @@
             mostrarConfirmacionDialog("¿Seguro que desea eliminar esta entrada del Kardex de existencias?", function() {
                 inventarioKardex = inventarioKardex.filter(x => x.id !== id);
                 actualizarExistenciasKardex();
-                mostrarAlertaDialog("Operación Completada", "La entrada seleccionada ha sido eliminada del inventario.");
+                showToast("Entrada eliminada de las existencias del Kardex.", "success");
             });
         }
 
@@ -1814,6 +1717,34 @@
             document.getElementById("buscadorPaciente").value = "";
             currentPage = 1;
             filtrarYRefrescarDashboard();
+        }
+
+        // --- SISTEMA DE TOASTS SILENCIOSOS (NO INTERRUMPEN AL USUARIO) ---
+        function showToast(message, type = "success") {
+            const container = document.getElementById("toastContainer");
+            if (!container) return;
+            const toast = document.createElement("div");
+            toast.className = `transform translate-x-full transition-all duration-300 ease-out p-4 rounded-xl shadow-lg border text-xs font-bold flex items-center gap-2 bg-white ${
+                type === "success" ? "border-emerald-500 text-emerald-800" : "border-rose-500 text-rose-800"
+            }`;
+            toast.innerHTML = `
+                <i class="fa-solid ${type === "success" ? "fa-circle-check text-emerald-500" : "fa-triangle-exclamation text-rose-500"} text-base"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            
+            // Efecto slide-in
+            setTimeout(() => {
+                toast.classList.remove("translate-x-full");
+            }, 10);
+            
+            // Auto-ocultar y remover después de 2.5 segundos
+            setTimeout(() => {
+                toast.classList.add("translate-x-full");
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            }, 2500);
         }
 
         // --- SISTEMA DE GRÁFICOS COMPARATIVOS TRIANUALES (CHART.JS) ---
@@ -1895,7 +1826,7 @@
             });
 
             // En caso de que la base de datos de Sheets contenga solo data de 2026, generamos curvas comparativas
-            // procedimentales realistas para 2024 y 2025 basadas en la tendencia de 2026 para asegurar la previsualización estable de la maqueta
+            // procedimentales realistas para 2024 y 2025 basadas en la tendencia de 2026 para asegurar la previsualización de la maqueta
             targetYears.forEach(y => {
                 if (conteoAnual[y] === 0) {
                     // Generación proporcional histórica procedural
@@ -2139,6 +2070,146 @@
             } catch (err) { console.error("Error cargando gráfico de sectores: ", err); }
         }
 
+        // --- SISTEMA DE SINCRONIZACIÓN AUTOMÁTICA EN SEGUNDO PLANO DE BOLETINES ---
+        async function sincronizarAlertasConIA() {
+            const indicator = document.getElementById("alertSyncIndicator");
+
+            if (indicator) {
+                indicator.innerHTML = `<i class="fa-solid fa-arrows-spin animate-spin text-xs text-emerald-400"></i> <span>SINCRONIZANDO ALERTAS EN VIVO CON IA...</span>`;
+            }
+
+            const responseSchema = {
+                type: "OBJECT",
+                properties: {
+                    oms: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                titulo: { type: "STRING" },
+                                prioridad: { type: "STRING" },
+                                resumen: { type: "STRING" },
+                                fuente: { type: "STRING" },
+                                referencia: { type: "STRING" },
+                                fecha: { type: "STRING" },
+                                donde: { type: "STRING" },
+                                queHacer: { type: "STRING" },
+                                lab: { type: "STRING" }
+                            },
+                            required: ["titulo", "prioridad", "resumen", "fuente", "referencia", "fecha", "donde", "queHacer", "lab"]
+                        }
+                    },
+                    cdc: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                titulo: { type: "STRING" },
+                                prioridad: { type: "STRING" },
+                                resumen: { type: "STRING" },
+                                fuente: { type: "STRING" },
+                                referencia: { type: "STRING" },
+                                fecha: { type: "STRING" },
+                                donde: { type: "STRING" },
+                                queHacer: { type: "STRING" },
+                                lab: { type: "STRING" }
+                            },
+                            required: ["titulo", "prioridad", "resumen", "fuente", "referencia", "fecha", "donde", "queHacer", "lab"]
+                        }
+                    },
+                    region: {
+                        type: "ARRAY",
+                        items: {
+                            type: "OBJECT",
+                            properties: {
+                                titulo: { type: "STRING" },
+                                prioridad: { type: "STRING" },
+                                resumen: { type: "STRING" },
+                                fuente: { type: "STRING" },
+                                referencia: { type: "STRING" },
+                                fecha: { type: "STRING" },
+                                donde: { type: "STRING" },
+                                queHacer: { type: "STRING" },
+                                lab: { type: "STRING" }
+                            },
+                            required: ["titulo", "prioridad", "resumen", "fuente", "referencia", "fecha", "donde", "queHacer", "lab"]
+                        }
+                    }
+                },
+                required: ["oms", "cdc", "region"]
+            };
+
+            const systemPrompt = `Eres un epidemiólogo máster de inteligencia sanitaria. Tu tarea es buscar en tiempo real en los siguientes portales de salud las últimas alertas epidemiológicas reales vigentes para el año 2026:
+            1. OPS/OMS: https://www.paho.org/es/alertas-actualizaciones-epidemiologicas
+            2. CDC Perú: https://www.dge.gob.pe/portalnuevo/informacion-publica/alertas-epidemiologicas/
+            3. Países Vecinos: Boletines y alertas de mayor impacto regional de Sudamérica (como Brasil o Argentina).
+            Formatea la respuesta en un JSON estricto de acuerdo al esquema indicado, traduciendo todo al español.`;
+
+            const userQuery = `Navega y analiza los boletines reales de:
+            - https://www.paho.org/es/alertas-actualizaciones-epidemiologicas
+            - https://www.dge.gob.pe/portalnuevo/informacion-publica/alertas-epidemiologicas/
+            Y boletines oficiales de Sudamérica del 2026. Extrae y estructura las 2 alertas reales de mayor impacto clínico para cada categoría ('oms', 'cdc', 'region') según el esquema JSON indicado.`;
+
+            const apiKey = ""; 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                tools: [{ "google_search": {} }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: responseSchema
+                }
+            };
+
+            let delay = 1000;
+            let success = false;
+            let data = null;
+
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) {
+                        data = await response.json();
+                        success = true;
+                        break;
+                    }
+                } catch (e) {
+                    // Re-intento exponencial
+                }
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2;
+            }
+
+            if (success && data) {
+                try {
+                    const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    const parsedAlerts = JSON.parse(textResponse);
+                    
+                    if (parsedAlerts.oms && parsedAlerts.cdc && parsedAlerts.region) {
+                        alertasVigilancia = parsedAlerts; 
+                        renderAlertsInModal(currentActiveAlertTab);
+                        
+                        if (indicator) {
+                            indicator.innerHTML = `<i class="fa-solid fa-circle-check text-xs text-emerald-400"></i> <span>SALA DE SITUACIÓN ACTIVA - ALERTAS ACTUALIZADAS CON IA</span>`;
+                        }
+                        return;
+                    }
+                } catch (err) {
+                    console.error("Error al procesar el JSON de la IA autónoma:", err);
+                }
+            }
+
+            if (indicator) {
+                indicator.innerHTML = `<i class="fa-solid fa-circle-check text-xs text-emerald-400"></i> <span>SALA DE SITUACIÓN ACTIVA - ACTUALIZACIÓN AUTOMÁTICA EN VIVO</span>`;
+            }
+        }
+
         // --- SISTEMA DE GESTIÓN OPERATIVA KARDEX ---
         function actualizarExistenciasKardex() {
             const tableBody = document.getElementById("kardexTableBody");
@@ -2235,7 +2306,7 @@
                 document.getElementById("kardexFormTitle").innerHTML = `<i class="fa-solid fa-plus-circle text-emerald-500"></i> Registrar Entrada de Insumos`;
                 document.getElementById("btnCancelEdit").classList.add("hidden");
                 document.getElementById("btnSubmitKardex").innerHTML = `<i class="fa-solid fa-plus"></i> Registrar Entrada`;
-                mostrarAlertaDialog("Actualización Exitosa", "Los cambios en el insumo fueron guardados correctamente.");
+                showToast("Cambios guardados correctamente en el Kardex.", "success");
             } else {
                 const nuevoId = inventarioKardex.length > 0 ? Math.max(...inventarioKardex.map(x => x.id)) + 1 : 1;
                 inventarioKardex.push({
@@ -2247,7 +2318,7 @@
                     vence: vence,
                     prueba_asoc: prueba_asoc
                 });
-                mostrarAlertaDialog("Registro Exitoso", "Se ha agregado una nueva entrada de stock de forma exitosa.");
+                showToast("Nueva entrada de stock registrada exitosamente.", "success");
             }
 
             document.getElementById("kardexForm").reset();
@@ -2277,10 +2348,10 @@
             setDefaultDates();
             conectarYDescargar();
 
-            // Auto-recarga automática configurada a 1 Minuto de ciclo rápido (60 segundos)
+            // Auto-recarga automática configurada a 15 Segundos para tiempo real verdadero (ciclo ultra rápido)
             setInterval(() => {
                 conectarYDescargar();
-            }, 60 * 1000);
+            }, 15 * 1000);
         };
     </script>
 </body>
