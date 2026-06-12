@@ -110,7 +110,7 @@
 
     <!-- MODAL DE ALERTAS DETALLADAS CON PESTAÑAS CENTRADAS RECONSTRUIDAS (MODO OSCURO PREMIUM) -->
     <div id="alertsModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
-        <div class="bg-[#111827] rounded-3xl p-6 md:p-8 max-w-6xl w-full mx-4 max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-800 flex flex-col transform scale-95 transition-all duration-350 gap-6 custom-scrollbar text-slate-100 font-bold">
+        <div class="bg-[#111827] rounded-3xl p-6 md:p-8 max-w-6xl w-full mx-4 max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-800 flex flex-col transform scale-95 transition-all duration-350 gap-6 custom-scrollbar text-slate-100">
             
             <!-- Cabecera del Modal -->
             <div class="bg-[#4c0519] px-6 py-4 flex justify-between items-center border-b border-rose-950 rounded-2xl shadow-md">
@@ -182,7 +182,7 @@
                 </div>
                 <h4 class="font-extrabold text-sm uppercase">¿Confirmar Acción?</h4>
             </div>
-            <p id="customDialogMessage" class="text-xs text-slate-600 leading-relaxed">¿Seguro que desea realizar esta acción?</p>
+            <p id="customDialogMessage" class="text-xs text-slate-600 leading-relaxed font-bold">¿Seguro que desea realizar esta acción?</p>
             <div class="flex justify-end gap-2 mt-5">
                 <button id="customDialogCancelBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-4 py-2 rounded-lg text-xs font-bold transition-all uppercase tracking-wider">Cancelar</button>
                 <button id="customDialogConfirmBtn" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-lg text-xs font-bold transition-all uppercase tracking-wider">Confirmar</button>
@@ -195,9 +195,15 @@
 
         <!-- ================= 1. FILTRO DE CONTROL DE VIGILANCIA ================= -->
         <section class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print">
-            <div class="bg-brand-dark text-white px-6 py-4 flex items-center gap-2 shadow-sm border-b border-teal-900">
-                <i class="fa-solid fa-sliders text-emerald-400 text-lg"></i>
-                <h2 class="text-sm font-extrabold uppercase tracking-wider">Filtros de Control de Vigilancia</h2>
+            <div class="bg-brand-dark text-white px-6 py-4 flex items-center justify-between shadow-sm border-b border-teal-900">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-emerald-400 text-lg"></i>
+                    <h2 class="text-sm font-extrabold uppercase tracking-wider">Filtros de Control de Vigilancia</h2>
+                </div>
+                <!-- BOTÓN RESTABLECER / LIMPIAR FILTROS UBICADO OFICIALMENTE EN CABECERA DE FILTROS -->
+                <button onclick="resetFilters()" class="bg-emerald-600 hover:bg-emerald-500 transition-colors text-white py-1.5 px-4 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-sm border border-emerald-500/30">
+                    <i class="fa-solid fa-arrow-rotate-left text-[11px]"></i> Limpiar Filtros
+                </button>
             </div>
             <div class="p-6 bg-slate-50/40">
                 <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 text-sm justify-between">
@@ -445,15 +451,15 @@
         <section class="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-md space-y-3.5 hover:shadow-lg transition-all font-bold">
             <div class="flex justify-between items-center border-b border-slate-100 pb-3 font-bold">
                 <div>
-                    <h2 class="text-base font-extrabold text-slate-700 uppercase tracking-wider font-bold">Resumen Epidemiológico de Patógenos Vigilados</h2>
-                    <p class="text-[11px] text-slate-400 font-bold">Distribución global con censo real extraído de tu base de datos (Ordenado de Mayor a Menor Casos)</p>
+                    <h2 class="text-base font-extrabold text-slate-700 uppercase tracking-wider">Resumen Epidemiológico de Patógenos Vigilados</h2>
+                    <p class="text-[11px] text-slate-400">Distribución global con censo real extraído de tu base de datos (Ordenado de Mayor a Menor Casos)</p>
                 </div>
-                <span class="bg-teal-50 text-brand-teal text-xs px-3.5 py-1.5 rounded-full font-bold uppercase border border-teal-100 flex items-center gap-1 no-print">
+                <span class="bg-teal-50 text-brand-teal text-xs px-3.5 py-1.5 rounded-full border border-teal-100 flex items-center gap-1 no-print">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> Procesando en Vivo
                 </span>
             </div>
             <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-xs text-left text-slate-600 font-bold">
+                <table class="w-full text-xs text-left text-slate-600">
                     <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                         <tr>
                             <th class="p-3.5 font-bold text-slate-700">Tipo de Examen</th>
@@ -465,7 +471,7 @@
                             <th class="p-3.5 text-center font-bold text-slate-700 text-brand-dark bg-slate-100/50">Tasa Positividad (%)</th>
                         </tr>
                     </thead>
-                    <tbody id="summaryTableBody" class="divide-y divide-slate-100 font-bold text-sm">
+                    <tbody id="summaryTableBody" class="divide-y divide-slate-100 text-sm">
                         <tr>
                             <td colspan="7" class="p-4 text-center text-slate-400 italic">Cargando resumen epidemiológico...</td>
                         </tr>
@@ -474,8 +480,8 @@
             </div>
         </section>
 
-        <!-- ================= 5. FICHA DE NOTIFICACION INTEGRAL DE CASOS ================= -->
-        <section id="formCasoSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print animate-fade-in font-bold">
+        <!-- ================= 5. FICHA DE NOTIFICACION INTEGRAL DE CASOS (COLAPSADA POR DEFECTO CON SU FLECHA) ================= -->
+        <section id="formCasoSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print animate-fade-in">
             <div onclick="toggleFormCaso()" class="bg-[#0b4d42] hover:bg-[#0d594d] transition-colors duration-200 text-white px-6 py-4 flex items-center justify-between shadow-sm border-b border-teal-900 cursor-pointer select-none">
                 <div class="flex items-center gap-3">
                     <i id="chevronFormCaso" class="fa-solid fa-chevron-down text-emerald-400 text-sm transition-transform duration-200"></i>
@@ -493,7 +499,7 @@
                 </span>
             </div>
             <div id="formCasoBody" class="hidden p-6 bg-slate-50/20 transition-all duration-300">
-                <form id="formNuevoCaso" onsubmit="registrarNuevoCaso(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs font-bold text-slate-600">
+                <form id="formNuevoCaso" onsubmit="registrarNuevoCaso(event)" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs text-slate-600">
                     <div>
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Semana Epidemiológica (S.E.)</label>
                         <input type="number" id="casoSE" required min="1" max="53" placeholder="Ej. 21" class="w-full bg-white border border-slate-200 text-slate-800 rounded-lg p-2.5 focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm">
@@ -562,22 +568,22 @@
         </section>
 
         <!-- ================= 6. HISTORIAL INTEGRADO DE MUESTRAS REGISTRADAS ================= -->        
-        <section id="historialSection" class="bg-white rounded-xl border border-slate-200/80 shadow-md overflow-hidden flex flex-col hover:shadow-md transition-shadow animate-fade-in font-bold">            
+        <section id="historialSection" class="bg-white rounded-xl border border-slate-200/80 shadow-md overflow-hidden flex flex-col hover:shadow-md transition-shadow animate-fade-in">            
             <div onclick="toggleHistorial()" class="bg-[#0b4d42]/10 hover:bg-[#0b4d42]/15 transition-colors duration-200 px-6 py-4 flex items-center justify-between border-b border-slate-200 cursor-pointer select-none">
                 <div class="flex items-center gap-3">
                     <i id="chevronHistorial" class="fa-solid fa-chevron-down text-brand-teal text-sm transition-transform duration-200"></i>
                     <div class="flex items-center gap-2">
                         <i class="fa-solid fa-list-check text-brand-teal text-lg"></i>
-                        <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 font-bold">Historial Integrado de Muestras Registradas</h2>
+                        <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">Historial Integrado de Muestras Registradas</h2>
                     </div>
                 </div>
-                <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider font-bold">Último ingreso primero</span>
+                <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Último ingreso primero</span>
             </div>
 
             <div id="historialBody" class="hidden transition-all duration-300">
                 <div class="p-6 border-b border-slate-155 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 bg-slate-50/20">                
                     <div class="space-y-1">
-                        <p class="text-[11px] text-slate-400 font-semibold text-teal-800 font-bold">Censo de Vigilancia General - Hospital de Ventanilla (Tabla General)</p>                
+                        <p class="text-[11px] text-slate-400 font-semibold text-teal-800">Censo de Vigilancia General - Hospital de Ventanilla (Tabla General)</p>                
                     </div>                                
                     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full xl:w-auto no-print">                    
                         <div class="relative flex-1 sm:w-96">                        
@@ -592,7 +598,7 @@
                     </div>            
                 </div>
                 <div class="overflow-x-auto custom-scrollbar">                
-                    <table class="w-full text-xs text-left text-slate-600 font-bold">                    
+                    <table class="w-full text-xs text-left text-slate-600">                    
                         <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">                        
                             <tr>                            
                                 <th class="p-3.5 font-bold text-slate-700 text-center">Nº de Caso</th>                            
@@ -606,7 +612,7 @@
                                 <th class="p-3.5 font-bold text-slate-700 text-center no-print">Acciones</th>
                             </tr>                    
                         </thead>                    
-                        <tbody id="samplesTableBody" class="divide-y divide-slate-100 font-bold text-sm">                        
+                        <tbody id="samplesTableBody" class="divide-y divide-slate-100 text-sm">                        
                             <tr>                            
                                 <td colspan="9" class="p-8 text-center text-slate-400 font-semibold">                                
                                     <i class="fa-solid fa-spinner animate-spin text-2xl mb-1 block text-teal-600"></i>                                
@@ -616,7 +622,7 @@
                         </tbody>                
                     </table>            
                 </div>
-                <div class="p-4 bg-slate-50/50 border-t border-slate-150 flex justify-between items-center text-xs text-slate-500 no-print font-bold">                
+                <div class="p-4 bg-slate-50/50 border-t border-slate-150 flex justify-between items-center text-xs text-slate-500 no-print">                
                     <span id="paginationInfo" class="font-semibold">Mostrando 0-0 de 0 registros</span>                
                     <div class="flex gap-1.5">                    
                         <button id="btnPrevPage" onclick="prevPage()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg hover:bg-slate-50 transition-colors font-semibold disabled:opacity-50" disabled>Anterior</button>                    
@@ -627,7 +633,7 @@
         </section>
 
         <!-- ================= 7. KARDEX DE CONTROL DE INSUMOS CRÍTICOS ================= -->        
-        <section id="kardexSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print animate-fade-in font-bold">            
+        <section id="kardexSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print animate-fade-in">            
             <div onclick="toggleKardex()" class="bg-[#0b4d42]/10 hover:bg-[#0b4d42]/15 transition-colors duration-200 px-6 py-4 flex items-center justify-between border-b border-slate-200 cursor-pointer select-none">                
                 <div class="flex items-center gap-3">                    
                     <i id="chevronKardex" class="fa-solid fa-chevron-down text-brand-teal text-sm transition-transform duration-200"></i>                    
@@ -685,7 +691,7 @@
                 </form>
 
                 <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-xs text-left text-slate-600 font-bold">
+                    <table class="w-full text-xs text-left text-slate-600">
                         <thead class="text-[11px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
                             <tr>
                                 <th class="p-3.5">F. Ingreso</th>
@@ -700,7 +706,7 @@
                                 <th class="p-3.5 text-center no-print">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="kardexTableBody" class="divide-y divide-slate-100 font-bold text-sm">
+                        <tbody id="kardexTableBody" class="divide-y divide-slate-100 text-sm">
                             <!-- JS -->
                         </tbody>
                     </table>
@@ -715,6 +721,7 @@
 
     <!-- LOGICA JAVASCRIPT PRINCIPAL -->
     <script>
+        // Declaraciones Globales de Estado
         let datosBaseDescargados = [];     
         let datosLocalesAdicionales = []; 
         let datosGlobales = [];           
@@ -1109,15 +1116,6 @@
                 modal.querySelector("div").classList.remove("scale-95");
                 modal.querySelector("div").classList.add("scale-100");
                 confirmCallback = callback;
-            }
-        }
-
-        function closeDialog() {
-            const dialog = document.getElementById("customDialogModal");
-            if (dialog) {
-                dialog.classList.add("opacity-0", "pointer-events-none");
-                dialog.querySelector("div").classList.remove("scale-100");
-                dialog.querySelector("div").classList.add("scale-95");
             }
         }
 
@@ -1668,10 +1666,9 @@
                 const yr = parseInt(yrStr);
                 const color = colorPalette[index % colorPalette.length];
                 let mesesData = Array(12).fill(0);
-                let countRealValores = 0;
 
-                // Contar los registros reales de la base de datos para este año específico
-                datosGlobales.forEach(f => {
+                // Contar los registros reales de datos filtrados para este año específico
+                datos.forEach(f => {
                     let fYr = parseInt(extractYear(f.fechaNoti));
                     if (fYr === yr) {
                         if (f.fechaNoti && f.fechaNoti !== "---") {
@@ -1680,19 +1677,10 @@
                             if (parts.length >= 2) mesIdx = parseInt(parts[1]) - 1;
                             if (mesIdx >= 0 && mesIdx < 12) {
                                 mesesData[mesIdx]++;
-                                countRealValores++;
                             }
                         }
                     }
                 });
-
-                // Si no hay datos reales en la base de datos para este año, generamos una curva estacional de referencia
-                if (countRealValores === 0) {
-                    let baseMultip = yr === 2024 ? 0.75 : (yr === 2025 ? 0.90 : 1.0);
-                    for (let m = 0; m < 12; m++) {
-                        mesesData[m] = Math.round((m === 4 || m === 5 ? 14 : (m === 3 || m === 6 ? 8 : 2)) * baseMultip);
-                    }
-                }
 
                 datasetsTrianuales.push({
                     label: `Año ${yr}`,
@@ -1724,9 +1712,8 @@
                 });
             } catch (err) { console.error("Error cargando comparativa trianual:", err); }
 
-            // 2. Mensual
-            let labelsMeses = Object.keys(mesesMap).filter(m => mesesMap[m] > 0);
-            if (labelsMeses.length === 0) labelsMeses = ["Mar", "Abr", "May", "Nov", "Dic"]; 
+            // 2. Mensual (Manteniendo siempre escala de 12 meses idéntica al gráfico comparativo)
+            let labelsMeses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
             let datosMeses = labelsMeses.map(m => mesesMap[m] || 0);
 
             try {
@@ -2045,6 +2032,50 @@
                 currentPage++;
                 renderizarTablaHistorial(datosFiltrados);
             }
+        }
+
+        // --- REESTABLECER FILTROS DINÁMICOS COMPLETO ---
+        function selectAllYears(selectAll) {
+            const checkboxes = document.querySelectorAll("#yearCheckboxesContainer input[type='checkbox']");
+            selectedYearsForComparison.clear();
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll;
+                if (selectAll) {
+                    selectedYearsForComparison.add(cb.value);
+                }
+            });
+
+            if (!selectAll && checkboxes.length > 0) {
+                // Si deseleccionan todos, dejamos el más reciente marcado por defecto para evitar pantallas en blanco
+                const latestCb = checkboxes[checkboxes.length - 1];
+                latestCb.checked = true;
+                selectedYearsForComparison.add(latestCb.value);
+                showToast("Se requiere al menos un año seleccionado.", "error");
+            }
+
+            filtrarYRefrescarDashboard();
+        }
+
+        function resetFilters() {
+            const filterTestType = document.getElementById("filterTestType");
+            const filterWeek = document.getElementById("filterWeek");
+            const filterResult = document.getElementById("filterResult");
+            const filterSector = document.getElementById("filterSector");
+            
+            if (filterTestType) filterTestType.value = "ALL";
+            if (filterWeek) filterWeek.value = "ALL";
+            if (filterResult) filterResult.value = "ALL";
+            if (filterSector) filterSector.value = "ALL";
+            
+            const searchInput = document.getElementById("buscadorPaciente");
+            if (searchInput) searchInput.value = "";
+            
+            // Marcar todos los años por defecto en el filtro unificado
+            selectAllYears(true);
+            
+            currentPage = 1;
+            filtrarYRefrescarDashboard();
+            showToast("Filtros restablecidos", "success");
         }
 
         function clearSearch() {
