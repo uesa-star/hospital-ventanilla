@@ -287,12 +287,12 @@
                     <i class="fa-solid fa-flask-vial text-base"></i>                
                 </div>            
             </div>
-            <!-- KPI 3: Casos S.E. 20 -->
+            <!-- KPI 3: Casos S.E. Activa Dinámica -->
             <div class="bg-white p-4 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[100px]">                
                 <div>                    
-                    <p id="kpiSETitle" class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Casos S.E. 20</p>                    
+                    <p id="kpiSETitle" class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Casos S.E. --</p>                    
                     <h3 id="kpiSEValue" class="text-xl font-black text-amber-700 mt-1 leading-none">0</h3>                    
-                    <p class="text-[9px] text-amber-600 mt-2 font-semibold">Semana 20 Activa</p>                
+                    <p id="kpiSESub" class="text-[9px] text-amber-600 mt-2 font-semibold">Semana Activa</p>                
                 </div>                
                 <div class="bg-amber-50 p-2 text-amber-500 rounded-full shrink-0 shadow-inner">                    
                     <i class="fa-solid fa-calendar-week text-base"></i>                
@@ -797,6 +797,26 @@
         ];
 
         let editInsumoId = null;
+
+        // --- SISTEMA DE CÁLCULO DE SEMANA EPIDEMIOLÓGICA (MINSA/OMS) ---
+        function obtenerSemanaEpidemiologicaActual() {
+            const hoy = new Date(); // Fecha del sistema (Junio 2026)
+            const anio = hoy.getFullYear();
+            let primerDomingo = new Date(anio, 0, 1);
+            while (primerDomingo.getDay() !== 0) {
+                primerDomingo.setDate(primerDomingo.getDate() + 1);
+            }
+            let inicioEpi = new Date(primerDomingo);
+            // Si el primer domingo del año es posterior al 4 de enero, la semana anterior cuenta como S.E. 1
+            if (primerDomingo.getDate() > 4) {
+                inicioEpi.setDate(primerDomingo.getDate() - 7);
+            }
+            const diferenciaMs = hoy - inicioEpi;
+            const dias = Math.floor(diferenciaMs / (1000 * 60 * 60 * 24));
+            let semana = Math.floor(dias / 7) + 1;
+            if (semana < 1) return 52;
+            return semana;
+        }
 
         // --- SISTEMA DE TOASTS SILENCIOSOS ---
         function showToast(message, type = "success") {
@@ -1359,7 +1379,14 @@
             const selectedTest = document.getElementById("filterTestType") ? document.getElementById("filterTestType").value : "ALL";
             let countPatogeno = 0;
 
-            let countSE20 = 0;
+            // Determinar la S.E. activa según los filtros o tiempo real
+            let activeWeek = obtenerSemanaEpidemiologicaActual();
+            const filterWeekVal = document.getElementById("filterWeek") ? document.getElementById("filterWeek").value : "ALL";
+            if (filterWeekVal !== "ALL") {
+                activeWeek = filterWeekVal;
+            }
+
+            let countSEValue = 0;
             let sectoresMapa = {};
 
             datos.forEach(f => {
@@ -1371,8 +1398,8 @@
                 if (selectedTest !== "ALL" && f.prueba && f.prueba.trim() === selectedTest.trim()) {
                     countPatogeno++;
                 }
-                if (f.semana && f.semana.toString().trim() === "20") {
-                    countSE20++;
+                if (f.semana && f.semana.toString().trim() === activeWeek.toString().trim()) {
+                    countSEValue++;
                 }
                 if (f.sector && f.sector !== "---" && f.sector !== "") {
                     sectoresMapa[f.sector] = (sectoresMapa[f.sector] || 0) + 1;
@@ -1406,7 +1433,12 @@
             safeSetText("kpiNegativos", negativos + descartados);
             safeSetText("kpiPendientes", pendientes);
             safeSetText("kpiTasa", tasaText);
-            safeSetText("kpiSEValue", countSE20); 
+            
+            // Asignación dinâmica a la tarjeta S.E.
+            safeSetText("kpiSETitle", `Casos S.E. ${activeWeek}`);
+            safeSetText("kpiSESub", `Semana ${activeWeek} Activa`);
+            safeSetText("kpiSEValue", countSEValue); 
+            
             safeSetText("kpiSectorText", displaySectorKPI); 
 
             const cardTasa = document.getElementById("kpiTasaCard");
