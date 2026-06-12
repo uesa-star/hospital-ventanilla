@@ -67,8 +67,8 @@
                 <!-- TÍTULO DE CABECERA SEGÚN REQUERIMIENTO OFICIAL -->                
                 <div class="flex flex-col">                    
                     <h1 class="text-lg md:text-xl font-extrabold tracking-tight text-white uppercase leading-none">HOSPITAL DE VENTANILLA</h1>                    
-                    <h2 class="text-xs md:text-sm font-bold text-emerald-300 uppercase tracking-wide mt-1.5 leading-none">GESTIÓN DE LABORATORIO Y VIGILANCIA EPIDEMIOLÓGICA</h2>                    
-                    <p class="text-[9px] md:text-[10px] font-semibold text-slate-300 uppercase tracking-widest mt-1.5 leading-none">DASHBOARD DE ANÁLISIS</p>                
+                    <h2 class="text-xs md:text-sm font-bold text-emerald-300 uppercase tracking-wide mt-1.5 leading-none">GESTOR DE LABORATORIO Y VIGILANCIA EPIDEMIOLÓGICA</h2>                    
+                    <p class="text-[9px] md:text-[10px] font-semibold text-slate-300 uppercase tracking-widest mt-1.5 leading-none">SISTEMA INTEGRADO DE ANÁLISIS</p>                
                 </div>            
             </div>                        
             
@@ -200,15 +200,10 @@
                 <h2 class="text-sm font-extrabold uppercase tracking-wider">Filtros de Control de Vigilancia</h2>
             </div>
             <div class="p-6 bg-slate-50/40">
-                <div class="flex flex-col lg:flex-row items-stretch lg:items-end gap-4 text-sm justify-between">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 flex-1">
-                        <!-- Año de Vigilancia -->
-                        <div class="flex flex-col gap-1.5">
-                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Año de Vigilancia</span>
-                            <select id="filterYear" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer">
-                                <option value="ALL" selected>Todos los Años</option>
-                            </select>
-                        </div>
+                <div class="flex flex-col lg:flex-row items-stretch lg:items-center gap-4 text-sm justify-between">
+                    
+                    <!-- GRID DE SELECTS (AHORA DE 4 COLUMNAS, YA QUE EL AÑO ES UN ELEMENTO DINÁMICO MULTI-CHECK A LA DERECHA) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 flex-1">
                         <!-- Tipo de Prueba -->
                         <div class="flex flex-col gap-1.5">
                             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tipo de Prueba</span>
@@ -249,10 +244,19 @@
                             </select>
                         </div>
                     </div>
-                    <div class="flex justify-end flex-col gap-1 bg-teal-50/50 p-2.5 rounded-xl border border-teal-100 min-w-[220px]">
-                        <span class="text-[9px] font-extrabold text-teal-800 uppercase tracking-wider mb-1 block">Comparativa Interanual</span>
-                        <div id="yearCheckboxesContainer" class="flex flex-wrap gap-2.5 max-h-[48px] overflow-y-auto custom-scrollbar">
-                            <!-- Creado dinámicamente según los años de la base de datos -->
+                    
+                    <!-- CONTROL DE AÑOS INTEGRADO (CHECKBOXES CON SINCRONIZACIÓN ABSOLUTA EN TODOS LOS ELEMENTOS) -->
+                    <div class="flex flex-col gap-1.5 bg-teal-50/50 p-3 rounded-xl border border-teal-100 min-w-[270px] max-w-full lg:max-w-xs justify-between">
+                        <div class="flex items-center justify-between border-b border-teal-200/50 pb-1 mb-1.5">
+                            <span class="text-[10px] font-extrabold text-teal-800 uppercase tracking-wider">Años en Vigilancia (Sincronizado)</span>
+                            <div class="flex gap-2">
+                                <button onclick="selectAllYears(true)" class="text-[9px] font-extrabold text-brand-teal hover:underline uppercase">Todos</button>
+                                <span class="text-[9px] text-teal-300">|</span>
+                                <button onclick="selectAllYears(false)" class="text-[9px] font-extrabold text-rose-600 hover:underline uppercase">Ninguno</button>
+                            </div>
+                        </div>
+                        <div id="yearCheckboxesContainer" class="flex flex-wrap gap-2 max-h-[55px] overflow-y-auto custom-scrollbar select-none">
+                            <!-- Creado dinámicamente según los años de la base de datos en tiempo real -->
                         </div>
                     </div>
                 </div>
@@ -351,20 +355,20 @@
             </div>        
         </section>
 
-        <!-- ================= 3. SECCIÓN DE GRÁFICOS ANALÍTICOS (6 GRÁFICOS CON MODO COMPARATIVO 3 AÑOS EN LÍNEAS AL INICIO) ================= -->        
+        <!-- ================= 3. SECCIÓN DE GRÁFICOS ANALÍTICOS (6 GRÁFICOS) ================= -->        
         <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">                        
             <!-- GRÁFICO 1: COMPARATIVO TRIANUAL DE TENDENCIAS -->            
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300 md:col-span-2 lg:col-span-3">                
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
                     <h3 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                        <i class="fa-solid fa-chart-line text-emerald-500"></i> Comparativa Interanual (Tendencias: 2024 vs 2025 vs 2026)
+                        <i class="fa-solid fa-chart-line text-emerald-500"></i> Comparativa Interanual de Curvas de Tendencias
                     </h3>                        
-                    <span class="text-[9px] font-bold text-teal-600 bg-teal-50 px-3 py-1 rounded-full uppercase">Canal de Tendencias</span>                    
+                    <span class="text-[9px] font-bold text-teal-600 bg-teal-50 px-3 py-1 rounded-full uppercase">Canal de Vigilancia</span>                    
                 </div>                    
                 <div class="relative h-64 w-full mt-2">                        
                     <canvas id="chartTrianualComparativo"></canvas>                    
                 </div>                
-                <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Análisis estacional de curvas epidemiológicas trianuales por mes (Ajustable con filtros rápidos)</p>            
+                <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Análisis estacional de curvas epidemiológicas por mes (Controlado en vivo por los checkboxes superiores)</p>            
             </div>
 
             <!-- GRÁFICO 2: Casos por Mes (Barras V) -->            
@@ -378,7 +382,7 @@
                         <canvas id="chartMensual"></canvas>                    
                     </div>                
                 </div>                
-                <p class="text-[9px] text-slate-400 text-center mt-3 font-semibold">Evolución temporal del censo de muestras en la sesión actual</p>            
+                <p class="text-[9px] text-slate-400 text-center mt-3 font-semibold">Evolución temporal del censo de muestras en los años seleccionados</p>            
             </div>
 
             <!-- GRÁFICO 3: Curva Semanal -->            
@@ -419,7 +423,7 @@
                         <canvas id="chartResultados"></canvas>                    
                     </div>                
                 </div>                
-                <p class="text-[9px] text-slate-400 text-center mt-3 font-semibold">Resumen de positividad y descarte clínico</p>            
+                <p class="text-[9px] text-slate-400 text-center mt-3 font-semibold">Resumen de positividad y descarte clínico sincronizado</p>            
             </div>
 
             <!-- GRÁFICO 6: Casos por Sector -->            
@@ -470,7 +474,7 @@
             </div>
         </section>
 
-        <!-- ================= 5. FICHA DE NOTIFICACION INTEGRAL DE CASOS (COLAPSADA POR DEFECTO CON SU FLECHA) ================= -->
+        <!-- ================= 5. FICHA DE NOTIFICACION INTEGRAL DE CASOS ================= -->
         <section id="formCasoSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print animate-fade-in font-bold">
             <div onclick="toggleFormCaso()" class="bg-[#0b4d42] hover:bg-[#0d594d] transition-colors duration-200 text-white px-6 py-4 flex items-center justify-between shadow-sm border-b border-teal-900 cursor-pointer select-none">
                 <div class="flex items-center gap-3">
@@ -557,7 +561,7 @@
             </div>
         </section>
 
-        <!-- ================= 6. HISTORIAL INTEGRADO DE MUESTRAS REGISTRADAS (COLAPSADO POR DEFECTO CON SU FLECHA) ================= -->        
+        <!-- ================= 6. HISTORIAL INTEGRADO DE MUESTRAS REGISTRADAS ================= -->        
         <section id="historialSection" class="bg-white rounded-xl border border-slate-200/80 shadow-md overflow-hidden flex flex-col hover:shadow-md transition-shadow animate-fade-in font-bold">            
             <div onclick="toggleHistorial()" class="bg-[#0b4d42]/10 hover:bg-[#0b4d42]/15 transition-colors duration-200 px-6 py-4 flex items-center justify-between border-b border-slate-200 cursor-pointer select-none">
                 <div class="flex items-center gap-3">
@@ -622,7 +626,7 @@
             </div>
         </section>
 
-        <!-- ================= 7. KARDEX DE CONTROL DE INSUMOS CRÍTICOS (COLAPSADO POR DEFECTO CON SU FLECHA) ================= -->        
+        <!-- ================= 7. KARDEX DE CONTROL DE INSUMOS CRÍTICOS ================= -->        
         <section id="kardexSection" class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0 no-print animate-fade-in font-bold">            
             <div onclick="toggleKardex()" class="bg-[#0b4d42]/10 hover:bg-[#0b4d42]/15 transition-colors duration-200 px-6 py-4 flex items-center justify-between border-b border-slate-200 cursor-pointer select-none">                
                 <div class="flex items-center gap-3">                    
@@ -1165,14 +1169,12 @@
         }
 
         function actualizarOpcionesDeFiltros() {
-            const selectYear = document.getElementById("filterYear");
             const selectTest = document.getElementById("filterTestType");
             const selectWeek = document.getElementById("filterWeek");
             const checkboxesContainer = document.getElementById("yearCheckboxesContainer");
 
-            if (!selectYear || !selectTest || !selectWeek) return;
+            if (!selectTest || !selectWeek) return;
 
-            const prevYear = selectYear.value;
             const prevTest = selectTest.value;
             const prevWeek = selectWeek.value;
 
@@ -1194,26 +1196,20 @@
 
             const sortedYears = Array.from(años).sort();
 
-            // Re-poblar Años en Dropdown
-            selectYear.innerHTML = `<option value="ALL">Todos los Años</option>`;
-            sortedYears.forEach(a => {
-                selectYear.innerHTML += `<option value="${a}">${a}</option>`;
-            });
-            selectYear.value = años.has(prevYear) ? prevYear : "ALL";
+            // Si selectedYearsForComparison está vacío por defecto, inicializamos marcando todos los años disponibles
+            if (selectedYearsForComparison.size === 0 && sortedYears.length > 0) {
+                sortedYears.forEach(y => selectedYearsForComparison.add(y));
+            }
 
-            // Re-poblar checklist de años a comparar dinámicamente
+            // Re-poblar checklist de años a comparar dinámicamente con estilos de botones interactivos premium
             if (checkboxesContainer) {
-                if (selectedYearsForComparison.size === 0) {
-                    // Por defecto, marcamos los últimos 3 años para que la gráfica no se inicie vacía
-                    sortedYears.slice(-3).forEach(y => selectedYearsForComparison.add(y));
-                }
-
                 let checkboxesHtml = "";
                 sortedYears.forEach(year => {
                     const isChecked = selectedYearsForComparison.has(year) ? "checked" : "";
                     checkboxesHtml += `
-                        <label class="flex items-center gap-1 text-xs font-black text-slate-700 cursor-pointer">
-                            <input type="checkbox" value="${year}" ${isChecked} onchange="toggleYearComparison(this)" class="accent-brand-dark cursor-pointer h-3.5 w-3.5"> ${year}
+                        <label class="flex items-center gap-1.5 text-xs font-black text-slate-700 cursor-pointer hover:bg-slate-100 p-1 rounded-lg transition-all">
+                            <input type="checkbox" value="${year}" ${isChecked} onchange="toggleYearComparison(this)" class="accent-brand-dark cursor-pointer h-4 w-4">
+                            <span>Año ${year}</span>
                         </label>
                     `;
                 });
@@ -1235,6 +1231,7 @@
             selectWeek.value = semanas.has(prevWeek) ? prevWeek : "ALL";
         }
 
+        // --- MANEJO DE SELECCIÓN DE AÑOS INTEGRADO ---
         function toggleYearComparison(checkbox) {
             const yearStr = checkbox.value;
             if (checkbox.checked) {
@@ -1242,6 +1239,36 @@
             } else {
                 selectedYearsForComparison.delete(yearStr);
             }
+
+            // Evitar dejar el dashboard sin ningún año seleccionado
+            if (selectedYearsForComparison.size === 0) {
+                checkbox.checked = true;
+                selectedYearsForComparison.add(yearStr);
+                showToast("Se requiere al menos un año seleccionado en vigilancia.", "error");
+                return;
+            }
+
+            filtrarYRefrescarDashboard();
+        }
+
+        function selectAllYears(selectAll) {
+            const checkboxes = document.querySelectorAll("#yearCheckboxesContainer input[type='checkbox']");
+            selectedYearsForComparison.clear();
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll;
+                if (selectAll) {
+                    selectedYearsForComparison.add(cb.value);
+                }
+            });
+
+            if (!selectAll && checkboxes.length > 0) {
+                // Si deseleccionan todos, dejamos el más reciente marcado por defecto para evitar pantallas en blanco
+                const latestCb = checkboxes[checkboxes.length - 1];
+                latestCb.checked = true;
+                selectedYearsForComparison.add(latestCb.value);
+                showToast("Se requiere al menos un año seleccionado.", "error");
+            }
+
             filtrarYRefrescarDashboard();
         }
 
@@ -1251,13 +1278,11 @@
         }
 
         function resetFilters() {
-            const filterYear = document.getElementById("filterYear");
             const filterTestType = document.getElementById("filterTestType");
             const filterWeek = document.getElementById("filterWeek");
             const filterResult = document.getElementById("filterResult");
             const filterSector = document.getElementById("filterSector");
             
-            if (filterYear) filterYear.value = "ALL";
             if (filterTestType) filterTestType.value = "ALL";
             if (filterWeek) filterWeek.value = "ALL";
             if (filterResult) filterResult.value = "ALL";
@@ -1265,6 +1290,9 @@
             
             const searchInput = document.getElementById("buscadorPaciente");
             if (searchInput) searchInput.value = "";
+            
+            // Marcar todos los años por defecto en el filtro unificado
+            selectAllYears(true);
             
             currentPage = 1;
             filtrarYRefrescarDashboard();
@@ -1483,7 +1511,7 @@
                     <tr>
                         <td colspan="9" class="p-8 text-center text-slate-400 font-semibold">
                             <i class="fa-solid fa-folder-open text-2xl mb-1 block text-slate-300"></i>
-                            Base de datos vacía o ningún registro coincide con la búsqueda.
+                            Base de datos vacía o ningún registro coincide con la búsqueda para este año o filtros.
                         </td>
                     </tr>
                 `;
@@ -1561,8 +1589,8 @@
             if (typeof Chart === "undefined") return;
 
             const colorPalette = [
-                '#ef4444', // Rojo Coral
                 '#14b8a6', // Teal Interactivo
+                '#ef4444', // Rojo Coral
                 '#3b82f6', // Azul Eléctrico
                 '#f59e0b', // Ámbar Alerta
                 '#8b5cf6', // Púrpura
@@ -1626,11 +1654,10 @@
                     }
                 });
 
-                // Si no hay datos reales en la base de datos para este año, generamos una curva estacional simulada de referencia
+                // Si no hay datos reales en la base de datos para este año, generamos una curva estacional de referencia
                 if (countRealValores === 0) {
                     let baseMultip = yr === 2024 ? 0.75 : (yr === 2025 ? 0.90 : 1.0);
                     for (let m = 0; m < 12; m++) {
-                        // Simulación de curva epidémica normal de dengue
                         mesesData[m] = Math.round((m === 4 || m === 5 ? 14 : (m === 3 || m === 6 ? 8 : 2)) * baseMultip);
                     }
                 }
@@ -1788,7 +1815,6 @@
         // --- SISTEMA DE FUSIÓN Y FILTRADO GENERAL ---
         function filtrarYRefrescarDashboard() {
             const filterWeek = document.getElementById("filterWeek") ? document.getElementById("filterWeek").value : "ALL";
-            const filterYear = document.getElementById("filterYear") ? document.getElementById("filterYear").value : "ALL";
             const filterTestType = document.getElementById("filterTestType") ? document.getElementById("filterTestType").value : "ALL";
             const filterSector = document.getElementById("filterSector") ? document.getElementById("filterSector").value : "ALL";
             const filterResult = document.getElementById("filterResult") ? document.getElementById("filterResult").value : "ALL";
@@ -1796,11 +1822,17 @@
 
             datosFiltrados = datosGlobales.filter(f => {
                 if (!f) return false;
+
+                // FILTRADO DINÁMICO DE AÑO SINCRONIZADO CON LOS CHECKBOXES SENSITIVOS
+                const yr = extractYear(f.fechaNoti || "").toString().trim();
+                if (selectedYearsForComparison.size > 0) {
+                    if (!selectedYearsForComparison.has(yr)) return false;
+                } else {
+                    return false; // Si no hay ningún año seleccionado, no pasa la muestra
+                }
+
                 if (filterWeek !== "ALL") {
                     if ((f.semana || "").toString().trim() !== filterWeek.toString().trim()) return false;
-                }
-                if (filterYear !== "ALL") {
-                    if (extractYear(f.fechaNoti || "").toString().trim() !== filterYear.toString().trim()) return false;
                 }
                 if (filterTestType !== "ALL") {
                     if ((f.prueba || "").toString().trim() !== filterTestType.toString().trim()) return false;
