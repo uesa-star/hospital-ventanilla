@@ -730,6 +730,7 @@
         let currentPage = 1;
         const recordsPerPage = 10;
         let selectedYearsForComparison = new Set(); // Guarda los años activos seleccionados dinámicamente
+        let isFirstSync = true; // Control de notificación inicial de carga para evitar spam en intervalos
 
         let chartTrianualComparativoInstance = null;
         let chartMensualInstance = null;
@@ -1146,7 +1147,11 @@
                                 if (badge && statusText) {
                                     statusText.innerText = "ONLINE";
                                 }
-                                showToast("Base de datos sincronizada correctamente con Google Sheets", "success");
+                                // Notificar únicamente la primera vez que se sincroniza la base de datos
+                                if (isFirstSync) {
+                                    showToast("Sincronización Exitosa con Base Sheet", "success");
+                                    isFirstSync = false;
+                                }
                             } else {
                                 console.warn("Archivo CSV vacío.");
                                 cargarDatosSimulados();
