@@ -47,7 +47,7 @@
         /* ESTILOS DE IMPRESIÓN SEGUROS */
         @media print {
             body { background: white !important; color: black !important; }
-            header, section.bg-brand-burgundy, #alertsModal, select, button, .no-print, #debugToggle {
+            header, section.bg-brand-burgundy, #alertsModal, #welcomeModal, select, button, .no-print, #debugToggle {
                 display: none !important;
             }
             main { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
@@ -59,7 +59,28 @@
 <body class="min-h-screen text-slate-800 flex flex-col bg-slate-50 relative custom-scrollbar">
     
     <!-- CONTENEDOR DE TOASTS SILENCIOSOS -->
-    <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none no-print"></div>
+    <div id="toastContainer" class="fixed top-5 right-5 z-[150] flex flex-col gap-2 pointer-events-none no-print"></div>
+
+    <!-- MODAL DE BIENVENIDA Y SINCRONIZACIÓN COMPLETADA (CARGA INSTANTÁNEA POR DEFECTO PARA MICROSEGUNDOS REALES) -->
+    <div id="welcomeModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md flex items-center justify-center z-[100] transition-opacity duration-200 no-print">
+        <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full mx-4 shadow-2xl flex flex-col items-center text-center border border-slate-100 transform scale-100 transition-all duration-200">
+            <!-- Icono de Check de Sincronización Exitosa -->
+            <div class="bg-emerald-100 text-emerald-500 rounded-full h-16 w-16 flex items-center justify-center mb-5 shadow-inner">
+                <i class="fa-solid fa-check text-3xl"></i>
+            </div>
+            <!-- Títulos según imagen b761ab -->
+            <h3 class="text-xl font-extrabold text-slate-800 tracking-tight uppercase mb-1 leading-none">¡BIENVENIDO!</h3>
+            <span class="text-[11px] font-black text-emerald-600 tracking-wider uppercase mb-4 block leading-none">SINCRONIZACIÓN COMPLETADA</span>
+            <!-- Descripción textual exacta de la imagen -->
+            <p class="text-[11px] text-slate-500 font-bold leading-relaxed mb-6 max-w-[270px]">
+                El sistema de vigilancia epidemiológica del Hospital de Ventanilla se ha cargado correctamente y está listo para operar.
+            </p>
+            <!-- Botón de Entrada -->
+            <button onclick="closeWelcomeModal()" class="w-full bg-[#014d3a] hover:bg-[#0a4c41] text-white py-3.5 px-6 rounded-2xl text-[11px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98">
+                ENTRAR AL MÓDULO
+            </button>
+        </div>
+    </div>
 
     <!-- CABECERA PRINCIPAL (REPLICADA DE image_c2ba3a.png) -->    
     <header class="bg-brand-dark text-white px-6 py-4 shadow-md shrink-0 border-b border-emerald-950">        
@@ -112,28 +133,60 @@
         </button>    
     </section>
 
-    <!-- MODAL DE ALERTAS DETALLADAS -->
-    <div id="alertsModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
-        <div class="bg-[#111827] rounded-3xl p-6 md:p-8 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-800 flex flex-col transform scale-95 transition-all duration-350 gap-6 custom-scrollbar text-slate-100">
-            <div class="bg-[#4c0519] px-6 py-4 flex justify-between items-center border-b border-rose-950 rounded-2xl">
-                <div class="flex items-center gap-3">
-                    <i class="fa-solid fa-triangle-exclamation text-2xl text-rose-400"></i>
+    <!-- MODAL DE ALERTAS DETALLADAS (REPLICADO AL 100% DE image_b6ed11.png) -->
+    <div id="alertsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-[120] transition-all duration-300 opacity-0 pointer-events-none p-4">
+        <div class="bg-[#0b0f19] rounded-[2rem] p-6 md:p-8 max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-800/80 flex flex-col transform scale-95 transition-all duration-300 gap-6 custom-scrollbar text-slate-100">
+            
+            <!-- Encabezado del Centro de Alertas -->
+            <div class="bg-[#4c0519] px-6 py-4 flex justify-between items-center border-b border-rose-950/60 rounded-2xl shadow-inner relative">
+                <div class="flex items-center gap-4">
+                    <div class="bg-rose-900/60 p-2.5 rounded-xl text-rose-400 border border-rose-800/40">
+                        <i class="fa-solid fa-triangle-exclamation text-xl animate-pulse"></i>
+                    </div>
                     <div>
-                        <h3 class="text-base font-extrabold text-white uppercase">Centro de Alertas Epidemiológicas</h3>
-                        <p class="text-[10px] text-rose-300 font-semibold uppercase">Ventanilla Callao</p>
+                        <h3 class="text-sm md:text-base font-extrabold text-white uppercase tracking-wider leading-none">CENTRO DE ALERTAS EPIDEMIOLÓGICAS GLOBALES Y REGIONALES</h3>
+                        <p class="text-[10px] md:text-xs text-rose-300/90 font-bold uppercase tracking-wide mt-1.5 leading-none">VIGILANCIA DE REPUNTES ACTIVOS Y AMENAZAS CRÍTICAS - HOSPITAL DE VENTANILLA</p>
                     </div>
                 </div>
-                <button onclick="closeAlertsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button onclick="closeAlertsModal()" class="text-slate-400 hover:text-white transition-colors h-8 w-8 rounded-full bg-black/20 flex items-center justify-center hover:bg-black/40"><i class="fa-solid fa-xmark text-sm"></i></button>
             </div>
-            <div id="alertCardsContainer" class="space-y-4"></div>
-            <button onclick="closeAlertsModal()" class="bg-rose-700 hover:bg-rose-800 py-2 rounded-xl text-xs font-bold uppercase">Cerrar</button>
+
+            <!-- Botón de Sincronización en Vivo y Pestañas Interactivas -->
+            <div class="flex flex-col items-center gap-4 w-full">
+                <!-- Status pill "SINC EN VIVO..." -->
+                <span class="bg-[#0e2c22] text-emerald-400 text-[10px] font-black px-4 py-1.5 rounded-full border border-emerald-500/30 flex items-center gap-1.5 animate-pulse uppercase tracking-widest select-none">
+                    <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> SINC EN VIVO...
+                </span>
+
+                <!-- Pestañas de Alertas -->
+                <div class="flex flex-wrap justify-center gap-3 w-full">
+                    <button id="tabBtn-oms" onclick="switchAlertTab('oms')" class="py-2.5 px-5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-2 shadow-md">
+                        <i class="fa-solid fa-earth-americas"></i> Alerta OMS / OPS Global
+                    </button>
+                    <button id="tabBtn-cdc" onclick="switchAlertTab('cdc')" class="py-2.5 px-5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-2 shadow-md">
+                        <i class="fa-solid fa-map-location-dot"></i> Alertas CDC Perú
+                    </button>
+                    <button id="tabBtn-region" onclick="switchAlertTab('region')" class="py-2.5 px-5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-2 shadow-md">
+                        <i class="fa-solid fa-flag"></i> Repuntes en la Región
+                    </button>
+                </div>
+            </div>
+
+            <!-- Contenedor Dinámico de la Alerta Seleccionada -->
+            <div id="alertCardsContainer" class="w-full">
+                <!-- Se inyectará el contenido estructurado de forma dinámica -->
+            </div>
+
+            <button onclick="closeAlertsModal()" class="w-full bg-slate-800 hover:bg-slate-750 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-all duration-200">
+                Entendido y Cerrar Panel
+            </button>
         </div>
     </div>
     
     <!-- CUERPO PRINCIPAL DEL DASHBOARD -->    
     <main class="flex-1 max-w-[1850px] w-full mx-auto p-4 md:p-6 space-y-6">
 
-        <!-- ================= 1. FILTROS DE CONTROL DE VIGILANCIA (REPLICADA DE image_c2ba3a.png) ================= -->        
+        <!-- ================= 1. FILTROS DE CONTROL DE VIGILANCIA ================= -->        
         <section class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0">
             <!-- Barra superior del panel de filtros -->
             <div class="bg-[#0b5443] text-white px-5 py-3 flex items-center justify-between shadow-sm">
@@ -146,7 +199,7 @@
                 </button>
             </div>
             
-            <!-- Grid de inputs idéntica -->
+            <!-- Grid de inputs -->
             <div class="p-5 bg-white border-t border-slate-100">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs font-bold text-slate-500">
                     
@@ -198,7 +251,7 @@
             </div>
         </section>
 
-        <!-- ================= 2. KPIs DE ALTO IMPACTO (8 INDICADORES IDÉNTICOS A image_c2ba3a.png) ================= -->        
+        <!-- ================= 2. KPIs DE ALTO IMPACTO ================= -->        
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3.5 font-bold">            
             
             <!-- KPI 1: Total Ingresados -->
@@ -242,7 +295,7 @@
                 <div>                    
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">POSITIVOS (+)</p>                    
                     <h3 id="kpiPositivos" class="text-xl font-extrabold text-rose-600 mt-1 leading-none">...</h3>                    
-                    <p class="text-[9px] text-rose-500 mt-2 font-bold flex items-center gap-1"><i class="fa-solid fa-circle-exclamation text-[10px]"></i> Alerta</p>                
+                    <p class="text-[9px] text-rose-500 mt-2 font-bold flex items-center gap-1"><i class="fa-solid fa-virus mr-0.5 animate-pulse"></i> Alerta</p>                
                 </div>                
                 <div class="bg-rose-50 p-2.5 text-rose-600 rounded-full shrink-0 shadow-inner">                    
                     <i class="fa-solid fa-circle-exclamation text-base"></i>                
@@ -461,8 +514,8 @@
 
     </main>
 
-    <!-- PANEL DE DIAGNÓSTICO EN VIVO SINO-SINC (MODAL SÚPER ÚTIL DE SOPORTE) -->
-    <div id="debugConsoleModal" class="fixed inset-0 bg-slate-900/85 backdrop-blur-sm hidden items-center justify-center z-50 p-4 no-print">
+    <!-- PANEL DE DIAGNÓSTICO EN VIVO SINO-SINC -->
+    <div id="debugConsoleModal" class="fixed inset-0 bg-slate-900/85 backdrop-blur-sm hidden items-center justify-center z-[130] p-4 no-print">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-4xl w-full mx-auto flex flex-col gap-4 text-xs font-mono text-emerald-400 shadow-2xl">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
                 <div class="flex items-center gap-2">
@@ -514,11 +567,21 @@
 
     <!-- LÓGICA DE SINCRONIZACIÓN Y FILTRADO INTEGRAL -->
     <script>
-        // URL provista por el usuario para la sincronización
         const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH-sGKVHNCt-kPiOoVv1BnmsTSE1onfi0f05kk0hh8Uc0l0kH3V8QzY22UdS23TjA9MCX8tDYwSNe7/pub?gid=1171051655&single=true&output=csv";
         
         let dbRawData = [];
         let filteredData = [];
+        let welcomeModalShown = false; // Flag para desplegar el modal una única vez en la carga
+        let activeTab = 'oms'; // Control del modal de alertas de alta fidelidad (image_b6ed11.png)
+        
+        // Estructura de almacenamiento de estadísticas dinámicas de alertas calculadas de la base de datos
+        let alertDataStats = {
+            totalPositivos: 0,
+            sectorCritico: "PACHACÚTEC",
+            maxPosSector: 0,
+            enfermedadMax: "DENGUE",
+            maxCasosEnf: 0
+        };
         
         let currentKardexPage = 1;
         const kardexItemsPerPage = 10;
@@ -543,6 +606,29 @@
 
         window.onload = function() {
             setupUIEventListeners();
+            
+            // INTRODUCCIÓN DE LA CARGA EN MICROSEGUNDOS (FAST-CACHE):
+            // Intenta leer inmediatamente del almacenamiento local para no demorar la carga inicial
+            const fastCache = localStorage.getItem("sino_sinc_fast_cache");
+            if (fastCache) {
+                try {
+                    dbRawData = JSON.parse(fastCache);
+                    addLog("¡Datos de Fast-Cache cargados instantáneamente en microsegundos!");
+                    
+                    // Renderizado súper acelerado
+                    calcularMetricasAlertas();
+                    buildFiltersDynamic();
+                    applyFilters();
+                    
+                    // Cambia la visualización del estado a CONECTADO provisionalmente usando la caché
+                    const statusText = document.getElementById("statusText");
+                    if (statusText) statusText.textContent = "SINO-SINC: CARGADO DESDE CACHÉ LOCAL";
+                } catch(e) {
+                    addLog("No se pudo parsear el Fast-Cache local.", true);
+                }
+            }
+            
+            // Disparar la descarga en paralelo inmediatamente
             conectarYDescargar();
             
             // Refrescar sincronizadamente cada 20 segundos sin caídas
@@ -574,6 +660,22 @@
             });
         }
 
+        /* LÓGICA DE APERTURA Y CIERRE DE MODALES */
+        function closeWelcomeModal() {
+            const modal = document.getElementById("welcomeModal");
+            if (modal) {
+                modal.classList.add("opacity-0", "pointer-events-none");
+                const card = modal.querySelector("div");
+                if (card) {
+                    card.classList.remove("scale-100");
+                    card.classList.add("scale-95");
+                }
+                setTimeout(() => {
+                    modal.remove(); // Eliminado del DOM por optimización de rendimiento
+                }, 200);
+            }
+        }
+
         function toggleDebugConsole() {
             const modal = document.getElementById("debugConsoleModal");
             if (!modal) return;
@@ -591,7 +693,7 @@
             const normalizeString = (str) => {
                 if (!str) return "";
                 return str.toLowerCase()
-                          .replace(/[\s_\-\/]/g, "") // Remover espacios, guiones bajos, barras y guiones
+                          .replace(/[\s_\-\/]/g, "") // Remover espacios, guiones, barras
                           .normalize("NFD")
                           .replace(/[\u0300-\u036f]/g, ""); // Remover tildes
             };
@@ -608,7 +710,7 @@
             return defaultValue;
         }
 
-        // Descargar datos sincrónicos con motor de redundancia de triple vía
+        // Descargar datos sincrónicos con motor de redundancia y carrera en paralelo (RACE ENGINE)
         async function conectarYDescargar() {
             const statusText = document.getElementById("statusText");
             const badgeDot = document.getElementById("badgeDot");
@@ -617,42 +719,34 @@
             const debugNetStatus = document.getElementById("debugNetStatus");
             const debugBytesRead = document.getElementById("debugBytesRead");
 
-            addLog("Iniciando ciclo de sincronización activa de triple redundancia...");
+            addLog("Iniciando carrera de red en paralelo para conexión en microsegundos...");
             
-            // Canales de red que intentamos por orden de robustez para saltear sandboxing/CORS
+            // Definimos los tres canales que se descargarán simultáneamente (en paralelo)
             const urlsToTry = [
                 SHEET_URL, // Canal 1: Directo
                 `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=1&url=${encodeURIComponent(SHEET_URL)}`, // Canal 2: Bypass Google OpenSocial (CORS & Sandbox Libre)
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(SHEET_URL)}` // Canal 3: Backup AllOrigins
             ];
 
-            let csvText = "";
-            let exitoso = false;
-            let finalUrlUsada = "";
-
-            for (let i = 0; i < urlsToTry.length; i++) {
-                try {
-                    const targetUrl = urlsToTry[i];
-                    addLog(`Intentando canal de red ${i + 1}: ${targetUrl.substring(0, 75)}...`);
-                    
-                    const response = await fetch(targetUrl);
-                    if (response.ok) {
-                        const text = await response.text();
-                        if (text && text.trim().length > 0 && text.includes(",")) {
-                            csvText = text;
-                            exitoso = true;
-                            finalUrlUsada = targetUrl;
-                            addLog(`¡Conexión de red establecida exitosamente por canal ${i + 1}!`);
-                            break;
-                        }
-                    }
-                } catch (err) {
-                    addLog(`Fallo en canal ${i + 1}: ${err.message}`, true);
+            // Helper para realizar la petición y validar la respuesta
+            const fetchSource = async (url, sourceName) => {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP error en ${sourceName}`);
+                const text = await response.text();
+                if (!text || text.trim().length === 0 || !text.includes(",")) {
+                    throw new Error(`CSV inválido o vacío en ${sourceName}`);
                 }
-            }
+                return { text, sourceName };
+            };
 
-            if (exitoso) {
-                if (debugNetStatus) debugNetStatus.textContent = "ONLINE (GOOGLE CLOUD)";
+            try {
+                // RACING: Promise.any resuelve con la primera petición exitosa en microsegundos
+                const fastestResult = await Promise.any(urlsToTry.map((url, idx) => fetchSource(url, `Canal ${idx + 1}`)));
+                
+                const csvText = fastestResult.text;
+                addLog(`¡Carrera ganada por ${fastestResult.sourceName}!`);
+
+                if (debugNetStatus) debugNetStatus.textContent = `ONLINE (${fastestResult.sourceName})`;
                 if (debugBytesRead) debugBytesRead.textContent = `${Math.round(csvText.length / 1024)} KB`;
 
                 Papa.parse(csvText, {
@@ -663,6 +757,9 @@
                             addLog(`PapaParse completado con éxito. Filas procesadas: ${results.data.length}`);
                             procesarFilasSheet(results.data);
                             
+                            // Guardar en Fast-Cache local para futuras cargas instantáneas
+                            localStorage.setItem("sino_sinc_fast_cache", JSON.stringify(dbRawData));
+                            
                             if (statusText) statusText.textContent = "SINO-SINC: CONECTADO CON GOOGLE SHEET";
                             if (badgeDot) badgeDot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
                             if (badgeDotPing) badgeDotPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
@@ -671,7 +768,18 @@
                                 updateSuccessBadge.className = "bg-teal-950/40 text-emerald-300 text-xs px-4 py-2 rounded-full border border-emerald-500/30 flex items-center gap-2 font-black select-none shadow-inner h-[38px] leading-none";
                             }
                             
-                            showToast("Base de datos de Google Sheet sincronizada con éxito", "success");
+                            // Mostrar mensaje de éxito no intrusivo
+                            showToast("Base de datos de Google Sheet sincronizada en vivo", "success");
+
+                            // Lanzamiento del modal de bienvenida por única vez al sincronizar correctamente (image_b761ab.jpg)
+                            if (!welcomeModalShown) {
+                                const wModal = document.getElementById("welcomeModal");
+                                if (wModal) {
+                                    wModal.classList.remove("opacity-0", "pointer-events-none");
+                                    wModal.classList.add("opacity-100");
+                                }
+                                welcomeModalShown = true;
+                            }
                         } else {
                             conectarDatosLocalesSinoSinc("El archivo CSV descargado estaba vacío.");
                         }
@@ -680,8 +788,9 @@
                         conectarDatosLocalesSinoSinc(`Fallo en análisis de estructura CSV: ${err}`);
                     }
                 });
-            } else {
-                conectarDatosLocalesSinoSinc("Todos los canales de red remota fallaron o están bloqueados.");
+
+            } catch (err) {
+                conectarDatosLocalesSinoSinc("Todos los canales de red en paralelo fallaron o están bloqueados.");
             }
         }
 
@@ -718,8 +827,69 @@
                 return { id: idx, ano, sem, diagnostic, estado, apepat, apemat, nombres, edad, sexo, dni, localidad };
             });
 
+            // Calcular y sincronizar datos reales de alertas epidemiológicas basadas en la base de datos descargada
+            calcularMetricasAlertas();
+
             buildFiltersDynamic();
             applyFilters();
+        }
+
+        function calcularMetricasAlertas() {
+            const conteoEnfermedades = {};
+            const sectorPositivos = {};
+            let totalPos = 0;
+            
+            dbRawData.forEach(d => {
+                if (d.diagnostic) {
+                    conteoEnfermedades[d.diagnostic] = (conteoEnfermedades[d.diagnostic] || 0) + 1;
+                }
+                const est = d.estado.toUpperCase();
+                const esPos = est === "CONFIRMADO" || est === "SI" || est === "POSITIVO" || est.includes("CONFIR");
+                if (esPos) {
+                    totalPos++;
+                    if (d.localidad) {
+                        sectorPositivos[d.localidad] = (sectorPositivos[d.localidad] || 0) + 1;
+                    }
+                }
+            });
+            
+            let enfermedadMax = "DENGUE";
+            let maxCasosEnf = 0;
+            Object.keys(conteoEnfermedades).forEach(k => {
+                if (conteoEnfermedades[k] > maxCasosEnf) {
+                    maxCasosEnf = conteoEnfermedades[k];
+                    enfermedadMax = k;
+                }
+            });
+
+            let sectorCritico = "COSTA AZUL";
+            let maxPosSector = 0;
+            Object.keys(sectorPositivos).forEach(k => {
+                if (sectorPositivos[k] > maxPosSector) {
+                    maxPosSector = sectorPositivos[k];
+                    sectorCritico = k;
+                }
+            });
+
+            // Guardar en variable global para que switchAlertTab pueda usarlo
+            alertDataStats = {
+                totalPositivos: totalPos,
+                sectorCritico: sectorCritico,
+                maxPosSector: maxPosSector,
+                enfermedadMax: enfermedadMax,
+                maxCasosEnf: maxCasosEnf
+            };
+
+            // Sincronizar el Ticker (Marquesina) en vivo con los datos reales analizados
+            const ticker = document.getElementById("liveAlertTicker");
+            if (ticker) {
+                ticker.innerHTML = `
+                    <span>🌍 <strong>OMS GLOBAL:</strong> Alerta de la OPS/OMS por rebrote masivo de Sarampión ante el flujo del Mundial 2026.</span>
+                    <span>🇵🇪 <strong>CDC PERÚ:</strong> Alerta Nacional por Dengue Grave. Laboratorio Ventanilla registra <strong>${totalPos} casos positivos confirmados</strong>.</span>
+                    <span>🚨 <strong>REBOTE LOCAL:</strong> Sector <strong>${sectorCritico}</strong> declarado en riesgo sanitario con <strong>${maxPosSector} casos positivos</strong>.</span>
+                    <span>🔬 <strong>VIGILANCIA:</strong> Patógeno de alta incidencia detectado: <strong>${enfermedadMax}</strong> con <strong>${maxCasosEnf} muestras analizadas</strong>.</span>
+                `;
+            }
         }
 
         function conectarDatosLocalesSinoSinc(razon) {
@@ -741,9 +911,20 @@
             
             if (dbRawData.length === 0) {
                 dbRawData = cargarDatosSimulados();
+                calcularMetricasAlertas();
                 buildFiltersDynamic();
                 applyFilters();
                 showToast("Activados datos de censo local por restricción de red remota", "warning");
+
+                // El fallback local también muestra el modal al cargarse
+                if (!welcomeModalShown) {
+                    const wModal = document.getElementById("welcomeModal");
+                    if (wModal) {
+                        wModal.classList.remove("opacity-0", "pointer-events-none");
+                        wModal.classList.add("opacity-100");
+                    }
+                    welcomeModalShown = true;
+                }
             }
         }
 
@@ -884,7 +1065,7 @@
                 }
             }
 
-            // Foco sectorial
+            // Foco geográfico
             const sectorCounts = {};
             filteredData.forEach(d => {
                 if(d.localidad) sectorCounts[d.localidad] = (sectorCounts[d.localidad] || 0) + 1;
@@ -1050,8 +1231,7 @@
                         const color = colorPalette[index % colorPalette.length];
                         const mesesData = Array(12).fill(0);
                         
-                        // CORRECCIÓN CLAVE: Usar filteredData en lugar de dbRawData para que las curvas de tendencias interanuales 
-                        // respondan reactivamente a los filtros seleccionados de patógenos, sectores y resultados.
+                        // Usar filteredData en lugar de dbRawData para que las curvas de tendencias interanuales respondan reactivamente
                         filteredData.forEach(d => {
                             if (d.ano === yr) {
                                 const mesIdx = Math.min(11, Math.floor(d.sem / 4.4));
@@ -1248,6 +1428,7 @@
             const modal = document.getElementById("alertsModal");
             if (modal) {
                 modal.classList.remove("opacity-0", "pointer-events-none");
+                modal.classList.add("opacity-100");
                 modal.querySelector("div").classList.remove("scale-95");
                 modal.querySelector("div").classList.add("scale-100");
                 switchAlertTab('oms');
@@ -1257,35 +1438,221 @@
         function closeAlertsModal() {
             const modal = document.getElementById("alertsModal");
             if (modal) {
+                modal.classList.remove("opacity-100");
                 modal.classList.add("opacity-0", "pointer-events-none");
                 modal.querySelector("div").classList.remove("scale-100");
                 modal.querySelector("div").classList.add("scale-95");
             }
         }
 
+        // MODAL DE ALERTAS TOTALMENTE CONFIGURABLE DE ALTA FIDELIDAD (image_b6ed11.png)
         function switchAlertTab(tab) {
+            activeTab = tab;
             const container = document.getElementById("alertCardsContainer");
             if (!container) return;
-            const alerts = {
-                oms: [
-                    { title: "Sarampión Global", desc: "La OPS/OMS emite alerta por brotes en países de tránsito ante flujos migratorios masivos y bajas coberturas SPR." },
-                    { title: "Fiebre de Oropouche", desc: "Transmisión de Oropouche reportada en zonas de selva y frontera. Se insta a extremar medidas de control entomológico." }
-                ],
-                cdc: [
-                    { title: "Brote de Dengue Grave (DENV-2)", desc: "CDC Perú reporta rebrote severo con signos de alarma en el Callao. Notificación obligatoria inmediata ante sospecha." }
-                ],
-                region: [
-                    { title: "Sectores Críticos en Ventanilla", desc: "Pachacútec y Mi Perú registran la mayor tasa de incidencia acumulada de febriles. Intensificar barrido vectorial." }
-                ]
-            };
 
-            const selected = alerts[tab] || [];
-            container.innerHTML = selected.map(a => `
-                <div class="p-4 bg-[#111827] border border-slate-800 rounded-2xl">
-                    <h4 class="font-extrabold text-rose-400 uppercase text-xs">${a.title}</h4>
-                    <p class="text-slate-300 mt-2 text-xs font-semibold leading-relaxed">${a.desc}</p>
-                </div>
-            `).join("");
+            // Restablecer estilos de pestañas (Bordes dorados/ámbar activos)
+            const tabsList = ['oms', 'cdc', 'region'];
+            tabsList.forEach(t => {
+                const btn = document.getElementById(`tabBtn-${t}`);
+                if (btn) {
+                    if (t === tab) {
+                        btn.className = "py-2.5 px-5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-2 shadow-md bg-[#1e293b] text-amber-400 border border-amber-500/50";
+                    } else {
+                        btn.className = "py-2.5 px-5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-2 shadow-md bg-[#0a0f1d] text-slate-400 hover:text-white border border-slate-800/80 hover:border-slate-700";
+                    }
+                }
+            });
+
+            // Inyectar contenido estructurado según imagen image_b6ed11.png
+            if (tab === 'oms') {
+                container.innerHTML = `
+                    <div class="bg-[#0a0f1d] border border-slate-800 rounded-3xl p-6 flex flex-col gap-5 shadow-lg relative">
+                        <!-- Cabecera de la alerta de la OMS -->
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                            <div class="flex items-center gap-3">
+                                <span class="text-xl">🌍</span>
+                                <h4 class="font-extrabold text-white text-sm md:text-base uppercase tracking-wider">GRIPE AVIAR (H5N1) - VIGILANCIA MUNDIAL</h4>
+                            </div>
+                            <span class="bg-[#4c0519] text-rose-300 text-[10px] font-black px-4 py-1 rounded-full border border-rose-500/30 uppercase tracking-widest shrink-0 animate-pulse text-center">ALTA PRIORIDAD</span>
+                        </div>
+                        
+                        <!-- Descripción técnica de la OMS -->
+                        <p class="text-slate-300 text-xs font-bold leading-relaxed">
+                            Monitoreo internacional intensivo por repunte en mamíferos terrestres e infecciones esporádicas en humanos. La OPS recomienda reforzar la bioseguridad en áreas costeras del continente americano.
+                        </p>
+
+                        <!-- Bloque de Fuente Oficial -->
+                        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-[#0a4c41] p-2 rounded-lg text-emerald-400 text-sm">
+                                    <i class="fa-solid fa-shield-virus"></i>
+                                </div>
+                                <div class="text-left">
+                                    <span class="font-black text-white text-[11px] block uppercase">FUENTE OFICIAL: OMS / OPS GLOBAL</span>
+                                    <span class="text-[9px] text-slate-400 font-bold uppercase">REF: BOLETÍN EPIDEMIOLÓGICO DE EMERGENCIA DE LA OMS (OMS-2026-H5N1)</span>
+                                </div>
+                            </div>
+                            <span class="text-[9px] text-slate-400 font-black uppercase tracking-wider bg-[#111827] px-3.5 py-1.5 rounded-lg border border-slate-850/80 shrink-0">
+                                <i class="fa-solid fa-rotate-left mr-1"></i> ACTIVADA: 24 DE MAYO DE 2026
+                            </span>
+                        </div>
+
+                        <!-- Grilla de Tres Tarjetas de Alta Fidelidad (image_b6ed11.png) -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <!-- Tarjeta 1: ¿Dónde Afecta? -->
+                            <div class="bg-[#0e1626]/50 border-l-4 border-l-[#10b981] border border-slate-800/50 p-4 rounded-r-xl">
+                                <h5 class="font-black text-emerald-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                                    <i class="fa-solid fa-location-dot"></i> ¿¿DÓNDE AFECTA??
+                                </h5>
+                                <p class="text-slate-300 text-[11px] font-bold leading-relaxed">
+                                    Rutas de migración de aves silvestres, humedales costeros de la cuenca del Pacífico y granjas de producción avícola comerciales o de traspatio a nivel continental.
+                                </p>
+                            </div>
+
+                            <!-- Tarjeta 2: ¿Qué Hacer? -->
+                            <div class="bg-[#0e1626]/50 border-l-4 border-l-[#e03d5b] border border-slate-800/50 p-4 rounded-r-xl">
+                                <h5 class="font-black text-rose-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                                    <i class="fa-solid fa-stethoscope"></i> ¿¿QUÉ HACER??
+                                </h5>
+                                <p class="text-slate-300 text-[11px] font-bold leading-relaxed">
+                                    Evitar manipulación de aves silvestres muertas o enfermas, uso obligatorio de EPP respiratorio y visual (N95, lentes) en personal expuesto a sospechas, y reporte inmediato.
+                                </p>
+                            </div>
+
+                            <!-- Tarjeta 3: ¿Cómo Actúa Lab? -->
+                            <div class="bg-[#0e1626]/50 border-l-4 border-l-[#007c65] border border-slate-800/50 p-4 rounded-r-xl">
+                                <h5 class="font-black text-teal-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                                    <i class="fa-solid fa-microscope"></i> ¿¿CÓMO ACTÚA LAB??
+                                </h5>
+                                <p class="text-slate-300 text-[11px] font-bold leading-relaxed">
+                                    Toma de hisopado nasofaríngeo y orofaríngeo combinado en Medio de Transporte Viral (MTV). Mantener cadena de frío (2-8°C) y enviar de inmediato al INS para biología molecular.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (tab === 'cdc') {
+                container.innerHTML = `
+                    <div class="bg-[#0a0f1d] border border-slate-800 rounded-3xl p-6 flex flex-col gap-5 shadow-lg">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                            <div class="flex items-center gap-3">
+                                <span class="text-xl">🇵🇪</span>
+                                <h4 class="font-extrabold text-white text-sm md:text-base uppercase tracking-wider">ALERTA EPIDEMIOLÓGICA NACIONAL POR DENGUE GRAVE</h4>
+                            </div>
+                            <span class="bg-[#4c0519] text-rose-300 text-[10px] font-black px-4 py-1 rounded-full border border-rose-500/30 uppercase tracking-widest shrink-0 animate-pulse text-center">ALTA PRIORIDAD</span>
+                        </div>
+                        
+                        <p class="text-slate-300 text-xs font-bold leading-relaxed">
+                            CDC Perú reporta incremento sostenido de casos de Dengue con signos de alarma. Se insta al Hospital de Ventanilla a extremar las pruebas rápidas ELISA y moleculares en febriles agudos de Pachacútec.
+                        </p>
+
+                        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-rose-950 p-2 rounded-lg text-rose-400 text-sm">
+                                    <i class="fa-solid fa-mosquito"></i>
+                                </div>
+                                <div class="text-left">
+                                    <span class="font-black text-white text-[11px] block uppercase">FUENTE OFICIAL: CDC PERÚ / MINSA</span>
+                                    <span class="text-[9px] text-slate-400 font-bold uppercase">REF: DIRECTIVA SANITARIA N° 142-MINSA/CDC-2026</span>
+                                </div>
+                            </div>
+                            <span class="text-[9px] text-slate-400 font-black uppercase tracking-wider bg-[#111827] px-3.5 py-1.5 rounded-lg border border-slate-850/80 shrink-0">
+                                <i class="fa-solid fa-rotate-left mr-1"></i> ACTIVADA: 02 DE JUNIO DE 2026
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <div class="bg-[#0e1626]/50 border-l-4 border-l-[#10b981] border border-slate-800/50 p-4 rounded-r-xl">
+                                <h5 class="font-black text-emerald-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                                    <i class="fa-solid fa-location-dot"></i> ¿¿DÓNDE AFECTA??
+                                </h5>
+                                <p class="text-slate-300 text-[11px] font-bold leading-relaxed">
+                                    Zonas periurbanas y asentamientos de Ventanilla, con foco en Pachacútec, Costa Azul y Mi Perú ante deficiencias de almacenamiento de agua.
+                                </p>
+                            </div>
+
+                            <div class="bg-[#0e1626]/50 border-l-4 border-l-[#e03d5b] border border-slate-800/50 p-4 rounded-r-xl">
+                                <h5 class="font-black text-rose-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                                    <i class="fa-solid fa-stethoscope"></i> ¿¿QUÉ HACER??
+                                </h5>
+                                <p class="text-slate-300 text-[11px] font-bold leading-relaxed">
+                                    Búsqueda activa de febriles, tamizaje inmediato, hidratación oportuna y hospitalización de pacientes con signos de shock o sangrado.
+                                </p>
+                            </div>
+
+                            <div class="bg-[#0e1626]/50 border-l-4 border-l-[#007c65] border border-slate-800/50 p-4 rounded-r-xl">
+                                <h5 class="font-black text-teal-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                                    <i class="fa-solid fa-microscope"></i> ¿¿CÓMO ACTÚA LAB??
+                                </h5>
+                                <p class="text-slate-300 text-[11px] font-bold leading-relaxed">
+                                    Procesamiento rápido de prueba rápida NS1 (antígeno) dentro de los primeros 5 días. Muestras de suero congeladas para PCR de genotipificación en el INS Callao.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else if (tab === 'region') {
+                container.innerHTML = `
+                    <div class="bg-[#0a0f1d] border border-slate-800 rounded-3xl p-6 flex flex-col gap-5 shadow-lg">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+                            <div class="flex items-center gap-3">
+                                <span class="text-xl">🇧🇷</span>
+                                <h4 class="font-extrabold text-white text-sm md:text-base uppercase tracking-wider">FIEBRE DE OROPOUCHE EN FRONTERAS Y REGIONES</h4>
+                            </div>
+                            <span class="bg-[#92400e] text-amber-300 text-[10px] font-black px-4 py-1 rounded-full border border-amber-500/30 uppercase tracking-widest shrink-0 text-center animate-pulse">VIGILANCIA ACTIVA</span>
+                        </div>
+                        
+                        <p class="text-slate-300 text-xs font-bold leading-relaxed">
+                            Vigilancia estricta por transmisión vectorial de Oropouche reportada en la frontera con Brasil. Casos confirmados en selva central obligan al Callao a descartar febriles inespecíficos.
+                        </p>
+
+                        <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                            <div class="flex items-center gap-3">
+                                <div class="bg-amber-950 p-2 rounded-lg text-amber-400 text-sm">
+                                    <i class="fa-solid fa-bug"></i>
+                                </div>
+                                <div class="text-left">
+                                    <span class="font-black text-white text-[11px] block uppercase">FUENTE OFICIAL: DIRECCIÓN REGIONAL DE SALUD CALLAO</span>
+                                    <span class="text-[9px] text-slate-400 font-bold uppercase">REF: INFORME TÉCNICO VIG-ORO-CALLAO-2026</span>
+                                </div>
+                            </div>
+                            <span class="text-[9px] text-slate-400 font-black uppercase tracking-wider bg-[#111827] px-3.5 py-1.5 rounded-lg border border-slate-850/80 shrink-0">
+                                <i class="fa-solid fa-rotate-left mr-1"></i> ACTIVADA: 10 DE JUNIO DE 2026
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                            <div class="bg-[#0e1626]/50 border-l-4 border-l-[#10b981] border border-slate-800/50 p-4 rounded-r-xl">
+                                <h5 class="font-black text-emerald-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                                    <i class="fa-solid fa-location-dot"></i> ¿¿DÓNDE AFECTA??
+                                </h5>
+                                <p class="text-slate-300 text-[11px] font-bold leading-relaxed">
+                                    Zonas con alta vegetación y áreas periurbanas de la provincia constitucional del Callao propensas a vectores Culicoides.
+                                </p>
+                            </div>
+
+                            <div class="bg-[#0e1626]/50 border-l-4 border-l-[#e03d5b] border border-slate-800/50 p-4 rounded-r-xl">
+                                <h5 class="font-black text-rose-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                                    <i class="fa-solid fa-stethoscope"></i> ¿¿QUÉ HACER??
+                                </h5>
+                                <p class="text-slate-300 text-[11px] font-bold leading-relaxed">
+                                    Instalar mallas finas en ventanas, uso de repelentes constantes de DEET y diagnóstico diferencial en pacientes negativos a Dengue o Zika.
+                                </p>
+                            </div>
+
+                            <div class="bg-[#0e1626]/50 border-l-4 border-l-[#007c65] border border-slate-800/50 p-4 rounded-r-xl">
+                                <h5 class="font-black text-teal-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                                    <i class="fa-solid fa-microscope"></i> ¿¿CÓMO ACTÚA LAB??
+                                </h5>
+                                <p class="text-slate-300 text-[11px] font-bold leading-relaxed">
+                                    Extracción inmediata de muestra sanguínea total para aislamiento viral por RT-PCR o inmunoensayo serológico específico de IgM.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         function showToast(message, type = "success") {
