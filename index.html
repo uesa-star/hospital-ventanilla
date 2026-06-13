@@ -42,7 +42,7 @@
                 /* ESTILOS DE IMPRESIÓN / REPORTE PDF */
                 @media print {
                     body { background: white !important; color: black !important; }
-                    header, section.bg-rose-950, #welcomeModal, #alertsModal, #customDialogModal, #kardexForm, #formCasoSection, select, button, #excelFileInput, .no-print, #yearFilterContainer, .no-print-element {
+                    header, section.bg-rose-950, #welcomeModal, #alertsModal, #configModal, #customDialogModal, #kardexForm, #formCasoSection, select, button, #excelFileInput, .no-print, #yearFilterContainer, .no-print-element {
                         display: none !important;
                     }
                     main { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
@@ -70,15 +70,20 @@
                                 </div>
                         </div>
                                                 
-                        <div class="flex flex-row items-center gap-3 shrink-0 no-print">
-                                <!-- INDICADOR "ONLINE" QUE PARPADEA EN VERDE ESMERALDA -->
-                                <span id="updateSuccessBadge" class="bg-emerald-500/20 text-emerald-200 text-xs px-4 py-2.5 rounded-xl border border-emerald-500/30 flex items-center gap-2.5 font-black select-none animate-pulse shadow-sm shadow-emerald-500/10 h-[38px] leading-none">
+                        <div class="flex flex-wrap items-center gap-3 shrink-0 no-print">
+                                <!-- INDICADOR INTERACTIVO DE CONEXIÓN A GOOGLE SHEETS -->
+                                <button onclick="syncWithGoogleSheet()" id="updateSuccessBadge" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 text-xs px-4 py-2.5 rounded-xl border border-emerald-500/30 flex items-center gap-2.5 font-black transition-all shadow-sm shadow-emerald-500/10 h-[38px] leading-none">
                                         <span class="relative flex h-2 w-2">
-                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                                <span id="syncPulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                                <span id="syncDot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                         </span>
-                                        <span id="statusText">DATOS LOCALES ACTIVOS</span>
-                                </span>
+                                        <span id="statusText">CONECTANDO A SHEETS...</span>
+                                </button>
+
+                                <!-- CONFIGURADOR SHEET -->
+                                <button onclick="openConfigModal()" class="bg-slate-700 hover:bg-slate-600 transition-all text-white px-4 py-2.5 rounded-xl border border-slate-600 text-xs font-black flex items-center justify-center gap-2 shadow-md h-[38px] hover:scale-105 active:scale-95 duration-200 leading-none">
+                                        <i class="fa-solid fa-database text-emerald-400 text-base"></i> CONFIGURAR SHEET
+                                </button>
 
                                 <!-- BOTÓN GENERAR REPORTE PDF -->
                                 <button onclick="window.print()" class="bg-teal-600 hover:bg-teal-700 transition-all text-white px-4 py-2.5 rounded-xl border border-teal-500/30 text-xs font-black flex items-center justify-center gap-2 shadow-md uppercase tracking-wider h-[38px] hover:scale-105 active:scale-95 duration-200 leading-none">
@@ -104,6 +109,42 @@
                         <i class="fa-solid fa-bell text-xs animate-bounce"></i> Detalle de Alertas & Repuntes
                 </button>
         </section>
+
+        <!-- MODAL DE CONFIGURACIÓN DE CONEXIÓN GOOGLE SHEETS -->
+        <div id="configModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all duration-300">
+                <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full overflow-hidden border border-slate-200 transform scale-95 transition-transform duration-300 flex flex-col font-bold">
+                        <div class="bg-brand-dark text-white px-5 py-4 flex justify-between items-center shadow-md">
+                                <div class="flex items-center gap-2">
+                                        <i class="fa-solid fa-database text-emerald-400 text-lg"></i>
+                                        <h4 class="text-xs font-extrabold uppercase tracking-wider">Configurar Enlace de Google Sheets</h4>
+                                </div>
+                                <button onclick="closeConfigModal()" class="text-slate-300 hover:text-white transition-colors h-8 w-8 rounded-lg flex items-center justify-center">
+                                        <i class="fa-solid fa-xmark text-lg"></i>
+                                </button>
+                        </div>
+                        <div class="p-6 space-y-4 text-xs font-medium text-slate-700">
+                                <p class="text-slate-500 leading-relaxed font-semibold">
+                                        Configura el enlace publicado de tu hoja de cálculo para leer registros clínicos en tiempo real y el Apps Script Web App para enviar nuevos registros de manera interactiva.
+                                </p>
+                                <!-- URL de Lectura (CSV Publicado) -->
+                                <div class="flex flex-col gap-1.5">
+                                        <label class="text-[10px] text-slate-500 uppercase tracking-wide">1. URL de Lectura (Google Sheets publicado como CSV)</label>
+                                        <input type="text" id="configReadUrl" class="w-full border border-slate-200 rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-brand-teal focus:outline-none" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv">
+                                        <span class="text-[9px] text-slate-400 block mt-0.5">Por defecto se utiliza el enlace corporativo directo provisto.</span>
+                                </div>
+                                <!-- URL de Escritura (Apps Script) -->
+                                <div class="flex flex-col gap-1.5 pt-2">
+                                        <label class="text-[10px] text-slate-500 uppercase tracking-wide">2. URL de Escritura (Apps Script Web App para Guardar)</label>
+                                        <input type="text" id="configWriteUrl" class="w-full border border-slate-200 rounded-lg p-2.5 font-medium focus:ring-2 focus:ring-brand-teal focus:outline-none" placeholder="https://script.google.com/macros/s/.../exec">
+                                        <span class="text-[9px] text-slate-400 block mt-0.5">Se utiliza para enviar el formulario manual de muestras directamente al Google Sheets en la nube.</span>
+                                </div>
+                        </div>
+                        <div class="bg-slate-50 px-5 py-4 flex justify-end gap-2 border-t border-slate-100">
+                                <button onclick="saveConfigSettings()" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2 px-4 rounded-xl uppercase tracking-wider transition-colors font-bold text-xs flex items-center gap-1"><i class="fa-solid fa-floppy-disk"></i> Guardar y Conectar</button>
+                                <button onclick="closeConfigModal()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 py-2 px-4 rounded-xl uppercase tracking-wider transition-colors font-bold text-xs">Cancelar</button>
+                        </div>
+                </div>
+        </div>
 
         <!-- MODAL DE ALERTAS DETALLADAS -->
         <div id="alertsModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center z-50 transition-all duration-300 opacity-0 pointer-events-none">
@@ -193,15 +234,15 @@
                         <div class="p-6 bg-slate-50/40">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 w-full text-sm">
                                         
-                                        <!-- Filtro 1: Años en Vigilancia (Asignado id="yearFilterContainer" para arreglar apertura) -->
+                                        <!-- Filtro 1: Años en Vigilancia (Filtro interactivo optimizado) -->
                                         <div class="flex flex-col gap-1.5 relative" id="yearFilterContainer">
                                                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Años en Vigilancia</span>
                                                 <div class="relative">
-                                                        <button type="button" id="yearDropdownBtn" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer flex justify-between items-center h-[38px] transition-all">
+                                                        <button type="button" id="yearDropdownBtn" onclick="toggleYearDropdown(event)" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-brand-teal focus:outline-none shadow-sm cursor-pointer flex justify-between items-center h-[38px] transition-all">
                                                                 <span id="selectedYearsText" class="truncate">Todos los Años</span>
                                                                 <i class="fa-solid fa-chevron-down text-slate-400 text-[10px] ml-1 shrink-0"></i>
                                                         </button>
-                                                        <!-- Menú desplegable flotante de Años -->
+                                                        <!-- Menú desplegable de Años -->
                                                         <div id="yearDropdownMenu" class="hidden absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-30 p-3 flex flex-col gap-2 max-h-48 overflow-y-auto custom-scrollbar">
                                                                 <div class="flex justify-between items-center border-b border-slate-100 pb-1.5 mb-1.5 no-print">
                                                                         <button type="button" id="selectAllYearsBtn" class="text-[9px] font-extrabold text-brand-teal hover:underline uppercase">Todos</button>
@@ -298,7 +339,7 @@
                         <div class="bg-white p-4 rounded-2xl border border-slate-200/85 shadow-md flex items-center justify-between min-h-[100px]">
                                 <div>
                                         <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Positivos (+)</p>
-                                        <h3 id="kpiPositivos" class="text-xl font-black text-rose-650 mt-1 leading-none">0</h3>
+                                        <h3 id="kpiPositivos" class="text-xl font-black text-rose-700 mt-1 leading-none">0</h3>
                                         <p class="text-[9px] text-rose-500 mt-2 font-bold flex items-center gap-1"><i class="fa-solid fa-virus mr-0.5 animate-pulse"></i> Alerta</p>
                                 </div>
                                 <div class="bg-rose-50 p-2 text-rose-600 rounded-full shrink-0 shadow-inner">
@@ -351,7 +392,7 @@
                         </div>
                 </section>
 
-                <!-- ================= 3. SECCIÓN DE GRÁFICOS ANALÍTICOS (6 GRÁFICOS ANALÍTICOS DE ALTO RENDIMIENTO) ================= -->
+                <!-- ================= 3. SECCIÓN DE GRÁFICOS ANALÍTICOS (6 GRÁFICOS DE ALTO RENDIMIENTO) ================= -->
                 <section class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         
                         <!-- GRÁFICO 1: COMPARATIVO INTERANUAL DE TENDENCIAS (Ancho completo de la rejilla - lg:col-span-3) -->
@@ -541,7 +582,7 @@
                                         <!-- Botones del Formulario -->
                                         <div class="col-span-1 sm:col-span-3 flex justify-end gap-2.5 mt-2 pt-2 border-t border-slate-100">
                                                 <button type="button" id="clearFormBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 px-5 rounded-xl uppercase tracking-wider transition-colors">Limpiar</button>
-                                                <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 px-6 rounded-xl uppercase tracking-wider transition-all shadow-md flex items-center gap-2"><i class="fa-solid fa-plus"></i> Guardar Ficha</button>
+                                                <button type="submit" id="formSubmitBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 px-6 rounded-xl uppercase tracking-wider transition-all shadow-md flex items-center gap-2"><i class="fa-solid fa-plus"></i> Guardar Ficha</button>
                                         </div>
                                 </form>
                         </div>
@@ -642,6 +683,9 @@
 
         <!-- SCRIPTING PRINCIPAL -->
         <script>
+                // URL FIJA Y PRECONECTADA DE GOOGLE SHEETS
+                const GOOGLE_SHEET_PERMANENT_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH-sGKVHNCt-kPiOoVv1BnmsTSE1onfi0f05kk0hh8Uc0l0kH3V8QzY22UdS23TjA9MCX8tDYwSNe7/pub?gid=1171051655&single=true&output=csv";
+
                 let dbRawData = [];
                 let filteredData = [];
                 let selectedYearsSet = new Set();
@@ -657,7 +701,53 @@
                 let chartSectoresInstance = null;
                 let chartEdadesInstance = null;
 
-                // --- BASE DE DATOS SIMULADA / CENTRO CLÍNICO COHORT INTEGRADO (110 CASOS) ---
+                // --- MAPEO DE COLUMNAS DE GOOGLE SHEETS A BASE LOCAL ---
+                function mapSheetRow(row, index) {
+                        const findKey = (keys, synonyms) => {
+                                const found = keys.find(k => synonyms.includes(k.toLowerCase().trim()));
+                                return found ? found : null;
+                        };
+
+                        const keys = Object.keys(row);
+                        const getVal = (synonyms, def) => {
+                                const key = findKey(keys, synonyms);
+                                return key ? String(row[key]).trim() : def;
+                        };
+
+                        const getInt = (synonyms, def) => {
+                                const key = findKey(keys, synonyms);
+                                return key ? parseInt(row[key]) || def : def;
+                        };
+
+                        let ano = getInt(["año", "ano", "year", "temporalidad_año", "año_not", "año_notificacion"], 2026);
+                        let semana = getInt(["semana", "semana_epidemiologica", "semana_not", "week", "semana_epi"], 1);
+                        let edad = getInt(["edad", "age", "años"], 30);
+                        let sexo = getVal(["sexo", "sex", "genero"], "F").toUpperCase();
+                        if (sexo.startsWith("M")) sexo = "M";
+                        else if (sexo.startsWith("F")) sexo = "F";
+
+                        let resultado = getVal(["resultado", "resultado_clinico", "result", "diagnostico_estado", "estado_paciente", "resultado_dx", "dx_resultado"], "PENDIENTE").toUpperCase();
+
+                        return {
+                                id: index + 1,
+                                dni: getVal(["dni", "documento", "dni_paciente", "documento_identidad"], "N/A"),
+                                nombres: getVal(["nombres", "nombres_paciente", "nombre", "first_name"], "Paciente"),
+                                apellidos: getVal(["apellidos", "apellidos_paciente", "apellido", "last_name"], "Importado"),
+                                edad: edad,
+                                sexo: sexo,
+                                sector: getVal(["sector", "distrito", "procedencia", "zona", "localidad"], "Otros"),
+                                testType: getVal(["diagnostico", "enfermedad", "diagnostico_cie10", "prueba", "testtype", "prueba_solicitada", "enfermedad_not"], "DENGUE NS1").toUpperCase(),
+                                semana: semana,
+                                ano: ano,
+                                resultado: resultado,
+                                e_salud: getVal(["establecimiento_salud", "e_salud", "establecimiento", "ipress"], "Hospital de Ventanilla"),
+                                red: "BEPE CALLAO",
+                                microred: "VENTANILLA",
+                                fecha_ini: getVal(["fecha_notificacion", "fecha_not", "fecha_ini", "fecha"], `${ano}-01-01`)
+                        };
+                }
+
+                // --- BASE DE DATOS SIMULADA / FALLBACK CLÍNICO COHORT INTEGRADO (110 CASOS) ---
                 function loadDatabaseSimulated() {
                         const apellidos = ["Soto", "García", "Quispe", "Mendoza", "Alvarez", "Vargas", "Huaman", "Flores", "Rojas", "Sanchez", "Chavez", "Torres", "Ramos", "Espinoza", "Díaz", "Castro", "Mera", "Palacios", "Ventanilla", "Angamos"];
                         const nombres = ["Carlos", "Ana", "Luis", "Carmen", "Juan", "Rosa", "José", "María", "Pedro", "Sofía", "Miguel", "Lucía", "Jorge", "Laura", "Daniel", "Elena", "Felipe", "Gabriela", "Hugo", "Verónica"];
@@ -676,7 +766,6 @@
                                 let sector = sectores[Math.floor(Math.random() * sectores.length)];
                                 let prueba = pruebas[Math.floor(Math.random() * pruebas.length)];
                                 let res = resultados[Math.floor(Math.random() * resultados.length)];
-                                // Casuística epidemiológica: si es dengue en Pachacútec o Mi Perú tiene más chance de ser positivo
                                 if((prueba.includes("DENGUE") && (sector === "Pachacútec" || sector === "Mi Perú")) && Math.random() > 0.3) {
                                         res = "POSITIVO";
                                 }
@@ -702,23 +791,83 @@
                         return result;
                 }
 
-                window.onload = function () {
-                        // Cargar datos simulados como censo inicial
-                        dbRawData = loadDatabaseSimulated();
-                        
-                        // Inicializar lista de años únicos
+                // --- PROCEDIMIENTO DE SINC DE ALTA DISPONIBILIDAD CON GOOGLE SHEET ---
+                async function syncWithGoogleSheet() {
+                        const readUrl = localStorage.getItem("hospitalVentanillaReadUrl") || GOOGLE_SHEET_PERMANENT_URL;
+                        const badge = document.getElementById("updateSuccessBadge");
+                        const statusText = document.getElementById("statusText");
+                        const syncPulse = document.getElementById("syncPulse");
+                        const syncDot = document.getElementById("syncDot");
+
+                        try {
+                                statusText.textContent = "SINO-SINC SINCRONIZANDO...";
+                                badge.className = "bg-blue-500/20 text-blue-200 text-xs px-4 py-2.5 rounded-xl border border-blue-500/30 flex items-center gap-2.5 font-black transition-all shadow-sm shadow-blue-500/10 h-[38px] leading-none animate-pulse";
+                                syncPulse.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75";
+                                syncDot.className = "relative inline-flex rounded-full h-2 w-2 bg-blue-500";
+
+                                const response = await fetch(readUrl);
+                                if (!response.ok) throw new Error("La respuesta de Google Sheets no es correcta");
+                                
+                                const csvText = await response.text();
+                                Papa.parse(csvText, {
+                                        header: true,
+                                        skipEmptyLines: true,
+                                        complete: function (results) {
+                                                if (results.data && results.data.length > 0) {
+                                                        dbRawData = results.data.map((row, index) => mapSheetRow(row, index));
+                                                        initializeSystemData();
+                                                        showToast(`Sincronización exitosa. Se leyeron ${dbRawData.length} registros del Google Sheet.`, "success");
+                                                        
+                                                        statusText.textContent = "SINO-SINC ACTIVO (SHEET)";
+                                                        badge.className = "bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 text-xs px-4 py-2.5 rounded-xl border border-emerald-500/30 flex items-center gap-2.5 font-black transition-all shadow-sm shadow-emerald-500/10 h-[38px] leading-none";
+                                                        syncPulse.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
+                                                        syncDot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+                                                } else {
+                                                        throw new Error("El documento está vacío");
+                                                }
+                                        },
+                                        error: function() {
+                                                throw new Error("Error procesando CSV con PapaParse");
+                                        }
+                                });
+
+                        } catch (error) {
+                                console.error(error);
+                                showToast("No se pudo conectar a la base de datos en la nube. Cargando datos locales.", "error");
+                                dbRawData = loadDatabaseSimulated();
+                                initializeSystemData();
+
+                                statusText.textContent = "CONECTADO A DEMO LOCAL";
+                                badge.className = "bg-rose-500/20 text-rose-300 text-xs px-4 py-2.5 rounded-xl border border-rose-500/30 flex items-center gap-2.5 font-black h-[38px] leading-none";
+                                syncPulse.className = "hidden";
+                                syncDot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500";
+                        }
+                }
+
+                function initializeSystemData() {
+                        selectedYearsSet.clear();
                         let listYears = [...new Set(dbRawData.map(d => d.ano))].sort((a,b) => b-a);
                         listYears.forEach(y => selectedYearsSet.add(y));
 
                         // Renderizar componentes
                         buildYearCheckboxes();
                         buildFilterSelects();
-                        switchAlertTab('oms');
                         applyFilters();
-                        attachInteractiveEvents();
+                }
 
-                        // Mostrar Toast Inicial de Éxito
-                        showToast("Sistema de Vigilancia Clínico cargado correctamente", "success");
+                window.onload = function () {
+                        // Sincronizar automáticamente en la carga utilizando el enlace permanente por defecto
+                        if(!localStorage.getItem("hospitalVentanillaReadUrl")) {
+                                localStorage.setItem("hospitalVentanillaReadUrl", GOOGLE_SHEET_PERMANENT_URL);
+                        }
+                        
+                        document.getElementById("configReadUrl").value = localStorage.getItem("hospitalVentanillaReadUrl") || GOOGLE_SHEET_PERMANENT_URL;
+                        document.getElementById("configWriteUrl").value = localStorage.getItem("hospitalVentanillaWriteUrl") || "";
+
+                        // Iniciar Sincronización Automática
+                        syncWithGoogleSheet();
+                        switchAlertTab('oms');
+                        attachInteractiveEvents();
                 };
 
                 // --- CAPA DE DIÁLOGOS NO INTRUSIVOS (TOASTS & CUSTOM MODAL) ---
@@ -728,27 +877,24 @@
                         
                         const toast = document.createElement("div");
                         toast.className = `p-4 rounded-xl shadow-lg border text-xs font-bold flex items-center gap-2.5 bg-white pointer-events-auto transition-all duration-300 ease-out transform translate-y-2 opacity-0 shrink-0 ${
-                                type === "success" ? "border-emerald-500 text-emerald-800" : "border-rose-500 text-rose-800"
+                                type === "success" ? "border-emerald-500 text-emerald-800" : (type === "error" ? "border-rose-500 text-rose-800" : "border-amber-500 text-amber-850")
                         }`;
                         toast.innerHTML = `
-                                <i class="fa-solid ${type === "success" ? "fa-circle-check text-emerald-500" : "fa-triangle-exclamation text-rose-500"} text-base animate-pulse"></i>
+                                <i class="fa-solid ${type === "success" ? "fa-circle-check text-emerald-500" : (type === "error" ? "fa-triangle-exclamation text-rose-500" : "fa-info-circle text-amber-500")} text-base animate-pulse"></i>
                                 <span>${message}</span>
                         `;
                         container.appendChild(toast);
                         
-                        // Animación de entrada
                         setTimeout(() => {
                                 toast.classList.remove("translate-y-2", "opacity-0");
                         }, 10);
 
-                        // Eliminar Toast
                         setTimeout(() => {
                                 toast.classList.add("translate-y-2", "opacity-0");
                                 setTimeout(() => { toast.remove(); }, 300);
-                        }, 3000);
+                        }, 3500);
                 }
 
-                // Confirmación interactiva personalizada
                 function showCustomConfirm(message, onConfirm) {
                         const modal = document.getElementById("customDialogModal");
                         const msg = document.getElementById("customDialogMessage");
@@ -769,6 +915,28 @@
                                 close();
                                 onConfirm();
                         };
+                }
+
+                // --- GESTIÓN DE CONFIGURACIÓN ---
+                function openConfigModal() {
+                        const modal = document.getElementById("configModal");
+                        modal.classList.remove("hidden");
+                }
+
+                function closeConfigModal() {
+                        document.getElementById("configModal").classList.add("hidden");
+                }
+
+                function saveConfigSettings() {
+                        const readUrl = document.getElementById("configReadUrl").value.trim();
+                        const writeUrl = document.getElementById("configWriteUrl").value.trim();
+
+                        localStorage.setItem("hospitalVentanillaReadUrl", readUrl || GOOGLE_SHEET_PERMANENT_URL);
+                        localStorage.setItem("hospitalVentanillaWriteUrl", writeUrl);
+
+                        closeConfigModal();
+                        showToast("Configuración guardada exitosamente. Intentando sincronizar...", "success");
+                        syncWithGoogleSheet();
                 }
 
                 // --- CONTROL DE CARGA DIGITAL DE EXCEL / CSV ---
@@ -797,7 +965,6 @@
                                 };
                                 reader.readAsText(file);
                         } else {
-                                // Leer formato Excel
                                 reader.onload = function (e) {
                                         try {
                                                 const data = new Uint8Array(e.target.result);
@@ -825,7 +992,6 @@
                                 let nextId = dbRawData.length > 0 ? Math.max(...dbRawData.map(d => d.id)) + 1 : 1;
 
                                 rows.forEach(row => {
-                                        // Mapeo inteligente con soporte de mayúsculas/minúsculas y sinónimos
                                         let anoVal = parseInt(row.AÑO || row.ano || row.Ano || row.Year || row.year) || 2026;
                                         let semVal = parseInt(row.SEMANA || row.semana || row.Semana || row.Week || row.week) || 1;
                                         let testTypeVal = String(row.ENFERMEDAD || row.diagnostic || row.DIAGNOSTICO || row.testType || row.Prueba || row.test || "DENGUE NS1").toUpperCase();
@@ -837,9 +1003,8 @@
                                         let nombresVal = String(row.NOMBRES || row.nombres || row.Nombre || "Paciente");
                                         let apellidosVal = String(row.APELLIDOS || row.apellidos || row.Apellido || "Importado");
 
-                                        // Limpieza de valores
                                         if (sexoVal.startsWith("M")) sexoVal = "M";
-                                        else if (sexoVal.startsWith("F") || sexoVal.startsWith("G")) sexoVal = "F";
+                                        else if (sexoVal.startsWith("F")) sexoVal = "F";
 
                                         dbRawData.push({
                                                 id: nextId++,
@@ -862,7 +1027,6 @@
                                         selectedYearsSet.add(anoVal);
                                 });
 
-                                // Refrescar filtros y recrear selectores
                                 buildYearCheckboxes();
                                 buildFilterSelects();
                                 applyFilters();
@@ -878,11 +1042,16 @@
                 }
 
                 // --- ADMINISTRACIÓN DE FILTROS INTERACTIVOS ---
+                function toggleYearDropdown(event) {
+                        if (event) event.stopPropagation();
+                        const menu = document.getElementById("yearDropdownMenu");
+                        menu.classList.toggle("hidden");
+                }
+
                 function buildYearCheckboxes() {
                         const container = document.getElementById("yearCheckboxesContainer");
                         if (!container) return;
 
-                        // Obtener años únicos
                         let allYears = [...new Set(dbRawData.map(d => d.ano))].sort((a,b) => b-a);
                         container.innerHTML = "";
 
@@ -898,7 +1067,6 @@
                                 container.appendChild(label);
                         });
 
-                        // Agregar eventos a las checkboxes dinámicas de año
                         const checkBoxes = container.querySelectorAll(".year-checkbox");
                         checkBoxes.forEach(cb => {
                                 cb.addEventListener("change", function () {
@@ -945,15 +1113,12 @@
                         const testTypeSelect = document.getElementById("filterTestType");
                         const weekSelect = document.getElementById("filterWeek");
 
-                        // Guardar selecciones actuales
                         const currTest = testTypeSelect.value;
                         const currWeek = weekSelect.value;
 
-                        // Obtener valores únicos
                         const uniqueTests = [...new Set(dbRawData.map(d => d.testType))].sort();
                         const uniqueWeeks = [...new Set(dbRawData.map(d => d.semana))].sort((a,b) => a-b);
 
-                        // Llenar select de tipos de prueba
                         testTypeSelect.innerHTML = '<option value="ALL">Todas las Pruebas</option>';
                         uniqueTests.forEach(t => {
                                 let opt = document.createElement("option");
@@ -962,7 +1127,6 @@
                                 testTypeSelect.appendChild(opt);
                         });
 
-                        // Llenar select de semanas
                         weekSelect.innerHTML = '<option value="ALL">Todas</option>';
                         uniqueWeeks.forEach(w => {
                                 let opt = document.createElement("option");
@@ -971,13 +1135,11 @@
                                 weekSelect.appendChild(opt);
                         });
 
-                        // Restaurar selección si existe
                         if (uniqueTests.includes(currTest)) testTypeSelect.value = currTest;
                         if (uniqueWeeks.includes(parseInt(currWeek))) weekSelect.value = currWeek;
                 }
 
                 function resetFilters() {
-                        // Seleccionar todos los años
                         const checkboxes = document.querySelectorAll("#yearCheckboxesContainer .year-checkbox");
                         checkboxes.forEach(cb => {
                                 cb.checked = true;
@@ -985,7 +1147,6 @@
                         });
                         updateSelectedYearsLabel();
 
-                        // Resetear selectores estándar
                         document.getElementById("filterTestType").value = "ALL";
                         document.getElementById("filterWeek").value = "ALL";
                         document.getElementById("filterResult").value = "ALL";
@@ -995,7 +1156,6 @@
                         showToast("Filtros limpiados a su estado base", "info");
                 }
 
-                // --- LÓGICA DE APLICACIÓN DE FILTROS ---
                 function applyFilters() {
                         const tType = document.getElementById("filterTestType").value;
                         const week = document.getElementById("filterWeek").value;
@@ -1003,21 +1163,11 @@
                         const sector = document.getElementById("filterSector").value;
 
                         filteredData = dbRawData.filter(d => {
-                                // Filtro de año
                                 if (!selectedYearsSet.has(d.ano)) return false;
-
-                                // Filtro tipo de prueba
                                 if (tType !== "ALL" && d.testType !== tType) return false;
-
-                                // Filtro semana
                                 if (week !== "ALL" && d.semana !== parseInt(week)) return false;
-
-                                // Filtro resultado
                                 if (res !== "ALL" && d.resultado !== res) return false;
-
-                                // Filtro sector
                                 if (sector !== "ALL" && d.sector !== sector) return false;
-
                                 return true;
                         });
 
@@ -1030,13 +1180,9 @@
 
                 // --- COMPUTACIÓN DE KPIs Y ALERTA DE POSITIVIDAD ---
                 function calculateKPIs() {
-                        // KPI 1: Censo general de registros
                         document.getElementById("kpiTotal").textContent = dbRawData.length;
-
-                        // KPI 2: Casos filtrados activos
                         document.getElementById("kpiPatogeno").textContent = filteredData.length;
                         
-                        // KPI 3: Semana activa con mayor incidencia
                         const weekCounts = {};
                         filteredData.forEach(d => {
                                 weekCounts[d.semana] = (weekCounts[d.semana] || 0) + 1;
@@ -1052,7 +1198,6 @@
                         document.getElementById("kpiSETitle").textContent = `Casos S.E. ${maxWeek}`;
                         document.getElementById("kpiSEValue").textContent = maxWeekCount;
 
-                        // KPI 4, 5 y 6: Distribución de Resultados
                         const posCount = filteredData.filter(d => d.resultado === "POSITIVO").length;
                         const negCount = filteredData.filter(d => d.resultado === "NEGATIVO").length;
                         const pendCount = filteredData.filter(d => d.resultado === "PENDIENTE").length;
@@ -1061,7 +1206,6 @@
                         document.getElementById("kpiNegativos").textContent = negCount;
                         document.getElementById("kpiPendientes").textContent = pendCount;
 
-                        // KPI 7: Tasa de Positividad y Badge Dinámico de Alerta
                         const totalCalculable = posCount + negCount;
                         let tasa = 0.0;
                         if (totalCalculable > 0) {
@@ -1092,7 +1236,6 @@
                                 kpiTasaIcon.className = "bg-slate-100 p-2 text-slate-700 rounded-full shrink-0 shadow-inner";
                         }
 
-                        // KPI 8: Sector con mayor número de casos activos
                         const sectorCounts = {};
                         filteredData.forEach(d => {
                                 sectorCounts[d.sector] = (sectorCounts[d.sector] || 0) + 1;
@@ -1118,14 +1261,9 @@
                         renderChartEdades();
                 }
 
-                // GRÁFICO 1: Comparativa Interanual Trianual
                 function renderChartTrianual() {
                         const ctx = document.getElementById("chartTrianualComparativo").getContext("2d");
-                        
-                        // Meses
                         const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"];
-                        
-                        // Estructurar mapa por año y mes
                         const activeYearsList = [...selectedYearsSet].sort((a,b) => a-b);
                         const datasets = [];
 
@@ -1139,7 +1277,6 @@
                                 const yrData = Array(12).fill(0);
                                 filteredData.forEach(d => {
                                         if (d.ano === yr) {
-                                                // Simular distribución de meses basados en la semana (aprox. 4 semanas por mes)
                                                 let mesIndex = Math.min(Math.floor((d.semana - 1) / 4.4), 11);
                                                 yrData[mesIndex]++;
                                         }
@@ -1177,7 +1314,6 @@
                         });
                 }
 
-                // GRÁFICO 2: Casos por Mes
                 function renderChartMensual() {
                         const ctx = document.getElementById("chartMensual").getContext("2d");
                         const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"];
@@ -1210,11 +1346,8 @@
                         });
                 }
 
-                // GRÁFICO 3: Distribución por S.E.
                 function renderChartSemanal() {
                         const ctx = document.getElementById("chartSemanal").getContext("2d");
-                        
-                        // Agrupar semanas
                         const semCounts = Array(53).fill(0);
                         filteredData.forEach(d => {
                                 if (d.semana >= 1 && d.semana <= 53) {
@@ -1222,7 +1355,6 @@
                                 }
                         });
 
-                        // Labels simplificados para legibilidad
                         const labels = Array.from({length: 53}, (_, i) => `S${i+1}`);
 
                         if (chartSemanalInstance) chartSemanalInstance.destroy();
@@ -1254,10 +1386,8 @@
                         });
                 }
 
-                // GRÁFICO 4: Tipos de Examen
                 function renderChartExamenes() {
                         const ctx = document.getElementById("chartExamenes").getContext("2d");
-                        
                         const testCounts = {};
                         filteredData.forEach(d => {
                                 testCounts[d.testType] = (testCounts[d.testType] || 0) + 1;
@@ -1293,11 +1423,9 @@
                         });
                 }
 
-                // GRÁFICO 5: Resultados por Sector
                 function renderChartSectores() {
                         const ctx = document.getElementById("chartSectores").getContext("2d");
                         const sectores = ["Pachacútec", "Mi Perú", "Ventanilla Alta", "Ventanilla Baja", "Villa Los Reyes", "Angamos", "Otros"];
-                        
                         const posData = Array(sectores.length).fill(0);
                         const negData = Array(sectores.length).fill(0);
 
@@ -1333,26 +1461,21 @@
                         });
                 }
 
-                // GRÁFICO 6: Pirámide de Población (Población por Edad y Sexo)
                 function renderChartEdades() {
                         const ctx = document.getElementById("chartEdades").getContext("2d");
                         const ageGroups = ["0-11", "12-17", "18-29", "30-59", "60+"];
-                        
                         const mascCounts = Array(5).fill(0);
                         const femCounts = Array(5).fill(0);
 
                         filteredData.forEach(d => {
-                                let ageIdx = 4; // Mayor de 60
+                                let ageIdx = 4;
                                 if (d.edad <= 11) ageIdx = 0;
                                 else if (d.edad <= 17) ageIdx = 1;
                                 else if (d.edad <= 29) ageIdx = 2;
                                 else if (d.edad <= 59) ageIdx = 3;
 
-                                if (d.sexo === "M") {
-                                        mascCounts[ageIdx]++;
-                                } else {
-                                        femCounts[ageIdx]++;
-                                }
+                                if (d.sexo === "M") mascCounts[ageIdx]++;
+                                else femCounts[ageIdx]++;
                         });
 
                         if (chartEdadesInstance) chartEdadesInstance.destroy();
@@ -1417,13 +1540,11 @@
                                 const tr = document.createElement("tr");
                                 tr.className = "hover:bg-slate-50 transition-colors border-b border-slate-100";
 
-                                // Color de resultado clínico
                                 let resBadge = "bg-slate-100 text-slate-600";
                                 if (d.resultado === "POSITIVO") resBadge = "bg-rose-50 text-rose-700 border border-rose-200";
                                 else if (d.resultado === "NEGATIVO" || d.resultado === "DESCARTADO") resBadge = "bg-emerald-50 text-emerald-700 border border-emerald-200";
                                 else if (d.resultado === "PENDIENTE") resBadge = "bg-amber-50 text-amber-700 border border-amber-200 animate-pulse";
 
-                                // Sexo badge
                                 let sexBadge = d.sexo === "M" ? "bg-blue-50 text-blue-600" : "bg-fuchsia-50 text-fuchsia-600";
 
                                 tr.innerHTML = `
@@ -1484,8 +1605,8 @@
                         }
                 }
 
-                // --- REGISTRO MANUAL DE MUESTRAS (FORMULARIO) ---
-                function handleManualSubmit(event) {
+                // --- REGISTRO MANUAL DE MUESTRAS (FORMULARIO VINCULADO AL SHEET) ---
+                async function handleManualSubmit(event) {
                         event.preventDefault();
 
                         const dni = document.getElementById("formDni").value.trim();
@@ -1499,8 +1620,49 @@
                         const ano = parseInt(document.getElementById("formYear").value);
                         const resultado = document.getElementById("formResult").value;
 
-                        const nextId = dbRawData.length > 0 ? Math.max(...dbRawData.map(d => d.id)) + 1 : 1;
+                        const writeUrl = localStorage.getItem("hospitalVentanillaWriteUrl") || "";
+                        const submitBtn = document.getElementById("formSubmitBtn");
 
+                        // Si hay URL de escritura (Apps Script) configurado, enviamos un POST en tiempo real
+                        if (writeUrl) {
+                                try {
+                                        submitBtn.disabled = true;
+                                        submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> ENVIANDO...`;
+
+                                        const payload = {
+                                                semana_epidemiologica: semana,
+                                                fecha_notificacion: `${ano}-05-12`,
+                                                nombres_paciente: nombres + " " + apellidos,
+                                                edad: edad,
+                                                sexo: sexo,
+                                                diagnostico_cie10: testType,
+                                                distrito: sector,
+                                                estado_paciente: resultado,
+                                                establecimiento_salud: "Hospital de Ventanilla",
+                                                usuario_registra: "Dashboard Web"
+                                        };
+
+                                        await fetch(writeUrl, {
+                                                method: "POST",
+                                                mode: "no-cors",
+                                                headers: {
+                                                        "Content-Type": "application/json"
+                                                },
+                                                body: JSON.stringify(payload)
+                                        });
+
+                                        showToast("Enviado al servidor Sheets correctamente.", "success");
+                                } catch (err) {
+                                        console.error(err);
+                                        showToast("Error de transmisión a Google Sheets. Guardando de forma local temporal.", "error");
+                                } finally {
+                                        submitBtn.disabled = false;
+                                        submitBtn.innerHTML = `<i class="fa-solid fa-plus"></i> Guardar Ficha`;
+                                }
+                        }
+
+                        // Agregar caso localmente para actualización inmediata visual
+                        const nextId = dbRawData.length > 0 ? Math.max(...dbRawData.map(d => d.id)) + 1 : 1;
                         dbRawData.unshift({
                                 id: nextId,
                                 dni: dni,
@@ -1520,14 +1682,17 @@
                         });
 
                         selectedYearsSet.add(ano);
-
-                        // Recargar selectores y aplicar filtros
                         buildYearCheckboxes();
                         buildFilterSelects();
                         applyFilters();
                         resetForm();
 
-                        showToast("Ficha clínica de laboratorio guardada correctamente.", "success");
+                        if (!writeUrl) {
+                                showToast("Ficha clínica guardada localmente. Configura Apps Script para sincronizar con la nube.", "info");
+                        } else {
+                                // Re-sincronizar automáticamente para obtener la base de datos fresca
+                                setTimeout(() => syncWithGoogleSheet(), 2000);
+                        }
                 }
 
                 function resetForm() {
@@ -1620,7 +1785,6 @@
                                 return;
                         }
 
-                        // Generar cadena CSV plana
                         let csvContent = "data:text/csv;charset=utf-8,";
                         csvContent += "DNI,Nombres,Apellidos,Edad,Sexo,Prueba,Semana,Ano,Sector,Resultado\n";
 
@@ -1678,7 +1842,6 @@
                 function switchAlertTab(tab) {
                         activeAlertTab = tab;
                         
-                        // Estilos de botones de pestañas
                         const omsBtn = document.getElementById("tabBtn-oms");
                         const cdcBtn = document.getElementById("tabBtn-cdc");
                         const regBtn = document.getElementById("tabBtn-region");
@@ -1785,12 +1948,6 @@
                         const yearDropdownBtn = document.getElementById("yearDropdownBtn");
                         const yearDropdownMenu = document.getElementById("yearDropdownMenu");
 
-                        // Apertura del dropdown previendo la propagación del click al document
-                        yearDropdownBtn.addEventListener("click", function (e) {
-                                e.stopPropagation();
-                                yearDropdownMenu.classList.toggle("hidden");
-                        });
-
                         document.getElementById("selectAllYearsBtn").addEventListener("click", function(e) {
                                 selectAllYears(true, e);
                         });
@@ -1799,7 +1956,7 @@
                                 selectAllYears(false, e);
                         });
 
-                        // Cerrar al hacer clic fuera
+                        // Cerrar al hacer clic fuera del filtro de años
                         document.addEventListener("click", function (e) {
                                 const container = document.getElementById("yearFilterContainer");
                                 if (container && !container.contains(e.target)) {
