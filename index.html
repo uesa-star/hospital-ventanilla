@@ -1050,7 +1050,9 @@
                         const color = colorPalette[index % colorPalette.length];
                         const mesesData = Array(12).fill(0);
                         
-                        dbRawData.forEach(d => {
+                        // CORRECCIÓN CLAVE: Usar filteredData en lugar de dbRawData para que las curvas de tendencias interanuales 
+                        // respondan reactivamente a los filtros seleccionados de patógenos, sectores y resultados.
+                        filteredData.forEach(d => {
                             if (d.ano === yr) {
                                 const mesIdx = Math.min(11, Math.floor(d.sem / 4.4));
                                 mesesData[mesIdx]++;
