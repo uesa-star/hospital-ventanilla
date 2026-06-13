@@ -61,32 +61,27 @@
     <!-- CONTENEDOR DE TOASTS SILENCIOSOS -->
     <div id="toastContainer" class="fixed top-5 right-5 z-[150] flex flex-col gap-2 pointer-events-none no-print"></div>
 
-    <!-- MODAL DE BIENVENIDA Y SINCRONIZACIÓN COMPLETADA (CARGA INSTANTÁNEA POR DEFECTO PARA MICROSEGUNDOS REALES) -->
+    <!-- MODAL DE BIENVENIDA Y SINCRONIZACIÓN COMPLETADA -->
     <div id="welcomeModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md flex items-center justify-center z-[100] transition-opacity duration-200 no-print">
         <div class="bg-white rounded-[2rem] p-8 max-w-sm w-full mx-4 shadow-2xl flex flex-col items-center text-center border border-slate-100 transform scale-100 transition-all duration-200">
-            <!-- Icono de Check de Sincronización Exitosa -->
             <div class="bg-emerald-100 text-emerald-500 rounded-full h-16 w-16 flex items-center justify-center mb-5 shadow-inner">
                 <i class="fa-solid fa-check text-3xl"></i>
             </div>
-            <!-- Títulos según imagen b761ab -->
             <h3 class="text-xl font-extrabold text-slate-800 tracking-tight uppercase mb-1 leading-none">¡BIENVENIDO!</h3>
             <span class="text-[11px] font-black text-emerald-600 tracking-wider uppercase mb-4 block leading-none">SINCRONIZACIÓN COMPLETADA</span>
-            <!-- Descripción textual exacta de la imagen -->
             <p class="text-[11px] text-slate-500 font-bold leading-relaxed mb-6 max-w-[270px]">
                 El sistema de vigilancia epidemiológica del Hospital de Ventanilla se ha cargado correctamente y está listo para operar.
             </p>
-            <!-- Botón de Entrada -->
             <button onclick="closeWelcomeModal()" class="w-full bg-[#014d3a] hover:bg-[#0a4c41] text-white py-3.5 px-6 rounded-2xl text-[11px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98">
                 ENTRAR AL MÓDULO
             </button>
         </div>
     </div>
 
-    <!-- CABECERA PRINCIPAL (REPLICADA DE image_c2ba3a.png) -->    
+    <!-- CABECERA PRINCIPAL -->    
     <header class="bg-brand-dark text-white px-6 py-4 shadow-md shrink-0 border-b border-emerald-950">        
         <div class="max-w-[1850px] mx-auto flex flex-col md:flex-row justify-between items-center gap-4">            
             <div class="flex items-center gap-3">                
-                <!-- ICONO HOSPITALARIO IDÉNTICO -->
                 <div class="bg-[#10b981] p-2.5 rounded-2xl text-brand-dark shadow-lg shrink-0">                    
                     <i class="fa-solid fa-hospital text-2xl text-white"></i>                
                 </div>                
@@ -98,18 +93,15 @@
             </div>                        
             
             <div class="flex flex-row items-center gap-3 shrink-0 no-print">                
-                <!-- PILL DE ESTADO DINÁMICO IDÉNTICO EN DISEÑO -->                
                 <span id="updateSuccessBadge" class="bg-teal-950/40 text-emerald-300 text-xs px-4 py-2 rounded-full border border-emerald-500/30 flex items-center gap-2 font-black select-none shadow-inner h-[38px] leading-none">
                     <span class="relative flex h-2 w-2">
                         <span id="badgeDotPing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span id="badgeDot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
                     <span id="statusText">CONECTANDO...</span>
-                    <!-- ICONO DE DIAGNÓSTICO SINO-SINC -->
                     <i id="debugToggle" class="fa-solid fa-circle-info cursor-pointer text-emerald-400 hover:text-white transition-colors ml-1.5 text-xs" title="Ver consola de diagnóstico" onclick="toggleDebugConsole()"></i>
                 </span>
 
-                <!-- BOTÓN REPORTE PDF IDÉNTICO -->
                 <button onclick="window.print()" class="bg-[#007c65] hover:bg-[#006351] transition-all text-white px-4 py-2 rounded-xl border border-teal-500/30 text-xs font-black flex items-center justify-center gap-2 shadow-md uppercase tracking-wider h-[38px] hover:scale-102 active:scale-98 leading-none">
                     <i class="fa-solid fa-file-pdf text-sm"></i> REPORTE PDF
                 </button>
@@ -117,7 +109,7 @@
         </div>    
     </header>
     
-    <!-- BARRA DE ALERTA EPIDEMIOLÓGICA CON MARQUESINA (REPLICADA DE image_c2ba3a.png) -->    
+    <!-- BARRA DE ALERTA EPIDEMIOLÓGICA CON MARQUESINA -->    
     <section class="bg-brand-burgundy text-rose-100 px-6 sm:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-bold shrink-0 shadow-lg relative z-10">        
         <div class="flex items-center gap-4 overflow-hidden w-full md:flex-1">            
             <div class="overflow-hidden relative w-full flex items-center select-none cursor-pointer" onclick="openAlertsModal()">                
@@ -133,11 +125,10 @@
         </button>    
     </section>
 
-    <!-- MODAL DE ALERTAS DETALLADAS (REPLICADO AL 100% DE image_b6ed11.png) -->
+    <!-- MODAL DE ALERTAS DETALLADAS -->
     <div id="alertsModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-[120] transition-all duration-300 opacity-0 pointer-events-none p-4">
         <div class="bg-[#0b0f19] rounded-[2rem] p-6 md:p-8 max-w-5xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-800/80 flex flex-col transform scale-95 transition-all duration-300 gap-6 custom-scrollbar text-slate-100">
             
-            <!-- Encabezado del Centro de Alertas -->
             <div class="bg-[#4c0519] px-6 py-4 flex justify-between items-center border-b border-rose-950/60 rounded-2xl shadow-inner relative">
                 <div class="flex items-center gap-4">
                     <div class="bg-rose-900/60 p-2.5 rounded-xl text-rose-400 border border-rose-800/40">
@@ -151,14 +142,11 @@
                 <button onclick="closeAlertsModal()" class="text-slate-400 hover:text-white transition-colors h-8 w-8 rounded-full bg-black/20 flex items-center justify-center hover:bg-black/40"><i class="fa-solid fa-xmark text-sm"></i></button>
             </div>
 
-            <!-- Botón de Sincronización en Vivo y Pestañas Interactivas -->
             <div class="flex flex-col items-center gap-4 w-full">
-                <!-- Status pill "SINC EN VIVO..." -->
                 <span class="bg-[#0e2c22] text-emerald-400 text-[10px] font-black px-4 py-1.5 rounded-full border border-emerald-500/30 flex items-center gap-1.5 animate-pulse uppercase tracking-widest select-none">
                     <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span> SINC EN VIVO...
                 </span>
 
-                <!-- Pestañas de Alertas -->
                 <div class="flex flex-wrap justify-center gap-3 w-full">
                     <button id="tabBtn-oms" onclick="switchAlertTab('oms')" class="py-2.5 px-5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 flex items-center gap-2 shadow-md">
                         <i class="fa-solid fa-earth-americas"></i> Alerta OMS / OPS Global
@@ -172,10 +160,7 @@
                 </div>
             </div>
 
-            <!-- Contenedor Dinámico de la Alerta Seleccionada -->
-            <div id="alertCardsContainer" class="w-full">
-                <!-- Se inyectará el contenido estructurado de forma dinámica -->
-            </div>
+            <div id="alertCardsContainer" class="w-full"></div>
 
             <button onclick="closeAlertsModal()" class="w-full bg-slate-800 hover:bg-slate-750 text-white font-bold py-3 rounded-xl text-xs uppercase tracking-wider transition-all duration-200">
                 Entendido y Cerrar Panel
@@ -188,7 +173,6 @@
 
         <!-- ================= 1. FILTROS DE CONTROL DE VIGILANCIA ================= -->        
         <section class="bg-white rounded-2xl border border-slate-200/80 shadow-md overflow-hidden shrink-0">
-            <!-- Barra superior del panel de filtros -->
             <div class="bg-[#0b5443] text-white px-5 py-3 flex items-center justify-between shadow-sm">
                 <div class="flex items-center gap-2">
                     <i class="fa-solid fa-sliders text-emerald-400"></i>
@@ -199,11 +183,9 @@
                 </button>
             </div>
             
-            <!-- Grid de inputs -->
             <div class="p-5 bg-white border-t border-slate-100">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-xs font-bold text-slate-500">
                     
-                    <!-- Filtro 1: Años en Vigilancia -->
                     <div class="flex flex-col gap-1.5">
                         <span class="text-[9px] uppercase tracking-wider text-slate-400">Años en Vigilancia</span>
                         <select id="filterYear" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-[#0b5443] focus:outline-none shadow-sm cursor-pointer h-[38px]">
@@ -211,7 +193,6 @@
                         </select>
                     </div>
 
-                    <!-- Filtro 2: Tipo de Prueba -->
                     <div class="flex flex-col gap-1.5">
                         <span class="text-[9px] uppercase tracking-wider text-slate-400">Tipo de Prueba</span>
                         <select id="filterTestType" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-[#0b5443] focus:outline-none shadow-sm cursor-pointer h-[38px]">
@@ -219,7 +200,6 @@
                         </select>
                     </div>
 
-                    <!-- Filtro 3: Semana Epidemiológica -->
                     <div class="flex flex-col gap-1.5">
                         <span class="text-[9px] uppercase tracking-wider text-slate-400">Semana Epidemiológica (S.E.)</span>
                         <select id="filterWeek" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-[#0b5443] focus:outline-none shadow-sm cursor-pointer h-[38px]">
@@ -227,7 +207,6 @@
                         </select>
                     </div>
 
-                    <!-- Filtro 4: Resultado Clínico -->
                     <div class="flex flex-col gap-1.5">
                         <span class="text-[9px] uppercase tracking-wider text-slate-400">Resultado Clínico</span>
                         <select id="filterResult" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-[#0b5443] focus:outline-none shadow-sm cursor-pointer h-[38px]">
@@ -239,7 +218,6 @@
                         </select>
                     </div>
 
-                    <!-- Filtro 5: Sector o Zona -->
                     <div class="flex flex-col gap-1.5">
                         <span class="text-[9px] uppercase tracking-wider text-slate-400">Sector / Zona</span>
                         <select id="filterSector" onchange="applyFilters()" class="w-full bg-white border border-slate-200 text-slate-700 text-xs rounded-lg px-3 py-2.5 font-bold focus:ring-2 focus:ring-[#0b5443] focus:outline-none shadow-sm cursor-pointer h-[38px]">
@@ -254,7 +232,6 @@
         <!-- ================= 2. KPIs DE ALTO IMPACTO ================= -->        
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3.5 font-bold">            
             
-            <!-- KPI 1: Total Ingresados -->
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between min-h-[100px] hover:shadow-md transition-shadow">                
                 <div>                    
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">TOTAL INGRESADOS</p>                    
@@ -266,7 +243,6 @@
                 </div>            
             </div>
 
-            <!-- KPI 2: Casos Patógeno -->
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between min-h-[100px] hover:shadow-md transition-shadow">                
                 <div>                    
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">CASOS PATÓGENO</p>                    
@@ -278,7 +254,6 @@
                 </div>            
             </div>
 
-            <!-- KPI 3: Casos S.E. -->
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between min-h-[100px] hover:shadow-md transition-shadow">                
                 <div>                    
                     <p id="kpiSETitle" class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">CASOS S.E. 23</p>                    
@@ -290,7 +265,6 @@
                 </div>            
             </div>
 
-            <!-- KPI 4: Positivos (+) -->
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between min-h-[100px] hover:shadow-md transition-shadow">                
                 <div>                    
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">POSITIVOS (+)</p>                    
@@ -302,7 +276,6 @@
                 </div>            
             </div>
 
-            <!-- KPI 5: Negativos (-) -->
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between min-h-[100px] hover:shadow-md transition-shadow">                
                 <div>                    
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">NEGATIVOS (-)</p>                    
@@ -314,7 +287,6 @@
                 </div>            
             </div>
 
-            <!-- KPI 6: Pendientes -->
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between min-h-[100px] hover:shadow-md transition-shadow">                
                 <div>                    
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">PENDIENTES</p>                    
@@ -326,7 +298,6 @@
                 </div>            
             </div>
 
-            <!-- KPI 7: Tasa Positividad -->
             <div id="kpiTasaCard" class="bg-red-50 p-4 rounded-2xl border border-red-200 shadow-sm flex items-center justify-between min-h-[100px] transition-all duration-300">                
                 <div>                    
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">TASA POSITIVIDAD</p>                    
@@ -338,7 +309,6 @@
                 </div>            
             </div>
 
-            <!-- KPI 8: Foco Geográfico -->
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between min-h-[100px] hover:shadow-md transition-shadow">                
                 <div>                    
                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">SECTOR O ZONA</p>                    
@@ -353,7 +323,6 @@
 
         <!-- ================= 3. SECCIÓN DE GRÁFICOS ANALÍTICOS ================= -->        
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-6">                        
-            <!-- GRÁFICO 1: COMPARATIVO TRIANUAL DE TENDENCIAS (Ancho completo) -->            
             <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all duration-300 lg:col-span-2">                
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
                     <h3 id="titleChartTrianual" class="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
@@ -367,7 +336,6 @@
                 <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Análisis estacional de curvas epidemiológicas por mes (Sincronizado con checkboxes de año)</p>            
             </div>
 
-            <!-- GRÁFICO 2: Casos por Mes -->            
             <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all">                
                 <div>                    
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
@@ -379,7 +347,6 @@
                 </div>                
             </div>
 
-            <!-- GRÁFICO 3: Curva S.E -->            
             <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all">                
                 <div>                    
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
@@ -391,7 +358,6 @@
                 </div>                
             </div>
 
-            <!-- GRÁFICO 4: Tipo de Exámenes -->            
             <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all">                
                 <div>                    
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
@@ -403,7 +369,6 @@
                 </div>                
             </div>
 
-            <!-- GRÁFICO 5: Resultados Clínicos -->            
             <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all">                
                 <div>                    
                     <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-4">                        
@@ -416,7 +381,6 @@
                 <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold"></p>
             </div>
 
-            <!-- GRÁFICO 6: Casos por Sector -->            
             <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all lg:col-span-2">                
                 <div>                    
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
@@ -501,7 +465,6 @@
                 </table>
             </div>
 
-            <!-- PAGINACIÓN -->
             <div class="bg-slate-50/50 p-3 flex flex-col sm:flex-row items-center justify-between gap-3 font-bold text-xs">
                 <p id="kardexCountLabel" class="text-slate-500 text-[10px] uppercase">Mostrando 0 de 0 registros</p>
                 <div class="flex items-center gap-1">
@@ -593,7 +556,6 @@
         let chartResultadosInstance = null;
         let chartSectoresInstance = null;
 
-        // Registro de trazas de diagnóstico técnico
         function addLog(message, isError = false) {
             const container = document.getElementById("debugLogLines");
             if (!container) return;
@@ -608,19 +570,16 @@
             setupUIEventListeners();
             
             // INTRODUCCIÓN DE LA CARGA EN MICROSEGUNDOS (FAST-CACHE):
-            // Intenta leer inmediatamente del almacenamiento local para no demorar la carga inicial
             const fastCache = localStorage.getItem("sino_sinc_fast_cache");
             if (fastCache) {
                 try {
                     dbRawData = JSON.parse(fastCache);
                     addLog("¡Datos de Fast-Cache cargados instantáneamente en microsegundos!");
                     
-                    // Renderizado súper acelerado
                     calcularMetricasAlertas();
                     buildFiltersDynamic();
                     applyFilters();
                     
-                    // Cambia la visualización del estado a CONECTADO provisionalmente usando la caché
                     const statusText = document.getElementById("statusText");
                     if (statusText) statusText.textContent = "SINO-SINC: CARGADO DESDE CACHÉ LOCAL";
                 } catch(e) {
@@ -628,10 +587,8 @@
                 }
             }
             
-            // Disparar la descarga en paralelo inmediatamente
             conectarYDescargar();
             
-            // Refrescar sincronizadamente cada 20 segundos sin caídas
             setInterval(() => { 
                 conectarYDescargar(); 
             }, 20000);
@@ -660,7 +617,6 @@
             });
         }
 
-        /* LÓGICA DE APERTURA Y CIERRE DE MODALES */
         function closeWelcomeModal() {
             const modal = document.getElementById("welcomeModal");
             if (modal) {
@@ -671,7 +627,7 @@
                     card.classList.add("scale-95");
                 }
                 setTimeout(() => {
-                    modal.remove(); // Eliminado del DOM por optimización de rendimiento
+                    modal.remove(); 
                 }, 200);
             }
         }
@@ -688,14 +644,13 @@
             }
         }
 
-        // Mapeador robusto y avanzado para normalizar llaves de cabeceras de Google Sheets
         function getNormalizedValue(row, possibleKeys, defaultValue = "") {
             const normalizeString = (str) => {
                 if (!str) return "";
                 return str.toLowerCase()
-                          .replace(/[\s_\-\/]/g, "") // Remover espacios, guiones, barras
+                          .replace(/[\s_\-\/\.]/g, "") // Limpiamos espacios, guiones, barras y puntos (S.E. -> se)
                           .normalize("NFD")
-                          .replace(/[\u0300-\u036f]/g, ""); // Remover tildes
+                          .replace(/[\u0300-\u036f]/g, ""); 
             };
             
             const normalizedPossible = possibleKeys.map(k => normalizeString(k));
@@ -710,7 +665,31 @@
             return defaultValue;
         }
 
-        // Descargar datos sincrónicos con motor de redundancia y carrera en paralelo (RACE ENGINE)
+        function normalizarEstadoParaFiltros(estadoRaw) {
+            if (!estadoRaw) return "CONFIRMADO";
+            const est = String(estadoRaw).toUpperCase().trim();
+            
+            // Si el estado contiene "C" (Confirmado) o "1" o empieza con "CONF" o es "SI"
+            if (est === "C" || est === "1" || est.startsWith("CONF") || est === "POSITIVO" || est === "SI" || est.startsWith("C-") || est.startsWith("C -")) {
+                return "CONFIRMADO";
+            }
+            // Si el estado contiene "P" (Probable) o "2" o "PENDIENTE"
+            if (est === "P" || est === "2" || est.startsWith("PROB") || est === "PENDIENTE" || est.startsWith("PEND") || est.startsWith("PROC") || est.startsWith("P-") || est.startsWith("P -")) {
+                return "PROBABLE";
+            }
+            // Si el estado contiene "D" (Descartado) o "3" o "NEGATIVO"
+            if (est === "D" || est === "3" || est.startsWith("DESC") || est === "NEGATIVO" || est === "NO" || est.startsWith("NEG") || est.startsWith("D-") || est.startsWith("D -")) {
+                return "DESCARTADO";
+            }
+            
+            // Fallbacks genéricos por subcadenas
+            if (est.includes("CONFIR") || est.includes("POSI") || est === "SI") return "CONFIRMADO";
+            if (est.includes("PROB") || est.includes("PEND") || est.includes("PROC")) return "PROBABLE";
+            if (est.includes("DESC") || est.includes("NEG") || est === "NO") return "DESCARTADO";
+            
+            return "CONFIRMADO"; // Default seguro
+        }
+
         async function conectarYDescargar() {
             const statusText = document.getElementById("statusText");
             const badgeDot = document.getElementById("badgeDot");
@@ -721,14 +700,12 @@
 
             addLog("Iniciando carrera de red en paralelo para conexión en microsegundos...");
             
-            // Definimos los tres canales que se descargarán simultáneamente (en paralelo)
             const urlsToTry = [
-                SHEET_URL, // Canal 1: Directo
-                `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=1&url=${encodeURIComponent(SHEET_URL)}`, // Canal 2: Bypass Google OpenSocial (CORS & Sandbox Libre)
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(SHEET_URL)}` // Canal 3: Backup AllOrigins
+                SHEET_URL, 
+                `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=1&url=${encodeURIComponent(SHEET_URL)}`, 
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(SHEET_URL)}` 
             ];
 
-            // Helper para realizar la petición y validar la respuesta
             const fetchSource = async (url, sourceName) => {
                 const response = await fetch(url);
                 if (!response.ok) throw new Error(`HTTP error en ${sourceName}`);
@@ -740,7 +717,6 @@
             };
 
             try {
-                // RACING: Promise.any resuelve con la primera petición exitosa en microsegundos
                 const fastestResult = await Promise.any(urlsToTry.map((url, idx) => fetchSource(url, `Canal ${idx + 1}`)));
                 
                 const csvText = fastestResult.text;
@@ -757,7 +733,6 @@
                             addLog(`PapaParse completado con éxito. Filas procesadas: ${results.data.length}`);
                             procesarFilasSheet(results.data);
                             
-                            // Guardar en Fast-Cache local para futuras cargas instantáneas
                             localStorage.setItem("sino_sinc_fast_cache", JSON.stringify(dbRawData));
                             
                             if (statusText) statusText.textContent = "SINO-SINC: CONECTADO CON GOOGLE SHEET";
@@ -768,10 +743,8 @@
                                 updateSuccessBadge.className = "bg-teal-950/40 text-emerald-300 text-xs px-4 py-2 rounded-full border border-emerald-500/30 flex items-center gap-2 font-black select-none shadow-inner h-[38px] leading-none";
                             }
                             
-                            // Mostrar mensaje de éxito no intrusivo
                             showToast("Base de datos de Google Sheet sincronizada en vivo", "success");
 
-                            // Lanzamiento del modal de bienvenida por única vez al sincronizar correctamente (image_b761ab.jpg)
                             if (!welcomeModalShown) {
                                 const wModal = document.getElementById("welcomeModal");
                                 if (wModal) {
@@ -800,36 +773,74 @@
 
             if (debugTotalRows) debugTotalRows.textContent = rows.length;
 
-            // Limpieza y filtrado de celdas vacías
             const cleanRows = rows.filter(row => {
                 return Object.values(row).some(val => val !== null && val !== undefined && String(val).trim() !== "");
             });
 
-            // Registrar cabeceras en el panel de soporte para control del epidemiólogo
             if (cleanRows.length > 0 && debugHeadersContainer) {
                 const headers = Object.keys(cleanRows[0]);
                 debugHeadersContainer.innerHTML = headers.map(h => `<span class="bg-slate-800 text-slate-300 px-1 py-0.5 rounded text-[10px] truncate max-w-[150px]">${h}</span>`).join("");
             }
 
             dbRawData = cleanRows.map((row, idx) => {
-                let ano = parseInt(getNormalizedValue(row, ['ano', 'año', 'an_notific', 'year', 'anio'])) || 2026;
-                let sem = parseInt(getNormalizedValue(row, ['semana', 'semana_not', 'sem', 'semana_epidemiologica', 'se'])) || 1;
-                let diagnostic = getNormalizedValue(row, ['diagnostic', 'Enfermedad', 'diagnostico', 'prueba', 'cie10', 'examen', 'tipo_examen'], "DENGUE SIN SEÑALES DE ALARMA").toUpperCase().trim();
-                let estado = getNormalizedValue(row, ['tipo_dx', 'Notificado', 'estado', 'resultado', 'clasificacion'], "CONFIRMADO").toUpperCase().trim();
+                // Inteligencia de auto-recuperación para Año
+                let anoStr = getNormalizedValue(row, ['ano', 'año', 'an_notific', 'year', 'anio']);
+                let ano = parseInt(anoStr);
+                if (isNaN(ano)) {
+                    let fecha = getNormalizedValue(row, ['fecha', 'notificacion', 'marca', 'temporal', 'date']);
+                    if (fecha) {
+                        let match = fecha.match(/\b(202[0-9])\b/);
+                        if (match) {
+                            ano = parseInt(match[1]);
+                        } else {
+                            let match2 = fecha.match(/[\/\-](2[4-9])\b/);
+                            if (match2) {
+                                ano = 2000 + parseInt(match2[1]);
+                            }
+                        }
+                    }
+                }
+                if (isNaN(ano) || ano < 2000 || ano > 2030) {
+                    ano = 2026;
+                }
+
+                // Inteligencia de auto-recuperación para Semana Epidemiológica (S.E.)
+                let semStr = getNormalizedValue(row, ['semana', 'semana_not', 'sem', 'semana_epidemiologica', 'se', 'se_epi', 'semana_epi', 's.e.']);
+                let sem = parseInt(semStr);
+                if (isNaN(sem)) {
+                    let fecha = getNormalizedValue(row, ['fecha', 'notificacion', 'marca', 'temporal', 'date']);
+                    if (fecha) {
+                        let dateMatch = fecha.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+                        if (dateMatch) {
+                            let day = parseInt(dateMatch[1]);
+                            let month = parseInt(dateMatch[2]);
+                            if (month >= 1 && month <= 12) {
+                                sem = Math.min(52, Math.max(1, Math.floor((month - 1) * 4.34 + (day / 7))));
+                            }
+                        }
+                    }
+                }
+                if (isNaN(sem) || sem < 1 || sem > 53) {
+                    sem = 1;
+                }
+
+                let diagnostic = getNormalizedValue(row, ['diagnostic', 'Enfermedad', 'diagnostico', 'prueba', 'cie10', 'examen', 'tipo_examen', 'diagnostico_cie10', 'tipodeexamen'], "DENGUE SIN SEÑALES DE ALARMA").toUpperCase().trim();
+                
+                let estadoRaw = getNormalizedValue(row, ['tipo_dx', 'Notificado', 'estado', 'resultado', 'clasificacion', 'estado_paciente']);
+                let estado = normalizarEstadoParaFiltros(estadoRaw);
+
                 let apepat = getNormalizedValue(row, ['apepat', 'paterno', 'apellido_paterno'], "");
                 let apemat = getNormalizedValue(row, ['apemat', 'materno', 'apellido_materno'], "");
                 let nombres = getNormalizedValue(row, ['nombres', 'nombre', 'paciente', 'paciente_nombres'], "Paciente Anonimizado");
                 let edad = parseInt(getNormalizedValue(row, ['edad', 'edad_anos', 'edad_anios'])) || 0;
                 let sexo = getNormalizedValue(row, ['sexo', 'genero', 'sex'], "M").toUpperCase().trim().charAt(0);
                 let dni = getNormalizedValue(row, ['dni', 'documento', 'identificador', 'codigo'], "N/A");
-                let localidad = getNormalizedValue(row, ['localidad', 'distrito', 'procede', 'sector', 'direccion', 'zona', 'procedencia'], "VENTANILLA").toUpperCase().trim();
+                let localidad = getNormalizedValue(row, ['localidad', 'distrito', 'procede', 'sector', 'direccion', 'zona', 'procedencia', 'distritosector', 'sectorezonal'], "VENTANILLA").toUpperCase().trim();
 
                 return { id: idx, ano, sem, diagnostic, estado, apepat, apemat, nombres, edad, sexo, dni, localidad };
             });
 
-            // Calcular y sincronizar datos reales de alertas epidemiológicas basadas en la base de datos descargada
             calcularMetricasAlertas();
-
             buildFiltersDynamic();
             applyFilters();
         }
@@ -843,9 +854,7 @@
                 if (d.diagnostic) {
                     conteoEnfermedades[d.diagnostic] = (conteoEnfermedades[d.diagnostic] || 0) + 1;
                 }
-                const est = d.estado.toUpperCase();
-                const esPos = est === "CONFIRMADO" || est === "SI" || est === "POSITIVO" || est.includes("CONFIR");
-                if (esPos) {
+                if (d.estado === "CONFIRMADO") {
                     totalPos++;
                     if (d.localidad) {
                         sectorPositivos[d.localidad] = (sectorPositivos[d.localidad] || 0) + 1;
@@ -871,7 +880,6 @@
                 }
             });
 
-            // Guardar en variable global para que switchAlertTab pueda usarlo
             alertDataStats = {
                 totalPositivos: totalPos,
                 sectorCritico: sectorCritico,
@@ -880,7 +888,6 @@
                 maxCasosEnf: maxCasosEnf
             };
 
-            // Sincronizar el Ticker (Marquesina) en vivo con los datos reales analizados
             const ticker = document.getElementById("liveAlertTicker");
             if (ticker) {
                 ticker.innerHTML = `
@@ -916,7 +923,6 @@
                 applyFilters();
                 showToast("Activados datos de censo local por restricción de red remota", "warning");
 
-                // El fallback local también muestra el modal al cargarse
                 if (!welcomeModalShown) {
                     const wModal = document.getElementById("welcomeModal");
                     if (wModal) {
@@ -929,13 +935,11 @@
         }
 
         function buildFiltersDynamic() {
-            // Guardar selecciones actuales para no interrumpir al usuario
             const sYear = document.getElementById("filterYear").value || "ALL";
             const sTest = document.getElementById("filterTestType").value || "ALL";
             const sWeek = document.getElementById("filterWeek").value || "ALL";
             const sSector = document.getElementById("filterSector").value || "ALL";
 
-            // 1. Años
             const filterYear = document.getElementById("filterYear");
             const years = [...new Set(dbRawData.map(d => d.ano))].filter(Boolean).sort((a,b) => b - a);
             filterYear.innerHTML = '<option value="ALL">Todos los Años</option>';
@@ -947,7 +951,6 @@
                 filterYear.appendChild(opt);
             });
 
-            // 2. Pruebas
             const filterTest = document.getElementById("filterTestType");
             const tests = [...new Set(dbRawData.map(d => d.diagnostic))].filter(Boolean).sort();
             filterTest.innerHTML = '<option value="ALL">Todas las Pruebas</option>';
@@ -959,7 +962,6 @@
                 filterTest.appendChild(opt);
             });
 
-            // 3. Semanas
             const filterWeek = document.getElementById("filterWeek");
             const weeks = [...new Set(dbRawData.map(d => d.sem))].filter(Boolean).sort((a,b) => a - b);
             filterWeek.innerHTML = '<option value="ALL">Todas</option>';
@@ -971,7 +973,6 @@
                 filterWeek.appendChild(opt);
             });
 
-            // 4. Sectores
             const filterSector = document.getElementById("filterSector");
             const sectors = [...new Set(dbRawData.map(d => d.localidad))].filter(Boolean).sort();
             filterSector.innerHTML = '<option value="ALL">Todos los Sectores</option>';
@@ -998,15 +999,15 @@
                 if (sector !== "ALL" && item.localidad !== sector) return false;
                 
                 if (result !== "ALL") {
-                    const est = item.estado.toUpperCase();
+                    const est = item.estado; // "CONFIRMADO", "PROBABLE", "DESCARTADO"
                     if (result === "POSITIVO") {
-                        if (!(est.includes("POSI") || est.includes("CONFIR") || est === "SI")) return false;
+                        if (est !== "CONFIRMADO") return false;
                     } else if (result === "NEGATIVO") {
-                        if (!(est.includes("NEGA") || est.includes("DESCAR") || est === "NO")) return false;
+                        if (est !== "DESCARTADO") return false;
                     } else if (result === "PENDIENTE") {
-                        if (!(est.includes("PENDI") || est.includes("PROB") || est.includes("PROCESO"))) return false;
+                        if (est !== "PROBABLE") return false;
                     } else if (result === "DESCARTADO") {
-                        if (!(est.includes("DESCAR") || est.includes("NEGA") || est === "NO")) return false;
+                        if (est !== "DESCARTADO") return false;
                     }
                 }
                 return true;
@@ -1024,29 +1025,19 @@
             document.getElementById("kpiTotal").textContent = total;
             document.getElementById("kpiTotalSub").textContent = `De ${dbRawData.length} registros globales`;
 
-            // Filtrados de Positivos, Negativos, Pendientes
-            const confirmados = filteredData.filter(d => {
-                const est = d.estado.toUpperCase();
-                return est === "CONFIRMADO" || est === "SI" || est === "POSITIVO" || est.includes("CONFIR");
-            }).length;
+            // Filtrados de Positivos, Negativos, Pendientes con nuestros estados normalizados
+            const confirmados = filteredData.filter(d => d.estado === "CONFIRMADO").length;
             document.getElementById("kpiPositivos").textContent = confirmados;
 
-            const probables = filteredData.filter(d => {
-                const est = d.estado.toUpperCase();
-                return est === "PROBABLE" || est === "PENDIENTE" || est.includes("PROB") || est.includes("PENDI");
-            }).length;
+            const probables = filteredData.filter(d => d.estado === "PROBABLE").length;
             document.getElementById("kpiPendientes").textContent = probables;
 
-            const descartados = filteredData.filter(d => {
-                const est = d.estado.toUpperCase();
-                return est === "DESCARTADO" || est === "NEGATIVO" || est.includes("DESCAR") || est.includes("NEGA") || est === "NO";
-            }).length;
+            const descartados = filteredData.filter(d => d.estado === "DESCARTADO").length;
             document.getElementById("kpiNegativos").textContent = descartados;
 
             const tasa = total > 0 ? ((confirmados / total) * 100).toFixed(1) : "0.0";
             document.getElementById("kpiTasa").textContent = `${tasa}%`;
 
-            // Alerta visual de tasa positividad
             const cardTasa = document.getElementById("kpiTasaCard");
             const alertTasaText = document.getElementById("kpiTasaAlert");
             if (cardTasa && alertTasaText) {
@@ -1065,7 +1056,6 @@
                 }
             }
 
-            // Foco geográfico
             const sectorCounts = {};
             filteredData.forEach(d => {
                 if(d.localidad) sectorCounts[d.localidad] = (sectorCounts[d.localidad] || 0) + 1;
@@ -1132,12 +1122,11 @@
 
             currentPageData.forEach(r => {
                 let badgeClass = "bg-slate-100 text-slate-700";
-                const est = r.estado.toUpperCase();
-                if (est === "CONFIRMADO" || est === "POSITIVO" || est === "SI" || est.includes("CONFIR")) {
+                if (r.estado === "CONFIRMADO") {
                     badgeClass = "bg-emerald-100 text-emerald-850 border border-emerald-250";
-                } else if (est === "PROBABLE" || est === "PENDIENTE" || est.includes("PROB") || est.includes("PENDI")) {
+                } else if (r.estado === "PROBABLE") {
                     badgeClass = "bg-amber-100 text-amber-850 border border-amber-250";
-                } else if (est === "DESCARTADO" || est === "NEGATIVO" || est.includes("DESCAR") || est.includes("NEGA") || est === "NO") {
+                } else if (r.estado === "DESCARTADO") {
                     badgeClass = "bg-rose-100 text-rose-850 border border-rose-250";
                 }
 
@@ -1164,26 +1153,23 @@
             filteredData.forEach(item => {
                 const p = item.diagnostic || "No especificado";
                 if (!agrupado[p]) {
-                    agrupado[p] = { total: 0, pos: 0, neg: 0, pen: 0, des: 0 };
+                    agrupado[p] = { total: 0, pos: 0, neg: 0, pen: 0 };
                 }
                 agrupado[p].total++;
-                const est = item.estado.toUpperCase();
-                if (est === "CONFIRMADO" || est === "POSITIVO" || est === "SI" || est.includes("CONFIR")) {
+                if (item.estado === "CONFIRMADO") {
                     agrupado[p].pos++;
-                } else if (est === "NEGATIVO" || est === "DESCARTADO" || est.includes("NEGA") || est.includes("DESCAR") || est === "NO") {
+                } else if (item.estado === "DESCARTADO") {
                     agrupado[p].neg++;
-                } else if (est === "PROBABLE" || est === "PENDIENTE" || est.includes("PROB") || est.includes("PENDI")) {
+                } else if (item.estado === "PROBABLE") {
                     agrupado[p].pen++;
-                } else {
-                    agrupado[p].des++;
                 }
             });
 
             const items = Object.keys(agrupado).map(key => {
                 const item = agrupado[key];
-                const totalConResultado = item.pos + item.neg + item.pen + item.des;
+                const totalConResultado = item.pos + item.neg + item.pen;
                 const tasa = totalConResultado > 0 ? ((item.pos / totalConResultado) * 100).toFixed(1) : "0.0";
-                return { nombre: key, total: item.total, pos: item.pos, neg: item.neg, pen: item.pen, des: item.des, tasa: tasa };
+                return { nombre: key, total: item.total, pos: item.pos, neg: item.neg, pen: item.pen, tasa: tasa };
             }).sort((a,b) => b.total - a.total);
 
             let html = "";
@@ -1198,7 +1184,7 @@
                             <td class="p-3.5 text-center text-rose-600 font-extrabold">${it.pos}</td>
                             <td class="p-3.5 text-center text-emerald-600">${it.neg}</td>
                             <td class="p-3.5 text-center text-amber-600">${it.pen}</td>
-                            <td class="p-3.5 text-center text-slate-500">${it.des}</td>
+                            <td class="p-3.5 text-center text-slate-500">${it.total - it.pos - it.neg - it.pen}</td>
                             <td class="p-3.5 text-center text-brand-dark bg-slate-100/50">${it.tasa}%</td>
                         </tr>
                     `;
@@ -1211,7 +1197,6 @@
             const filterYearVal = document.getElementById("filterYear").value;
             const yearsSuffix = filterYearVal !== "ALL" ? ` - Año ${filterYearVal}` : " - Todos los Años";
 
-            // Actualizar cabeceras de gráficos
             document.getElementById("titleChartTrianual").innerHTML = `<i class="fa-solid fa-chart-line text-[#10b981]"></i> Comparativa Interanual de Curvas de Tendencias${yearsSuffix}`;
             document.getElementById("titleChartMensual").innerText = `Casos por Mes${yearsSuffix}`;
             document.getElementById("titleChartSemanal").innerText = `Curva S.E${yearsSuffix}`;
@@ -1231,7 +1216,6 @@
                         const color = colorPalette[index % colorPalette.length];
                         const mesesData = Array(12).fill(0);
                         
-                        // Usar filteredData en lugar de dbRawData para que las curvas de tendencias interanuales respondan reactivamente
                         filteredData.forEach(d => {
                             if (d.ano === yr) {
                                 const mesIdx = Math.min(11, Math.floor(d.sem / 4.4));
@@ -1355,18 +1339,9 @@
             try {
                 const canvas = document.getElementById('chartResultados');
                 if (canvas) {
-                    const pos = filteredData.filter(d => {
-                        const est = d.estado.toUpperCase();
-                        return est === "CONFIRMADO" || est === "SI" || est === "POSITIVO" || est.includes("CONFIR");
-                    }).length;
-                    const neg = filteredData.filter(d => {
-                        const est = d.estado.toUpperCase();
-                        return est === "DESCARTADO" || est === "NEGATIVO" || est.includes("DESCAR") || est.includes("NEGA") || est === "NO";
-                    }).length;
-                    const pen = filteredData.filter(d => {
-                        const est = d.estado.toUpperCase();
-                        return est === "PROBABLE" || est === "PENDIENTE" || est.includes("PROB") || est.includes("PENDI");
-                    }).length;
+                    const pos = filteredData.filter(d => d.estado === "CONFIRMADO").length;
+                    const neg = filteredData.filter(d => d.estado === "DESCARTADO").length;
+                    const pen = filteredData.filter(d => d.estado === "PROBABLE").length;
 
                     if (chartResultadosInstance) chartResultadosInstance.destroy();
                     chartResultadosInstance = new Chart(canvas.getContext('2d'), {
@@ -1445,13 +1420,11 @@
             }
         }
 
-        // MODAL DE ALERTAS TOTALMENTE CONFIGURABLE DE ALTA FIDELIDAD (image_b6ed11.png)
         function switchAlertTab(tab) {
             activeTab = tab;
             const container = document.getElementById("alertCardsContainer");
             if (!container) return;
 
-            // Restablecer estilos de pestañas (Bordes dorados/ámbar activos)
             const tabsList = ['oms', 'cdc', 'region'];
             tabsList.forEach(t => {
                 const btn = document.getElementById(`tabBtn-${t}`);
@@ -1464,11 +1437,9 @@
                 }
             });
 
-            // Inyectar contenido estructurado según imagen image_b6ed11.png
             if (tab === 'oms') {
                 container.innerHTML = `
                     <div class="bg-[#0a0f1d] border border-slate-800 rounded-3xl p-6 flex flex-col gap-5 shadow-lg relative">
-                        <!-- Cabecera de la alerta de la OMS -->
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
                             <div class="flex items-center gap-3">
                                 <span class="text-xl">🌍</span>
@@ -1477,12 +1448,10 @@
                             <span class="bg-[#4c0519] text-rose-300 text-[10px] font-black px-4 py-1 rounded-full border border-rose-500/30 uppercase tracking-widest shrink-0 animate-pulse text-center">ALTA PRIORIDAD</span>
                         </div>
                         
-                        <!-- Descripción técnica de la OMS -->
                         <p class="text-slate-300 text-xs font-bold leading-relaxed">
                             Monitoreo internacional intensivo por repunte en mamíferos terrestres e infecciones esporádicas en humanos. La OPS recomienda reforzar la bioseguridad en áreas costeras del continente americano.
                         </p>
 
-                        <!-- Bloque de Fuente Oficial -->
                         <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                             <div class="flex items-center gap-3">
                                 <div class="bg-[#0a4c41] p-2 rounded-lg text-emerald-400 text-sm">
@@ -1498,9 +1467,7 @@
                             </span>
                         </div>
 
-                        <!-- Grilla de Tres Tarjetas de Alta Fidelidad (image_b6ed11.png) -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
-                            <!-- Tarjeta 1: ¿Dónde Afecta? -->
                             <div class="bg-[#0e1626]/50 border-l-4 border-l-[#10b981] border border-slate-800/50 p-4 rounded-r-xl">
                                 <h5 class="font-black text-emerald-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
                                     <i class="fa-solid fa-location-dot"></i> ¿¿DÓNDE AFECTA??
@@ -1510,7 +1477,6 @@
                                 </p>
                             </div>
 
-                            <!-- Tarjeta 2: ¿Qué Hacer? -->
                             <div class="bg-[#0e1626]/50 border-l-4 border-l-[#e03d5b] border border-slate-800/50 p-4 rounded-r-xl">
                                 <h5 class="font-black text-rose-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
                                     <i class="fa-solid fa-stethoscope"></i> ¿¿QUÉ HACER??
@@ -1520,7 +1486,6 @@
                                 </p>
                             </div>
 
-                            <!-- Tarjeta 3: ¿Cómo Actúa Lab? -->
                             <div class="bg-[#0e1626]/50 border-l-4 border-l-[#007c65] border border-slate-800/50 p-4 rounded-r-xl">
                                 <h5 class="font-black text-teal-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
                                     <i class="fa-solid fa-microscope"></i> ¿¿CÓMO ACTÚA LAB??
@@ -1690,29 +1655,29 @@
             return semana;
         }
 
-        // Datos simulados de contingencia idénticos en caso de desconexión extrema sin internet
         function cargarDatosSimulados() {
             const apellidos = ["Alvarez", "Bustamante", "Cárdenas", "Delgado", "Espinoza", "Flores", "Gomez", "Huaman", "Ibañez", "Juarez", "López", "Mendoza", "Núñez", "Ospina", "Pérez", "Quispe", "Rojas", "Sanchez", "Torres", "Vargas"];
             const nombresList = ["Juan", "María", "Carlos", "Ana", "Luis", "Carmen", "Pedro", "Rosa", "José", "Sofía", "Miguel", "Lucía", "Jorge", "Elena", "Andrés", "Laura", "Diego", "Clara", "Felipe", "Gabriela"];
             const enfermedades = ["DENGUE SIN SEÑALES DE ALARMA", "DENGUE CON SEÑALES DE ALARMA", "DENGUE GRAVE", "ZIKA", "CHIKUNGUNYA"];
-            const dnxTipos = ["CONFIRMADO", "PROBABLE", "DESCARTADO"];
+            const dnxTipos = ["CONFIRMADO", "PROBABLE", "DESCARTADO", "C", "P", "D"];
             const localidades = ["COSTA AZUL", "PACHACÚTEC", "MI PERÚ", "VENTANILLA ALTA", "VENTANILLA BAJA", "ANGAMOS", "LICENCIADOS"];
             
             let dataset = [];
             let startDni = 40562381;
 
-            for (let i = 0; i < 100; i++) {
-                let ano = i < 30 ? 2024 : (i < 75 ? 2025 : 2026);
+            for (let i = 0; i < 170; i++) {
+                let ano = i < 40 ? 2024 : (i < 110 ? 2025 : 2026);
                 let semana = Math.floor(Math.random() * 52) + 1;
                 let sexo = Math.random() > 0.45 ? "F" : "M";
                 let edad = Math.floor(Math.random() * 80) + 1;
+                let estadoRaw = dnxTipos[Math.floor(Math.random() * dnxTipos.length)];
                 
                 dataset.push({
                     id: i,
                     ano: ano,
                     sem: semana,
                     diagnostic: enfermedades[Math.floor(Math.random() * enfermedades.length)],
-                    estado: dnxTipos[Math.floor(Math.random() * dnxTipos.length)],
+                    estado: normalizarEstadoParaFiltros(estadoRaw),
                     apepat: apellidos[Math.floor(Math.random() * apellidos.length)],
                     apemat: apellidos[Math.floor(Math.random() * apellidos.length)],
                     nombres: nombresList[Math.floor(Math.random() * nombresList.length)],
