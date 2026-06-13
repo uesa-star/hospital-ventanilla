@@ -567,10 +567,7 @@
         
         let dbRawData = [];
         let filteredData = [];
-        let welcomeModalShown = false; // Control de modal una sola vez
-        
-        // Control de notificaciones para que la de sincronización exitosa SOLO salga una vez (image_b59b36.png)
-        let firstSyncToastShown = false; 
+        let welcomeModalShown = false; // Flag para desplegar el modal una única vez en la carga
         
         // Estructura de almacenamiento de estadísticas dinámicas de alertas calculadas de la base de datos
         let alertDataStats = {
@@ -590,6 +587,26 @@
         let chartPatogenosInstance = null;
         let chartResultadosInstance = null;
         let chartSectoresInstance = null;
+
+        // Función de mapeo inteligente para normalizar estados clínicos heterogéneos de la base de datos (MINSA/NOTI)
+        function normalizarEstadoParaFiltros(estadoRaw) {
+            if (!estadoRaw) return "CONFIRMADO";
+            const est = String(estadoRaw).toUpperCase().trim();
+            
+            // Positivos / Confirmados (Mapea C, 1, CONFIRMADO, POSITIVO, SI)
+            if (est === "C" || est === "1" || est.startsWith("CONF") || est === "POSITIVO" || est === "SI" || est.startsWith("C-") || est.startsWith("C -") || est.includes("POSI") || est.includes("CONFIR")) {
+                return "CONFIRMADO";
+            }
+            // Probables / Pendientes / En Proceso (Mapea P, 2, PROBABLE, PENDIENTE, PROC)
+            if (est === "P" || est === "2" || est.startsWith("PROB") || est === "PENDIENTE" || est.startsWith("PEND") || est.startsWith("PROC") || est.startsWith("P-") || est.startsWith("P -") || est.includes("PROB") || est.includes("PEND") || est.includes("PROC")) {
+                return "PROBABLE";
+            }
+            // Descartados / Negativos (Mapea D, 3, DESCARTADO, NEGATIVO, NO)
+            if (est === "D" || est === "3" || est.startsWith("DESC") || est === "NEGATIVO" || est === "NO" || est.startsWith("NEG") || est.startsWith("D-") || est.startsWith("D -") || est.includes("DESCAR") || est.includes("NEG") || est === "NO") {
+                return "DESCARTADO";
+            }
+            return "CONFIRMADO"; // Fallback de seguridad
+        }
 
         // Registro de trazas de diagnóstico técnico
         function addLog(message, isError = false) {
@@ -828,59 +845,23 @@
 
             if (debugTotalRows) debugTotalRows.textContent = rows.length;
 
+            // Limpieza y filtrado de celdas vacías
             const cleanRows = rows.filter(row => {
                 return Object.values(row).some(val => val !== null && val !== undefined && String(val).trim() !== "");
             });
 
+            // Registrar cabeceras en el panel de soporte para control del epidemiólogo
             if (cleanRows.length > 0 && debugHeadersContainer) {
                 const headers = Object.keys(cleanRows[0]);
                 debugHeadersContainer.innerHTML = headers.map(h => `<span class="bg-slate-800 text-slate-300 px-1 py-0.5 rounded text-[10px] truncate max-w-[150px]">${h}</span>`).join("");
             }
 
             dbRawData = cleanRows.map((row, idx) => {
-                // Inteligencia de auto-recuperación para Año
-                let anoStr = getNormalizedValue(row, ['ano', 'año', 'an_notific', 'year', 'anio']);
-                let ano = parseInt(anoStr);
-                if (isNaN(ano)) {
-                    let fecha = getNormalizedValue(row, ['fecha', 'notificacion', 'marca', 'temporal', 'date']);
-                    if (fecha) {
-                        let match = fecha.match(/\b(202[0-9])\b/);
-                        if (match) {
-                            ano = parseInt(match[1]);
-                        } else {
-                            let match2 = fecha.match(/[\/\-](2[4-9])\b/);
-                            if (match2) {
-                                ano = 2000 + parseInt(match2[1]);
-                            }
-                        }
-                    }
-                }
-                if (isNaN(ano) || ano < 2000 || ano > 2030) {
-                    ano = 2026;
-                }
-
-                // Inteligencia de auto-recuperación para Semana Epidemiológica (S.E.)
-                let semStr = getNormalizedValue(row, ['semana', 'semana_not', 'sem', 'semana_epidemiologica', 'se', 'se_epi', 'semana_epi', 's.e.']);
-                let sem = parseInt(semStr);
-                if (isNaN(sem)) {
-                    let fecha = getNormalizedValue(row, ['fecha', 'notificacion', 'marca', 'temporal', 'date']);
-                    if (fecha) {
-                        let dateMatch = fecha.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-                        if (dateMatch) {
-                            let day = parseInt(dateMatch[1]);
-                            let month = parseInt(dateMatch[2]);
-                            if (month >= 1 && month <= 12) {
-                                sem = Math.min(52, Math.max(1, Math.floor((month - 1) * 4.34 + (day / 7))));
-                            }
-                        }
-                    }
-                }
-                if (isNaN(sem) || sem < 1 || sem > 53) {
-                    sem = 1;
-                }
-
-                let diagnostic = getNormalizedValue(row, ['diagnostic', 'Enfermedad', 'diagnostico', 'prueba', 'cie10', 'examen', 'tipo_examen', 'diagnostico_cie10', 'tipodeexamen'], "DENGUE SIN SEÑALES DE ALARMA").toUpperCase().trim();
+                let ano = parseInt(getNormalizedValue(row, ['ano', 'año', 'an_notific', 'year', 'anio'])) || 2026;
+                let sem = parseInt(getNormalizedValue(row, ['semana', 'semana_not', 'sem', 'semana_epidemiologica', 'se'])) || 1;
+                let diagnostic = getNormalizedValue(row, ['diagnostic', 'Enfermedad', 'diagnostico', 'prueba', 'cie10', 'examen', 'tipo_examen'], "DENGUE SIN SEÑALES DE ALARMA").toUpperCase().trim();
                 
+                // Normalización de estado en el mapeador primario para evitar asimetrías en KPIs y filtros
                 let estadoRaw = getNormalizedValue(row, ['tipo_dx', 'Notificado', 'estado', 'resultado', 'clasificacion', 'estado_paciente']);
                 let estado = normalizarEstadoParaFiltros(estadoRaw);
 
@@ -890,12 +871,14 @@
                 let edad = parseInt(getNormalizedValue(row, ['edad', 'edad_anos', 'edad_anios'])) || 0;
                 let sexo = getNormalizedValue(row, ['sexo', 'genero', 'sex'], "M").toUpperCase().trim().charAt(0);
                 let dni = getNormalizedValue(row, ['dni', 'documento', 'identificador', 'codigo'], "N/A");
-                let localidad = getNormalizedValue(row, ['localidad', 'distrito', 'procede', 'sector', 'direccion', 'zona', 'procedencia', 'distritosector', 'sectorezonal'], "VENTANILLA").toUpperCase().trim();
+                let localidad = getNormalizedValue(row, ['localidad', 'distrito', 'procede', 'sector', 'direccion', 'zona', 'procedencia'], "VENTANILLA").toUpperCase().trim();
 
                 return { id: idx, ano, sem, diagnostic, estado, apepat, apemat, nombres, edad, sexo, dni, localidad };
             });
 
+            // Calcular y sincronizar datos reales de alertas epidemiológicas basadas en la base de datos descargada
             calcularMetricasAlertas();
+
             buildFiltersDynamic();
             applyFilters();
         }
@@ -1086,6 +1069,7 @@
             document.getElementById("kpiTotal").textContent = total;
             document.getElementById("kpiTotalSub").textContent = `De ${dbRawData.length} registros globales`;
 
+            // Filtrados de Positivos, Negativos, Pendientes con el estado estandarizado de forma estricta
             const confirmados = filteredData.filter(d => d.estado === "CONFIRMADO").length;
             document.getElementById("kpiPositivos").textContent = confirmados;
 
