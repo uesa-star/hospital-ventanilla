@@ -98,13 +98,13 @@
             </div>                        
             
             <div class="flex flex-row items-center gap-3 shrink-0 no-print">                
-                <!-- PILL DE ESTADO DINÁMICO IDÉNTICO EN DISEÑO - AHORA SOLO DICE "ONLINE" -->                
+                <!-- PILL DE ESTADO DINÁMICO IDÉNTICO EN DISEÑO - ONLINE -->                
                 <span id="updateSuccessBadge" class="bg-teal-950/40 text-emerald-300 text-xs px-4 py-2 rounded-full border border-emerald-500/30 flex items-center gap-2 font-black select-none shadow-inner h-[38px] leading-none">
                     <span class="relative flex h-2 w-2 shrink-0">
                         <span id="badgeDotPing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span id="badgeDot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    <span id="statusText" class="tracking-widest">CONECTANDO...</span>
+                    <span id="statusText" class="tracking-widest">ONLINE</span>
                     <!-- ICONO DE DIAGNÓSTICO SINO-SINC -->
                     <i id="debugToggle" class="fa-solid fa-circle-info cursor-pointer text-emerald-400 hover:text-white transition-colors ml-1 text-xs" title="Ver consola de diagnóstico" onclick="toggleDebugConsole()"></i>
                 </span>
@@ -367,7 +367,7 @@
             <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all">                
                 <div>                    
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
-                        <h3 id="titleChartFrase" class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Casos por Mes</h3>                        
+                        <h3 id="titleChartMensual" class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Casos por Mes</h3>                        
                     </div>                    
                     <div class="relative h-56 w-full flex items-center justify-center mt-2">                        
                         <canvas id="chartMensual"></canvas>                    
@@ -568,6 +568,7 @@
         let dbRawData = [];
         let filteredData = [];
         let welcomeModalShown = false; // Flag para desplegar el modal una única vez en la carga
+        let firstSyncToastShown = false; // Bandera para mostrar la notificación de sincronización solo una vez
         
         // Estructura de almacenamiento de estadísticas dinámicas de alertas calculadas de la base de datos
         let alertDataStats = {
@@ -588,24 +589,63 @@
         let chartResultadosInstance = null;
         let chartSectoresInstance = null;
 
-        // Función de mapeo inteligente para normalizar estados clínicos heterogéneos de la base de datos (MINSA/NOTI)
         function normalizarEstadoParaFiltros(estadoRaw) {
-            if (!estadoRaw) return "CONFIRMADO";
+            if (!estadoRaw) return "PROBABLE"; // Por defecto probable, nunca confirmado para evitar inflar los KPIs
             const est = String(estadoRaw).toUpperCase().trim();
             
-            // Positivos / Confirmados (Mapea C, 1, CONFIRMADO, POSITIVO, SI)
-            if (est === "C" || est === "1" || est.startsWith("CONF") || est === "POSITIVO" || est === "SI" || est.startsWith("C-") || est.startsWith("C -") || est.includes("POSI") || est.includes("CONFIR")) {
-                return "CONFIRMADO";
-            }
-            // Probables / Pendientes / En Proceso (Mapea P, 2, PROBABLE, PENDIENTE, PROC)
-            if (est === "P" || est === "2" || est.startsWith("PROB") || est === "PENDIENTE" || est.startsWith("PEND") || est.startsWith("PROC") || est.startsWith("P-") || est.startsWith("P -") || est.includes("PROB") || est.includes("PEND") || est.includes("PROC")) {
-                return "PROBABLE";
-            }
-            // Descartados / Negativos (Mapea D, 3, DESCARTADO, NEGATIVO, NO)
-            if (est === "D" || est === "3" || est.startsWith("DESC") || est === "NEGATIVO" || est === "NO" || est.startsWith("NEG") || est.startsWith("D-") || est.startsWith("D -") || est.includes("DESCAR") || est.includes("NEG") || est === "NO") {
+            // DESCARTADOS / NEGATIVOS / NO REACTIVOS (Evita fallas de conteo)
+            if (
+                est === "D" || 
+                est === "3" || 
+                est === "DESC" || 
+                est === "NEGATIVO" || 
+                est === "NO" || 
+                est === "NO REACTIVO" ||
+                est === "NO_REACTIVO" ||
+                est.startsWith("DESC") || 
+                est.startsWith("NEG") || 
+                est.includes("DESCAR") || 
+                est.includes("NEG") || 
+                est.includes("NO REAC")
+            ) {
                 return "DESCARTADO";
             }
-            return "CONFIRMADO"; // Fallback de seguridad
+            
+            // CONFIRMADOS / POSITIVOS / REACTIVOS (Equivalente laboratorial exacto)
+            if (
+                est === "C" || 
+                est === "1" || 
+                est === "CONF" || 
+                est === "POSITIVO" || 
+                est === "SI" || 
+                est === "REACTIVO" ||
+                est === "REAC" ||
+                est.startsWith("CONF") || 
+                est.startsWith("POS") || 
+                est.includes("POSI") || 
+                est.includes("CONFIR") || 
+                est.includes("REACTI")
+            ) {
+                return "CONFIRMADO";
+            }
+            
+            // PROBABLES / PENDIENTES / EN PROCESO
+            if (
+                est === "P" || 
+                est === "2" || 
+                est === "PROB" || 
+                est === "PENDIENTE" || 
+                est.startsWith("PROB") || 
+                est.startsWith("PEND") || 
+                est.startsWith("PROC") || 
+                est.includes("PROB") || 
+                est.includes("PEND") || 
+                est.includes("PROC")
+            ) {
+                return "PROBABLE";
+            }
+            
+            return "PROBABLE"; // Fallback seguro
         }
 
         // Registro de trazas de diagnóstico técnico
@@ -616,39 +656,37 @@
             const color = isError ? 'text-rose-400' : 'text-emerald-400';
             container.innerHTML += `<p class="${color}">[${time}] ${message}</p>`;
             container.scrollTop = container.scrollHeight;
-            console.log(`[SINO-SINC] ${message}`);
+            console.log(`[SINO-SINC DIAG] ${message}`);
         }
 
         window.onload = function() {
             setupUIEventListeners();
             
-            // CARGA DE MICROSEGUNDOS (FAST-CACHE):
+            // INTRODUCCIÓN DE LA CARGA EN MICROSEGUNDOS (FAST-CACHE):
             const fastCache = localStorage.getItem("sino_sinc_fast_cache");
             if (fastCache) {
                 try {
                     dbRawData = JSON.parse(fastCache);
                     addLog("¡Datos de Fast-Cache cargados instantáneamente en microsegundos!");
                     
+                    // Renderizado súper acelerado
                     calcularMetricasAlertas();
                     buildFiltersDynamic();
                     applyFilters();
                     
-                    // Inicializa el botón con "ONLINE" en lugar de textos largos
+                    // Cambia la visualización del estado a ONLINE provisionalmente usando la caché
                     const statusText = document.getElementById("statusText");
                     if (statusText) statusText.textContent = "ONLINE";
-                    
-                    // CORRECCIÓN: Mostrar modal de bienvenida de forma inmediata al cargar de caché
-                    showWelcomeModal();
-                    welcomeModalShown = true; 
+                    welcomeModalShown = true; // No molestar con el modal si ya estaba cacheado
                 } catch(e) {
                     addLog("No se pudo parsear el Fast-Cache local.", true);
                 }
             }
             
-            // Disparar sincronización por red
+            // Disparar la descarga en paralelo inmediatamente
             conectarYDescargar();
             
-            // Intervalo silencioso de 20 segundos sin emitir toasts molestos (image_b59b36.png)
+            // Refrescar sincronizadamente cada 20 segundos sin caídas
             setInterval(() => { 
                 conectarYDescargar(); 
             }, 20000);
@@ -719,9 +757,9 @@
             const normalizeString = (str) => {
                 if (!str) return "";
                 return str.toLowerCase()
-                          .replace(/[\s_\-\/]/g, "") 
+                          .replace(/[\s_\-\/]/g, "") // Remover espacios, guiones, barras
                           .normalize("NFD")
-                          .replace(/[\u0300-\u036f]/g, ""); 
+                          .replace(/[\u0300-\u036f]/g, ""); // Remover tildes
             };
             
             const normalizedPossible = possibleKeys.map(k => normalizeString(k));
@@ -736,29 +774,6 @@
             return defaultValue;
         }
 
-        // Normalización inteligente del estado clínico de las fichas epidemiológicas
-        function normalizarEstadoParaFiltros(estadoRaw) {
-            if (!estadoRaw) return "CONFIRMADO";
-            const est = String(estadoRaw).toUpperCase().trim();
-            
-            if (est === "C" || est === "1" || est.startsWith("CONF") || est === "POSITIVO" || est === "SI" || est.startsWith("C-") || est.startsWith("C -")) {
-                return "CONFIRMADO";
-            }
-            if (est === "P" || est === "2" || est.startsWith("PROB") || est === "PENDIENTE" || est.startsWith("PEND") || est.startsWith("PROC") || est.startsWith("P-") || est.startsWith("P -")) {
-                return "PROBABLE";
-            }
-            if (est === "D" || est === "3" || est.startsWith("DESC") || est === "NEGATIVO" || est === "NO" || est.startsWith("NEG") || est.startsWith("D-") || est.startsWith("D -")) {
-                return "DESCARTADO";
-            }
-            
-            if (est.includes("CONFIR") || est.includes("POSI") || est === "SI") return "CONFIRMADO";
-            if (est.includes("PROB") || est.includes("PEND") || est.includes("PROC")) return "PROBABLE";
-            if (est.includes("DESC") || est.includes("NEG") || est === "NO") return "DESCARTADO";
-            
-            return "CONFIRMADO"; 
-        }
-
-        // Descargar datos sincrónicos con motor de redundancia y carrera en paralelo (RACE ENGINE)
         async function conectarYDescargar() {
             const statusText = document.getElementById("statusText");
             const badgeDot = document.getElementById("badgeDot");
@@ -770,9 +785,9 @@
             addLog("Iniciando carrera de red en paralelo para conexión en microsegundos...");
             
             const urlsToTry = [
-                SHEET_URL, 
-                `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=1&url=${encodeURIComponent(SHEET_URL)}`, 
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(SHEET_URL)}` 
+                SHEET_URL, // Canal 1: Directo
+                `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=1&url=${encodeURIComponent(SHEET_URL)}`, // Canal 2: Bypass Google OpenSocial
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(SHEET_URL)}` // Canal 3: Backup AllOrigins
             ];
 
             const fetchSource = async (url, sourceName) => {
@@ -786,6 +801,7 @@
             };
 
             try {
+                // RACING: Promise.any resuelve con la primera petición exitosa en microsegundos
                 const fastestResult = await Promise.any(urlsToTry.map((url, idx) => fetchSource(url, `Canal ${idx + 1}`)));
                 
                 const csvText = fastestResult.text;
@@ -805,7 +821,6 @@
                             // Guardar en Fast-Cache local para futuras cargas instantáneas
                             localStorage.setItem("sino_sinc_fast_cache", JSON.stringify(dbRawData));
                             
-                            // REQUERIMIENTO image_b59a82.png: El botón que parpadea en color verde solo debe decir ONLINE
                             if (statusText) statusText.textContent = "ONLINE";
                             if (badgeDot) badgeDot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
                             if (badgeDotPing) badgeDotPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75";
@@ -814,7 +829,7 @@
                                 updateSuccessBadge.className = "bg-teal-950/40 text-emerald-300 text-xs px-4 py-2 rounded-full border border-emerald-500/30 flex items-center gap-2 font-black select-none shadow-inner h-[38px] leading-none";
                             }
                             
-                            // REQUERIMIENTO image_b59b36.png: SÓLO mostrar el toast UNA VEZ al cargar el módulo
+                            // Mostrar mensaje de éxito una única vez (evita spam de Toasts cada 20 segundos)
                             if (!firstSyncToastShown) {
                                 showToast("Base de datos de Google Sheet sincronizada en vivo", "success");
                                 firstSyncToastShown = true;
@@ -859,10 +874,10 @@
             dbRawData = cleanRows.map((row, idx) => {
                 let ano = parseInt(getNormalizedValue(row, ['ano', 'año', 'an_notific', 'year', 'anio'])) || 2026;
                 let sem = parseInt(getNormalizedValue(row, ['semana', 'semana_not', 'sem', 'semana_epidemiologica', 'se'])) || 1;
-                let diagnostic = getNormalizedValue(row, ['diagnostic', 'Enfermedad', 'diagnostico', 'prueba', 'cie10', 'examen', 'tipo_examen'], "DENGUE SIN SEÑALES DE ALARMA").toUpperCase().trim();
+                let diagnostic = getNormalizedValue(row, ['diagnostic', 'Enfermedad', 'diagnostico', 'prueba', 'cie10', 'examen', 'tipo_examen', 'diagnostico_cie10'], "DENGUE SIN SEÑALES DE ALARMA").toUpperCase().trim();
                 
                 // Normalización de estado en el mapeador primario para evitar asimetrías en KPIs y filtros
-                let estadoRaw = getNormalizedValue(row, ['tipo_dx', 'Notificado', 'estado', 'resultado', 'clasificacion', 'estado_paciente']);
+                let estadoRaw = getNormalizedValue(row, ['tipo_dx', 'notificado', 'estado', 'resultado', 'clasificacion', 'estado_paciente', 'resultado_final', 'resultado_prueba', 'dx_final', 'res', 'resultado_de_la_prueba', 'dx']);
                 let estado = normalizarEstadoParaFiltros(estadoRaw);
 
                 let apepat = getNormalizedValue(row, ['apepat', 'paterno', 'apellido_paterno'], "");
@@ -918,6 +933,7 @@
                 }
             });
 
+            // Guardar en variable global para que switchAlertTab pueda usarlo
             alertDataStats = {
                 totalPositivos: totalPos,
                 sectorCritico: sectorCritico,
@@ -926,10 +942,11 @@
                 maxCasosEnf: maxCasosEnf
             };
 
+            // Sincronizar el Ticker (Marquesina) en vivo con los datos reales analizados
             const ticker = document.getElementById("liveAlertTicker");
             if (ticker) {
                 ticker.innerHTML = `
-                    <span>🌍 <strong>OMS GLOBAL:</strong> Alerta de la OPS/OMS por rebrote masivo de Sarampión ante el flujo del Mundial 2026.</span>
+                    <span>🌍 <strong>OMS GLOBAL:</strong> Alerta epidemiológica de OPS/OMS por Sarampión y Oropouche en zonas con bajo porcentaje de vacunación.</span>
                     <span>🇵🇪 <strong>CDC PERÚ:</strong> Alerta Nacional por Dengue Grave. Laboratorio Ventanilla registra <strong>${totalPos} casos positivos confirmados</strong>.</span>
                     <span>🚨 <strong>REBOTE LOCAL:</strong> Sector <strong>${sectorCritico}</strong> declarado en riesgo sanitario con <strong>${maxPosSector} casos positivos</strong>.</span>
                     <span>🔬 <strong>VIGILANCIA:</strong> Patógeno de alta incidencia detectado: <strong>${enfermedadMax}</strong> con <strong>${maxCasosEnf} muestras analizadas</strong>.</span>
@@ -947,7 +964,6 @@
             addLog(`Iniciando fallback local de contingencia. Razón: ${razon}`, true);
             if (debugNetStatus) debugNetStatus.textContent = "CONEXIÓN LOCAL (FALLBACK)";
 
-            // El botón de estado parpadeante solo debe decir ONLINE o similar (ONLINE en fallback local es aceptado)
             if (statusText) statusText.textContent = "ONLINE";
             if (badgeDot) badgeDot.className = "relative inline-flex rounded-full h-2 w-2 bg-amber-500";
             if (badgeDotPing) badgeDotPing.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75";
@@ -966,6 +982,7 @@
                     firstSyncToastShown = true;
                 }
 
+                // El fallback local también muestra el modal al cargarse
                 if (!welcomeModalShown) {
                     showWelcomeModal();
                     welcomeModalShown = true;
@@ -1043,7 +1060,7 @@
                 if (sector !== "ALL" && item.localidad !== sector) return false;
                 
                 if (result !== "ALL") {
-                    const est = item.estado; // "CONFIRMADO", "PROBABLE", "DESCARTADO"
+                    const est = item.estado;
                     if (result === "POSITIVO") {
                         if (est !== "CONFIRMADO") return false;
                     } else if (result === "NEGATIVO") {
@@ -1069,7 +1086,7 @@
             document.getElementById("kpiTotal").textContent = total;
             document.getElementById("kpiTotalSub").textContent = `De ${dbRawData.length} registros globales`;
 
-            // Filtrados de Positivos, Negativos, Pendientes con el estado estandarizado de forma estricta
+            // Conteo súper preciso basado únicamente en el estado pre-normalizado sin riesgo de nulos
             const confirmados = filteredData.filter(d => d.estado === "CONFIRMADO").length;
             document.getElementById("kpiPositivos").textContent = confirmados;
 
@@ -1082,6 +1099,7 @@
             const tasa = total > 0 ? ((confirmados / total) * 100).toFixed(1) : "0.0";
             document.getElementById("kpiTasa").textContent = `${tasa}%`;
 
+            // Alerta visual de tasa positividad
             const cardTasa = document.getElementById("kpiTasaCard");
             const alertTasaText = document.getElementById("kpiTasaAlert");
             if (cardTasa && alertTasaText) {
@@ -1100,6 +1118,7 @@
                 }
             }
 
+            // Foco sectorial
             const sectorCounts = {};
             filteredData.forEach(d => {
                 if(d.localidad) sectorCounts[d.localidad] = (sectorCounts[d.localidad] || 0) + 1;
@@ -1166,11 +1185,12 @@
 
             currentPageData.forEach(r => {
                 let badgeClass = "bg-slate-100 text-slate-700";
-                if (r.estado === "CONFIRMADO") {
+                const est = r.estado;
+                if (est === "CONFIRMADO") {
                     badgeClass = "bg-emerald-100 text-emerald-850 border border-emerald-250";
-                } else if (r.estado === "PROBABLE") {
+                } else if (est === "PROBABLE") {
                     badgeClass = "bg-amber-100 text-amber-850 border border-amber-250";
-                } else if (r.estado === "DESCARTADO") {
+                } else if (est === "DESCARTADO") {
                     badgeClass = "bg-rose-100 text-rose-850 border border-rose-250";
                 }
 
@@ -1241,8 +1261,9 @@
             const filterYearVal = document.getElementById("filterYear").value;
             const yearsSuffix = filterYearVal !== "ALL" ? ` - Año ${filterYearVal}` : " - Todos los Años";
 
+            // Actualizar cabeceras de gráficos
             document.getElementById("titleChartTrianual").innerHTML = `<i class="fa-solid fa-chart-line text-[#10b981]"></i> Comparativa Interanual de Curvas de Tendencias${yearsSuffix}`;
-            document.getElementById("titleChartFrase").innerText = `Casos por Mes${yearsSuffix}`;
+            document.getElementById("titleChartMensual").innerText = `Casos por Mes${yearsSuffix}`;
             document.getElementById("titleChartSemanal").innerText = `Curva S.E${yearsSuffix}`;
             document.getElementById("titleChartPatogenos").innerText = `Tipo De Exámenes${yearsSuffix}`;
             document.getElementById("titleChartResultados").innerText = `Resultados Clínicos${yearsSuffix}`;
@@ -1433,6 +1454,16 @@
             } catch(err) { console.warn("Gráfico 6: ", err); }
         }
 
+        function resetFilters() {
+            document.getElementById("filterYear").value = "ALL";
+            document.getElementById("filterTestType").value = "ALL";
+            document.getElementById("filterWeek").value = "ALL";
+            document.getElementById("filterResult").value = "ALL";
+            document.getElementById("filterSector").value = "ALL";
+            applyFilters();
+            showToast("Filtros restablecidos con éxito.", "success");
+        }
+
         function openAlertsModal() {
             const modal = document.getElementById("alertsModal");
             if (modal) {
@@ -1454,7 +1485,6 @@
             }
         }
 
-        // CONTROL DETALLADO FIEL DE ALERTAS ADAPTADO DE image_b6ed11.png
         function switchAlertTab(tab) {
             const container = document.getElementById("alertCardsContainer");
             if (!container) return;
@@ -1596,14 +1626,14 @@
                     <div class="bg-[#0a0f1d] border border-slate-800 rounded-3xl p-6 flex flex-col gap-5 shadow-lg">
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-4">
                             <div class="flex items-center gap-3">
-                                <span class="text-xl">🇧🇷</span>
-                                <h4 class="font-extrabold text-white text-sm md:text-base uppercase tracking-wider">FIEBRE DE OROPOUCHE EN FRONTERAS Y REGIONES</h4>
+                                <span class="text-xl">🇵🇪</span>
+                                <h4 class="font-extrabold text-white text-sm md:text-base uppercase tracking-wider">ESTADO DE REPUNTES EN VENTANILLA</h4>
                             </div>
-                            <span class="bg-[#92400e] text-amber-300 text-[10px] font-black px-4 py-1 rounded-full border border-amber-500/30 uppercase tracking-widest shrink-0 text-center animate-pulse">VIGILANCIA ACTIVA</span>
+                            <span class="bg-[#92400e] text-amber-300 text-[10px] font-black px-4 py-1 rounded-full border border-amber-500/30 uppercase tracking-widest shrink-0 text-center animate-pulse">ALERTA REGIONAL</span>
                         </div>
                         
                         <p class="text-slate-300 text-xs font-bold leading-relaxed">
-                            Vigilancia estricta por transmisión vectorial de Oropouche reportada en la frontera con Brasil. Casos confirmados en selva central obligan al Callao a descartar febriles inespecíficos.
+                            Vigilancia estricta y tamizaje masivo. El análisis en vivo del Google Sheet registra actualmente <strong>${alertDataStats.totalPositivos} casos positivos</strong> confirmados en territorio nacional.
                         </p>
 
                         <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
@@ -1612,22 +1642,22 @@
                                     <i class="fa-solid fa-bug"></i>
                                 </div>
                                 <div class="text-left">
-                                    <span class="font-black text-white text-[11px] block uppercase">FUENTE OFICIAL: DIRECCIÓN REGIONAL DE SALUD CALLAO</span>
-                                    <span class="text-[9px] text-slate-400 font-bold uppercase">REF: INFORME TÉCNICO VIG-ORO-CALLAO-2026</span>
+                                    <span class="font-black text-white text-[11px] block uppercase">DIRECCIÓN REGIONAL DE SALUD CALLAO</span>
+                                    <span class="text-[9px] text-slate-400 font-bold uppercase">REPUNTE LOCAL: ${alertDataStats.enfermedadMax} (${alertDataStats.maxCasosEnf} MUESTRAS)</span>
                                 </div>
                             </div>
                             <span class="text-[9px] text-slate-400 font-black uppercase tracking-wider bg-[#111827] px-3.5 py-1.5 rounded-lg border border-slate-850/80 shrink-0">
-                                <i class="fa-solid fa-rotate-left mr-1"></i> ACTIVADA: 10 DE JUNIO DE 2026
+                                <i class="fa-solid fa-rotate-left mr-1"></i> ACTUALIZADO EN VIVO
                             </span>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
                             <div class="bg-[#0e1626]/50 border-l-4 border-l-[#10b981] border border-slate-800/50 p-4 rounded-r-xl">
                                 <h5 class="font-black text-emerald-400 text-xs uppercase tracking-wider flex items-center gap-1.5 mb-2">
-                                    <i class="fa-solid fa-location-dot"></i> ¿¿DÓNDE AFECTA??
+                                    <i class="fa-solid fa-location-dot"></i> FOCO DE ALERTA SECTORIAL
                                 </h5>
                                 <p class="text-slate-300 text-[11px] font-bold leading-relaxed">
-                                    Zonas con alta vegetación y áreas periurbanas de la provincia constitucional del Callao propensas a vectores Culicoides.
+                                    El sector <strong>${alertDataStats.sectorCritico}</strong> se declara en riesgo alto con un repunte directo de <strong>${alertDataStats.maxPosSector} casos positivos</strong>.
                                 </p>
                             </div>
 
@@ -1636,7 +1666,7 @@
                                     <i class="fa-solid fa-stethoscope"></i> ¿¿QUÉ HACER??
                                 </h5>
                                 <p class="text-slate-300 text-[11px] font-bold leading-relaxed">
-                                    Instalar mallas finas en ventanas, uso de repelentes constantes de DEET y diagnóstico diferencial en pacientes negativos a Dengue o Zika.
+                                    Barrido y fumigación en el sector ${alertDataStats.sectorCritico}, instalación de mallas y repelentes de mosquitos constantes para evitar propagación.
                                 </p>
                             </div>
 
@@ -1645,7 +1675,7 @@
                                     <i class="fa-solid fa-microscope"></i> ¿¿CÓMO ACTÚA LAB??
                                 </h5>
                                 <p class="text-slate-300 text-[11px] font-bold leading-relaxed">
-                                    Extracción inmediata de muestra sanguínea total para aislamiento viral por RT-PCR o inmunoensayo serológico específico de IgM.
+                                    Intensificar el procesamiento rápido de muestras. El patógeno con mayor índice de análisis es <strong>${alertDataStats.enfermedadMax}</strong>.
                                 </p>
                             </div>
                         </div>
@@ -1700,8 +1730,8 @@
             let dataset = [];
             let startDni = 40562381;
 
-            for (let i = 0; i < 170; i++) {
-                let ano = i < 40 ? 2024 : (i < 110 ? 2025 : 2026);
+            for (let i = 0; i < 100; i++) {
+                let ano = i < 30 ? 2024 : (i < 75 ? 2025 : 2026);
                 let semana = Math.floor(Math.random() * 52) + 1;
                 let sexo = Math.random() > 0.45 ? "F" : "M";
                 let edad = Math.floor(Math.random() * 80) + 1;
