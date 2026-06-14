@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es" class="bg-slate-50 font-sans">
 <head>    
@@ -436,30 +437,36 @@
                         <p class="text-[8px] text-slate-300 font-bold uppercase tracking-widest mt-1.5">Monitoreo de Pacientes en Tiempo Real</p>
                     </div>
                 </div>
-                <div class="relative w-full md:w-64 no-print">
-                    <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
-                        <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
-                    </span>
-                    <input id="kardexSearch" type="text" placeholder="Buscar por DNI o apellidos..." class="w-full bg-white/10 border border-white/20 text-white text-xs rounded-lg pl-8 pr-2.5 py-1.5 placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-accent h-[32px]">
+                <div class="flex flex-row items-center gap-2 w-full md:w-auto no-print">
+                    <div class="relative w-full md:w-64">
+                        <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
+                            <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
+                        </span>
+                        <input id="kardexSearch" type="text" placeholder="Buscar por DNI, H.C. o apellidos..." class="w-full bg-white/10 border border-white/20 text-white text-xs rounded-lg pl-8 pr-2.5 py-1.5 placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-accent h-[32px]">
+                    </div>
+                    <button onclick="clearKardexSearch()" class="bg-[#007c65] hover:bg-[#006351] text-white px-3.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-98 h-[32px] flex items-center justify-center gap-1.5 border border-teal-500/20">
+                        <i class="fa-solid fa-eraser"></i> LIMPIAR
+                    </button>
                 </div>
             </div>
 
             <div class="overflow-x-auto custom-scrollbar w-full max-w-full">
-                <table class="w-full text-left border-collapse font-bold text-xs min-w-[750px]">
+                <table class="w-full text-left border-collapse font-bold text-xs min-w-[850px]">
                     <thead>
                         <tr class="bg-slate-100/80 text-slate-500 text-[9px] uppercase tracking-wider border-b border-slate-200">
-                            <th class="p-3">DNI / Código</th>
-                            <th class="p-3">Paciente</th>
-                            <th class="p-3 text-center">Edad / Sexo</th>
-                            <th class="p-3">Diagnóstico / Evento</th>
                             <th class="p-3 text-center">S.E. / Año</th>
-                            <th class="p-3">Estado</th>
-                            <th class="p-3">Procedencia</th>
+                            <th class="p-3">Fecha de Noti</th>
+                            <th class="p-3">Paciente</th>
+                            <th class="p-3 text-center">H.C.</th>
+                            <th class="p-3">DNI / Código</th>
+                            <th class="p-3">Zona Detectada</th>
+                            <th class="p-3">Tipo de Prueba</th>
+                            <th class="p-3 text-center">Resultado</th>
                         </tr>
                     </thead>
                     <tbody id="kardexTableBody" class="divide-y divide-slate-100 text-slate-700">
                         <tr>
-                            <td colspan="7" class="p-8 text-center text-slate-400 italic">Sincronizando con Google Sheets...</td>
+                            <td colspan="8" class="p-8 text-center text-slate-400 italic">Sincronizando con Google Sheets...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -535,10 +542,9 @@
         let dbRawData = [];
         let filteredData = [];
         let welcomeModalShown = false; // Flag para desplegar el modal una única vez en la carga
-        let activeTab = 'oms'; // Control del modal de alertas de alta fidelidad (image_b6ed11.png)
-        let firstSyncToastShown = false; // Bandera para mostrar la notificación de sincronización solo una vez
+        let activeTab = 'oms'; // Control del modal de alertas de alta fidelidad
         
-        // Estructura de almacenamiento de estadísticas dinámicas de alertas calculadas de la base de datos
+        // Estructura de almacenamiento de estadísticas de alertas calculadas
         let alertDataStats = {
             totalPositivos: 0,
             sectorCritico: "PACHACÚTEC",
@@ -618,6 +624,17 @@
             });
         }
 
+        /* LÓGICA DE LIMPIEZA DE BUSCADOR DE KARDEX SINC */
+        function clearKardexSearch() {
+            const searchInput = document.getElementById("kardexSearch");
+            if (searchInput) {
+                searchInput.value = "";
+                currentKardexPage = 1;
+                renderKardexTable();
+                showToast("Buscador de Kardex restablecido.", "success");
+            }
+        }
+
         function closeWelcomeModal() {
             const modal = document.getElementById("welcomeModal");
             if (modal) {
@@ -645,50 +662,63 @@
             }
         }
 
+        /* CORRECCIÓN DE LA FUNCIÓN DE COINCIDENCIA DE CABECERAS PARA EVITAR FALSOS POSITIVOS */
         function getNormalizedValue(row, possibleKeys, defaultValue = "") {
             const normalizeString = (str) => {
                 if (!str) return "";
                 return str.toLowerCase()
-                          .replace(/[\s_\-\/\.]/g, "") // Limpiamos espacios, guiones, barras y puntos (S.E. -> se)
+                          .replace(/[º°ª]/g, "o") // Reemplaza indicadores ordinales por 'o' para que Nº o N° se vuelvan No
+                          .replace(/[\s_\-\/\.]/g, "")
                           .normalize("NFD")
                           .replace(/[\u0300-\u036f]/g, ""); 
             };
             
             const normalizedPossible = possibleKeys.map(k => normalizeString(k));
             
+            // 1. Paso 1: Coincidencia EXACTA
             for (let key in row) {
                 const normKey = normalizeString(key);
-                if (normalizedPossible.includes(normKey) || normalizedPossible.some(p => normKey.includes(p) || p.includes(normKey))) {
+                if (normalizedPossible.includes(normKey)) {
                     const val = row[key];
                     return val !== undefined && val !== null ? String(val).trim() : defaultValue;
+                }
+            }
+            
+            // 2. Paso 2: Coincidencia aproximada segura (excluye claves cortas de 3 caracteres o menos)
+            for (let key in row) {
+                const normKey = normalizeString(key);
+                if (normKey.length <= 3) continue; // Evita falsos positivos en claves cortas (como "dia", "se", "hc")
+                
+                for (let poss of normalizedPossible) {
+                    if (poss.length <= 3) continue; // Evita falsos positivos con claves cortas
+                    if (normKey.includes(poss) || poss.includes(normKey)) {
+                        const val = row[key];
+                        return val !== undefined && val !== null ? String(val).trim() : defaultValue;
+                    }
                 }
             }
             return defaultValue;
         }
 
         function normalizarEstadoParaFiltros(estadoRaw) {
-            if (!estadoRaw) return "PROBABLE"; // Por defecto probable, nunca confirmado para evitar inflar los KPIs de forma falsa
+            if (!estadoRaw) return "PROBABLE"; 
             const est = String(estadoRaw).toUpperCase().trim();
             
-            // Si el estado contiene "C" (Confirmado) o "1" o empieza con "CONF" o es "SI" o es "REACTIVO"
             if (est === "C" || est === "1" || est.startsWith("CONF") || est === "POSITIVO" || est === "SI" || est.startsWith("C-") || est.startsWith("C -") || est === "REACTIVO" || est.startsWith("REAC")) {
                 return "CONFIRMADO";
             }
-            // Si el estado contiene "P" (Probable) o "2" o "PENDIENTE"
             if (est === "P" || est === "2" || est.startsWith("PROB") || est === "PENDIENTE" || est.startsWith("PEND") || est.startsWith("PROC") || est.startsWith("P-") || est.startsWith("P -")) {
                 return "PROBABLE";
             }
-            // Si el estado contiene "D" (Descartado) o "3" o "NEGATIVO" o "NO REACTIVO"
             if (est === "D" || est === "3" || est.startsWith("DESC") || est === "NEGATIVO" || est === "NO" || est.startsWith("NEG") || est.startsWith("D-") || est.startsWith("D -") || est === "NO REACTIVO" || est.includes("NO REAC")) {
                 return "DESCARTADO";
             }
             
-            // Fallbacks genéricos por subcadenas
             if (est.includes("CONFIR") || est.includes("POSI") || est === "SI" || est.includes("REACTI")) return "CONFIRMADO";
             if (est.includes("PROB") || est.includes("PEND") || est.includes("PROC")) return "PROBABLE";
             if (est.includes("DESC") || est.includes("NEG") || est === "NO" || est.includes("NO REAC")) return "DESCARTADO";
             
-            return "PROBABLE"; // Default seguro para evitar inflar KPIs
+            return "PROBABLE"; 
         }
 
         async function conectarYDescargar() {
@@ -706,16 +736,6 @@
                 `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=1&url=${encodeURIComponent(SHEET_URL)}`, 
                 `https://api.allorigins.win/raw?url=${encodeURIComponent(SHEET_URL)}` 
             ];
-
-            const fetchSource = async (url, sourceName) => {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error(`HTTP error en ${sourceName}`);
-                const text = await response.text();
-                if (!text || text.trim().length === 0 || !text.includes(",")) {
-                    throw new Error(`CSV inválido o vacío en ${sourceName}`);
-                }
-                return { text, sourceName };
-            };
 
             try {
                 const fastestResult = await Promise.any(urlsToTry.map((url, idx) => fetchSource(url, `Canal ${idx + 1}`)));
@@ -744,11 +764,7 @@
                                 updateSuccessBadge.className = "bg-teal-950/40 text-emerald-300 text-xs px-4 py-2 rounded-full border border-emerald-500/30 flex items-center gap-2 font-black select-none shadow-inner h-[38px] leading-none";
                             }
                             
-                            // Mostrar toast solo una vez para evitar spam visual en refrescos automáticos
-                            if (!firstSyncToastShown) {
-                                showToast("Base de datos de Google Sheet sincronizada en vivo", "success");
-                                firstSyncToastShown = true;
-                            }
+                            showToast("Base de datos de Google Sheet sincronizada en vivo", "success");
 
                             if (!welcomeModalShown) {
                                 const wModal = document.getElementById("welcomeModal");
@@ -772,6 +788,16 @@
             }
         }
 
+        const fetchSource = async (url, sourceName) => {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP error en ${sourceName}`);
+            const text = await response.text();
+            if (!text || text.trim().length === 0 || !text.includes(",")) {
+                throw new Error(`CSV inválido o vacío en ${sourceName}`);
+            }
+            return { text, sourceName };
+        };
+
         function procesarFilasSheet(rows) {
             const debugTotalRows = document.getElementById("debugTotalRows");
             const debugHeadersContainer = document.getElementById("debugHeadersContainer");
@@ -788,16 +814,17 @@
             }
 
             dbRawData = cleanRows.map((row, idx) => {
+                // Inteligencia de auto-recuperación para Año
                 let anoStr = getNormalizedValue(row, ['ano', 'año', 'an_notific', 'year', 'anio']);
                 let ano = parseInt(anoStr);
                 if (isNaN(ano)) {
-                    let fecha = getNormalizedValue(row, ['fecha', 'notificacion', 'marca', 'temporal', 'date']);
-                    if (fecha) {
-                        let match = fecha.match(/\b(202[0-9])\b/);
+                    let fechaRaw = getNormalizedValue(row, ['fecha', 'notificacion', 'marca', 'temporal', 'date']);
+                    if (fechaRaw) {
+                        let match = fechaRaw.match(/\b(202[0-9])\b/);
                         if (match) {
                             ano = parseInt(match[1]);
                         } else {
-                            let match2 = fecha.match(/[\/\-](2[4-9])\b/);
+                            let match2 = fechaRaw.match(/[\/\-](2[4-9])\b/);
                             if (match2) {
                                 ano = 2000 + parseInt(match2[1]);
                             }
@@ -808,12 +835,13 @@
                     ano = 2026;
                 }
 
+                // Inteligencia de auto-recuperación para Semana Epidemiológica (S.E.)
                 let semStr = getNormalizedValue(row, ['semana', 'semana_not', 'sem', 'semana_epidemiologica', 'se', 'se_epi', 'semana_epi', 's.e.']);
                 let sem = parseInt(semStr);
                 if (isNaN(sem)) {
-                    let fecha = getNormalizedValue(row, ['fecha', 'notificacion', 'marca', 'temporal', 'date']);
-                    if (fecha) {
-                        let dateMatch = fecha.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+                    let fechaRaw = getNormalizedValue(row, ['fecha', 'notificacion', 'marca', 'temporal', 'date']);
+                    if (fechaRaw) {
+                        let dateMatch = fechaRaw.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
                         if (dateMatch) {
                             let day = parseInt(dateMatch[1]);
                             let month = parseInt(dateMatch[2]);
@@ -827,6 +855,13 @@
                     sem = 1;
                 }
 
+                let fecha = getNormalizedValue(row, ['fecha', 'notificacion', 'marca', 'temporal', 'date']);
+                if (fecha) {
+                    fecha = fecha.split(/\s+/)[0]; 
+                } else {
+                    fecha = `${sem < 10 ? '0' : ''}${sem}/11/${ano}`;
+                }
+
                 let diagnostic = getNormalizedValue(row, ['diagnostic', 'Enfermedad', 'diagnostico', 'prueba', 'cie10', 'examen', 'tipo_examen', 'diagnostico_cie10', 'tipodeexamen'], "DENGUE SIN SEÑALES DE ALARMA").toUpperCase().trim();
                 
                 let estadoRaw = getNormalizedValue(row, ['tipo_dx', 'Notificado', 'estado', 'resultado', 'clasificacion', 'estado_paciente']);
@@ -837,10 +872,41 @@
                 let nombres = getNormalizedValue(row, ['nombres', 'nombre', 'paciente', 'paciente_nombres'], "Paciente Anonimizado");
                 let edad = parseInt(getNormalizedValue(row, ['edad', 'edad_anos', 'edad_anios'])) || 0;
                 let sexo = getNormalizedValue(row, ['sexo', 'genero', 'sex'], "M").toUpperCase().trim().charAt(0);
-                let dni = getNormalizedValue(row, ['dni', 'documento', 'identificador', 'codigo'], "N/A");
-                let localidad = getNormalizedValue(row, ['localidad', 'distrito', 'procede', 'sector', 'direccion', 'zona', 'procedencia', 'distritosector', 'sectorezonal'], "VENTANILLA").toUpperCase().trim();
+                
+                // BÚSQUEDA DE HISTORIA CLÍNICA CON DICCIONARIO
+                let hc = getNormalizedValue(row, [
+                    'hc', 'h_c', 'historia', 'historia_clinica', 'historiaclinica', 
+                    'nro_hc', 'nrohc', 'nohc', 'no_hc', 'nodehc', 'nrodehc',
+                    'nro_historia', 'nrohistoria', 'nohistoria', 'no_historia', 
+                    'nro_historia_clinica', 'nrohistoriaclinica', 
+                    'cod_hc', 'codhc', 'codigo_hc', 'codigohc',
+                    'h.c.', 'h.c', 'h. c.', 'h c',
+                    'nhc', 'n_hc', 'hist_clinica', 'histclinica', 'hist', 'h_clinica', 'hclinica',
+                    'nro_hist', 'nrohist', 'nohist', 'no_hist', 'hist_clin', 'histclin', 
+                    'nodeficha', 'ficha', 'nroficha', 'noficha'
+                ], "N/A");
 
-                return { id: idx, ano, sem, diagnostic, estado, apepat, apemat, nombres, edad, sexo, dni, localidad };
+                // FALLBACK INTELIGENTE HEURÍSTICO PARA HISTORIA CLÍNICA (H.C.) - EVITA CAÍDAS DE COLUMNAS
+                if (hc === "N/A") {
+                    for (let key in row) {
+                        const lKey = key.toLowerCase();
+                        if ((lKey.includes("hc") || lKey.includes("hist") || lKey.includes("clin") || lKey.includes("ficha") || lKey.includes("num") || lKey.includes("nro")) 
+                            && !lKey.includes("dni") && !lKey.includes("documento") && !lKey.includes("ano") && !lKey.includes("año") && !lKey.includes("fecha") && !lKey.includes("diagnostico") && !lKey.includes("evento")) {
+                            const val = row[key];
+                            if (val !== undefined && val !== null && String(val).trim() !== "") {
+                                hc = String(val).trim();
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                let dni = getNormalizedValue(row, ['dni', 'documento', 'identificador', 'codigo'], "N/A");
+                
+                // FALLBACK DE LOCALIDAD PONIENDO "" EN LUGAR DE "VENTANILLA" POR DEFECTO PARA RENDERIZAR "--"
+                let localidad = getNormalizedValue(row, ['localidad', 'distrito', 'procede', 'sector', 'direccion', 'zona', 'procedencia', 'distritosector', 'sectorezonal'], "").toUpperCase().trim();
+
+                return { id: idx, ano, sem, fecha, hc, diagnostic, estado, apepat, apemat, nombres, edad, sexo, dni, localidad };
             });
 
             calcularMetricasAlertas();
@@ -894,10 +960,9 @@
             const ticker = document.getElementById("liveAlertTicker");
             if (ticker) {
                 ticker.innerHTML = `
-                    <span>🌍 <strong>OMS GLOBAL:</strong> Alerta de la OPS/OMS por rebrote masivo de Sarampión ante el flujo del Mundial 2026.</span>
-                    <span>🇵🇪 <strong>CDC PERÚ:</strong> Alerta Nacional por Dengue Grave. Laboratorio Ventanilla registra <strong>${totalPos} casos positivos confirmados</strong>.</span>
-                    <span>🚨 <strong>REBOTE LOCAL:</strong> Sector <strong>${sectorCritico}</strong> declarado en riesgo sanitario con <strong>${maxPosSector} casos positivos</strong>.</span>
-                    <span>🔬 <strong>VIGILANCIA:</strong> Patógeno de alta incidencia detectado: <strong>${enfermedadMax}</strong> con <strong>${maxCasosEnf} muestras analizadas</strong>.</span>
+                    <span>🌍 <strong>OMS GLOBAL:</strong> Alerta de la OPS/OMS por rebrote masivo de Sarampión ante el flujo del Mundial 2026.</span>                    
+                    <span>🇵🇪 <strong>CDC PERÚ:</strong> Alerta Epidemiológica por Sarampión y Dengue grave en territorio nacional.</span>                    
+                    <span>🇧🇷 <strong>VIGILANCIA FRONTERA:</strong> Transmisión de Fiebre de Oropouche en la frontera con Brasil (Acre).</span>                
                 `;
             }
         }
@@ -924,11 +989,7 @@
                 calcularMetricasAlertas();
                 buildFiltersDynamic();
                 applyFilters();
-                
-                if (!firstSyncToastShown) {
-                    showToast("Activados datos de censo local por restricción de red remota", "warning");
-                    firstSyncToastShown = true;
-                }
+                showToast("Activados datos de censo local por restricción de red remota", "warning");
 
                 if (!welcomeModalShown) {
                     const wModal = document.getElementById("welcomeModal");
@@ -1006,7 +1067,7 @@
                 if (sector !== "ALL" && item.localidad !== sector) return false;
                 
                 if (result !== "ALL") {
-                    const est = item.estado; // "CONFIRMADO", "PROBABLE", "DESCARTADO"
+                    const est = item.estado; 
                     if (result === "POSITIVO") {
                         if (est !== "CONFIRMADO") return false;
                     } else if (result === "NEGATIVO") {
@@ -1056,9 +1117,9 @@
                     alertTasaText.innerText = "RIESGO MODERADO ⚠";
                     alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-amber-700";
                 } else {
-                    cardTasa.className = "bg-rose-50 p-4 rounded-2xl border border-rose-200 shadow-sm flex items-center justify-between min-h-[100px] animate-pulse transition-all";
+                    cardTasa.className = "bg-rose-50 p-4 rounded-2xl border border-rose-200 shadow-sm flex items-center justify-between min-h-[100px] transition-all";
                     alertTasaText.innerText = "ALERTA DE RIESGO 🚨";
-                    alertTasaText.className = "text-[9px] mt-2 font-black uppercase tracking-wider text-rose-750";
+                    alertTasaText.className = "text-[8px] mt-2 font-black uppercase tracking-wider text-rose-600";
                 }
             }
 
@@ -1092,13 +1153,18 @@
 
         function getFilteredTableData() {
             const query = document.getElementById("kardexSearch").value.toLowerCase().trim();
-            if (!query) return filteredData;
-            return filteredData.filter(d => 
-                d.dni.toLowerCase().includes(query) || 
-                `${d.nombres} ${d.apepat} ${d.apemat}`.toLowerCase().includes(query)
-            );
+            let matchedData = filteredData;
+            if (query) {
+                matchedData = filteredData.filter(d => 
+                    d.dni.toLowerCase().includes(query) || 
+                    d.hc.toLowerCase().includes(query) ||
+                    `${d.nombres} ${d.apepat} ${d.apemat}`.toLowerCase().includes(query)
+                );
+            }
+            return [...matchedData].reverse();
         }
 
+        /* */
         function renderKardexTable() {
             const tbody = document.getElementById("kardexTableBody");
             if (!tbody) return;
@@ -1122,9 +1188,12 @@
             const currentPageData = targetData.slice(startIdx, startIdx + kardexItemsPerPage);
 
             if (currentPageData.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400 italic">No se encontraron registros coincidentes.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400 italic">No se encontraron registros coincidentes.</td></tr>`;
                 return;
             }
+
+            const searchQuery = document.getElementById("kardexSearch").value.toLowerCase().trim();
+            const isSearchActive = searchQuery.length > 0;
 
             currentPageData.forEach(r => {
                 let badgeClass = "bg-slate-100 text-slate-700";
@@ -1136,21 +1205,48 @@
                     badgeClass = "bg-rose-100 text-rose-850 border border-rose-250";
                 }
 
+                // Lógica de privacidad extrema: Si no hay búsqueda activa, oculta el nombre, H.C. y DNI por completo
+                const rawHC = r.hc && r.hc !== "N/A" && r.hc.trim() !== "" ? r.hc : "--";
+                const rawDNI = r.dni && r.dni !== "N/A" && r.dni.trim() !== "" ? r.dni : "--";
+
+                let displayPaciente = "";
+                let displayHC = "";
+                let displayDNI = "";
+
+                if (isSearchActive) {
+                    let nombreCompleto = `${r.apepat} ${r.apemat} ${r.nombres}`.replace(/\s+/g, ' ').trim();
+                    if (!nombreCompleto || nombreCompleto === "Paciente Anonimizado") {
+                        nombreCompleto = r.nombres; 
+                    }
+                    displayPaciente = `<span class="text-slate-900 font-extrabold uppercase">${nombreCompleto}</span>`;
+                    displayHC = `<span class="font-mono text-slate-750 font-bold">${rawHC}</span>`;
+                    displayDNI = `<span class="font-mono text-slate-750 font-bold">${rawDNI}</span>`;
+                } else {
+                    displayPaciente = `<span class="text-slate-400 font-bold uppercase tracking-wide italic">PACIENTE ANONIMIZADO</span>`;
+                    displayHC = `<span class="text-slate-400 font-mono select-none">${rawHC === "--" ? "--" : "••••••"}</span>`;
+                    displayDNI = `<span class="text-slate-400 font-mono select-none">${rawDNI === "--" ? "--" : "••••••••"}</span>`;
+                }
+                
+                // REEMPLAZO ESTRICTO DE "VENTANILLA" POR "--" SEGÚN INDICACIONES DE LA IMAGEN
+                const zonaVal = r.localidad && r.localidad !== "N/A" && r.localidad.trim() !== "" && r.localidad !== "VENTANILLA" ? r.localidad : "--";
+
                 const tr = document.createElement("tr");
                 tr.className = "hover:bg-slate-50 border-b border-slate-100 transition-colors";
                 tr.innerHTML = `
-                    <td class="p-3 font-semibold text-slate-600">${r.dni}</td>
-                    <td class="p-3 font-bold text-slate-900 uppercase">${r.apepat} ${r.apemat} ${r.nombres}</td>
-                    <td class="p-3 text-center">${r.edad}a / <span class="text-slate-500 font-extrabold">${r.sexo}</span></td>
-                    <td class="p-3 font-bold text-slate-600">${r.diagnostic}</td>
-                    <td class="p-3 text-center font-bold text-slate-500">SE ${r.sem} - ${r.ano}</td>
-                    <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${badgeClass}">${r.estado}</span></td>
-                    <td class="p-3 uppercase text-slate-500 text-[11px]">${r.localidad}</td>
+                    <td class="p-3 text-center font-extrabold text-slate-700">SE ${r.sem} - ${r.ano}</td>
+                    <td class="p-3 font-semibold text-slate-600">${r.fecha}</td>
+                    <td class="p-3">${displayPaciente}</td>
+                    <td class="p-3 text-center">${displayHC}</td>
+                    <td class="p-3">${displayDNI}</td>
+                    <td class="p-3 uppercase text-slate-500 text-[11px]">${zonaVal}</td>
+                    <td class="p-3 font-bold text-slate-700 uppercase">${r.diagnostic}</td>
+                    <td class="p-3 text-center"><span class="px-2.5 py-0.5 rounded text-[10px] font-bold uppercase ${badgeClass}">${r.estado}</span></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
+        /* */
         function renderSummaryTable() {
             const summaryTableBody = document.getElementById("summaryTableBody");
             if (!summaryTableBody) return;
@@ -1199,6 +1295,7 @@
             summaryTableBody.innerHTML = html;
         }
 
+        /* */
         function renderCharts() {
             const filterYearVal = document.getElementById("filterYear").value;
             const yearsSuffix = filterYearVal !== "ALL" ? ` - Año ${filterYearVal}` : " - Todos los Años";
@@ -1584,7 +1681,7 @@
                                     <i class="fa-solid fa-bug"></i>
                                 </div>
                                 <div class="text-left">
-                                    <span class="font-black text-white text-[11px] block uppercase">FUENTE OFICIAL: DIRECCIÓN REGIONAL DE SALUD CALLAO</span>
+                                    <span class="font-black text-white text-[11px] block uppercase">FUENTE OFICIAL: DEPARTAMENTO SANITARIO CALLAO</span>
                                     <span class="text-[9px] text-slate-400 font-bold uppercase">REF: INFORME TÉCNICO VIG-ORO-CALLAO-2026</span>
                                 </div>
                             </div>
@@ -1682,11 +1779,14 @@
                     id: i,
                     ano: ano,
                     sem: semana,
+                    fecha: `${semana < 10 ? '0' : ''}${semana}/11/${ano}`,
+                    hc: `${100000 + i}`,
                     diagnostic: enfermedades[Math.floor(Math.random() * enfermedades.length)],
                     estado: normalizarEstadoParaFiltros(estadoRaw),
                     apepat: apellidos[Math.floor(Math.random() * apellidos.length)],
                     apemat: apellidos[Math.floor(Math.random() * apellidos.length)],
                     nombres: nombresList[Math.floor(Math.random() * nombresList.length)],
+                    parentName: `${apellidos[Math.floor(Math.random() * apellidos.length)]} ${apellidos[Math.floor(Math.random() * apellidos.length)]} ${nombresList[Math.floor(Math.random() * nombresList.length)]}`,
                     edad: edad,
                     sexo: sexo,
                     dni: String(startDni + i),
