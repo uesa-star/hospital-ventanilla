@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es" class="bg-slate-50 font-sans">
 <head>    
@@ -124,6 +123,58 @@
         <button onclick="openAlertsModal()" class="bg-[#e03d5b] hover:bg-[#c9324c] text-white px-5 py-2 rounded-xl text-xs font-black flex items-center gap-2 shadow-md border border-rose-400/30 shrink-0 hover:scale-102 transition-all uppercase tracking-wider no-print">
             <i class="fa-solid fa-bell text-xs animate-bounce"></i> DETALLE DE ALERTAS & REPUNTES
         </button>    
+    </section>
+
+    <!-- ================= MÓDULO RELOCALIZADO Y COLAPSABLE: RESUMEN EPIDEMIOLÓGICO DE PATÓGENOS VIGILADOS ================= -->
+    <section class="bg-white border-b border-slate-200/80 shadow-md no-print relative z-20">
+        <div onclick="togglePatogenosResumen()" class="max-w-[1850px] mx-auto px-6 py-3.5 flex items-center justify-between cursor-pointer hover:bg-slate-50/80 transition-colors select-none">
+            <div class="flex items-center gap-3">
+                <div class="bg-teal-50 text-brand-teal p-2 rounded-xl border border-teal-100/50">
+                    <i class="fa-solid fa-microscope text-base text-[#0a4c41]"></i>
+                </div>
+                <div>
+                    <h2 class="text-xs font-extrabold text-slate-800 uppercase tracking-wider leading-tight flex items-center gap-2">
+                        Resumen Epidemiológico de Patógenos Vigilados
+                    </h2>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                        Haga clic aquí para expandir / contraer el censo de patógenos activos
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <span class="bg-teal-50/80 text-brand-teal text-[9px] px-3 py-1.5 rounded-full font-bold uppercase border border-teal-100/50 flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Procesando en Vivo
+                </span>
+                <i id="patogenosToggleArrow" class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-200 text-sm"></i>
+            </div>
+        </div>
+        
+        <!-- CONTENIDO DETALLADO (OCULTO POR DEFECTO CON LA CLASE 'hidden') -->
+        <div id="patogenosCollapseContent" class="hidden border-t border-slate-100 bg-slate-50/40 p-6">
+            <div class="max-w-[1850px] mx-auto">
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-xs text-left text-slate-600 font-bold min-w-[650px]">
+                        <thead class="text-[10px] text-slate-500 uppercase bg-slate-100/80 border-b border-slate-200">
+                            <tr>
+                                <th class="p-3.5 font-bold text-slate-700">Tipo de Examen</th>
+                                <th class="p-3.5 text-center font-bold text-slate-700">Total Casos</th>
+                                <th class="p-3.5 text-center font-bold text-slate-700 text-rose-600">Positivos (+)</th>
+                                <th class="p-3.5 text-center font-bold text-slate-700 text-emerald-600">Negativos (-)</th>
+                                <th class="p-3.5 text-center font-bold text-slate-700 text-amber-600">Pendientes</th>
+                                <th class="p-3.5 text-center font-bold text-slate-700 text-slate-500">Descartados</th>
+                                <th class="p-3.5 text-center font-bold text-slate-700 text-brand-dark bg-slate-100/50">Tasa Positividad (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summaryTableBody" class="divide-y divide-slate-100 font-bold text-sm bg-white">
+                            <tr>
+                                <td colspan="7" class="p-4 text-center text-slate-400 italic">Cargando base epidemiológica...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </section>
 
     <!-- MODAL DE ALERTAS DETALLADAS -->
@@ -394,39 +445,6 @@
             </div>
         </section>
 
-        <!-- ================= 4. RESUMEN EPIDEMIOLÓGICO DE PATÓGENOS VIGILADOS ================= -->
-        <section class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3.5 hover:shadow-md transition-shadow">
-            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-                <div>
-                    <h2 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">Resumen Epidemiológico de Patógenos Vigilados</h2>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Censo extraído de la base activa</p>
-                </div>
-                <span class="bg-teal-50 text-brand-dark text-xs px-3.5 py-1.5 rounded-full font-bold uppercase border border-teal-100 flex items-center gap-1.5 no-print">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Procesando en Vivo
-                </span>
-            </div>
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-xs text-left text-slate-600 font-bold min-w-[650px]">
-                    <thead class="text-[10px] text-slate-500 uppercase bg-slate-50 border-b border-slate-200">
-                        <tr>
-                            <th class="p-3.5 font-bold text-slate-700">Tipo de Examen</th>
-                            <th class="p-3.5 text-center font-bold text-slate-700">Total Casos</th>
-                            <th class="p-3.5 text-center font-bold text-slate-700 text-rose-600">Positivos (+)</th>
-                            <th class="p-3.5 text-center font-bold text-slate-700 text-emerald-600">Negativos (-)</th>
-                            <th class="p-3.5 text-center font-bold text-slate-700 text-amber-600">Pendientes</th>
-                            <th class="p-3.5 text-center font-bold text-slate-700 text-slate-500">Descartados</th>
-                            <th class="p-3.5 text-center font-bold text-slate-700 text-brand-dark bg-slate-100/50">Tasa Positividad (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="summaryTableBody" class="divide-y divide-slate-100 font-bold text-sm">
-                        <tr>
-                            <td colspan="7" class="p-4 text-center text-slate-400 italic">Cargando base epidemiológica...</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
         <!-- ================= 5. KARDEX CLÍNICO INDIVIDUALIZADO (HISTORIAL) ================= -->
         <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow">
             <div class="bg-brand-dark text-white px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-900">
@@ -622,6 +640,21 @@
                     renderKardexTable();
                 }
             });
+        }
+
+        function togglePatogenosResumen() {
+            const content = document.getElementById("patogenosCollapseContent");
+            const arrow = document.getElementById("patogenosToggleArrow");
+            if (content && arrow) {
+                if (content.classList.contains("hidden")) {
+                    content.classList.remove("hidden");
+                    arrow.classList.add("rotate-180");
+                    showToast("Resumen Epidemiológico expandido.", "success");
+                } else {
+                    content.classList.add("hidden");
+                    arrow.classList.remove("rotate-180");
+                }
+            }
         }
 
         /* LÓGICA DE LIMPIEZA DE BUSCADOR DE KARDEX SINC */
@@ -1164,7 +1197,6 @@
             return [...matchedData].reverse();
         }
 
-        /* */
         function renderKardexTable() {
             const tbody = document.getElementById("kardexTableBody");
             if (!tbody) return;
@@ -1246,7 +1278,6 @@
             });
         }
 
-        /* */
         function renderSummaryTable() {
             const summaryTableBody = document.getElementById("summaryTableBody");
             if (!summaryTableBody) return;
@@ -1295,7 +1326,6 @@
             summaryTableBody.innerHTML = html;
         }
 
-        /* */
         function renderCharts() {
             const filterYearVal = document.getElementById("filterYear").value;
             const yearsSuffix = filterYearVal !== "ALL" ? ` - Año ${filterYearVal}` : " - Todos los Años";
@@ -1499,7 +1529,7 @@
             document.getElementById("filterResult").value = "ALL";
             document.getElementById("filterSector").value = "ALL";
             applyFilters();
-            showToast("Filtros restablecidos con éxito.", "success");
+            showToast("Filtros de control restablecidos con éxito.", "success");
         }
 
         function openAlertsModal() {
