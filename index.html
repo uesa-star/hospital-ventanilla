@@ -20,10 +20,10 @@
                 extend: {                    
                     colors: {                        
                         brand: {                            
-                            dark: '#014d3a',     // Verde oscuro corporativo idéntico a la imagen (Jungle Green)
+                            dark: '#014d3a',     // Verde oscuro corporativo (Jungle Green)
                             teal: '#0a4c41',     // Teal intermedio para filtros
                             accent: '#10b981',   // Esmeralda activo
-                            burgundy: '#4c0519', // Fondo de barra de alertas idéntico a la imagen
+                            burgundy: '#4c0519', // Fondo de barra de alertas
                             softBg: '#f8fafc'                        
                         }                    
                     }                
@@ -381,10 +381,11 @@
                 <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Análisis estacional de curvas epidemiológicas por mes (Sincronizado con checkboxes de año)</p>            
             </div>
 
+            <!-- ================= MODIFICADO: GRÁFICO 2 DE MESES A AÑOS (REF: image_cad62f.png) ================= -->
             <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all">                
                 <div>                    
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">                        
-                        <h3 id="titleChartMensual" class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Casos por Mes</h3>                        
+                        <h3 id="titleChartMensual" class="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Casos por Año</h3>                        
                     </div>                    
                     <div class="relative h-56 w-full flex items-center justify-center mt-2">                        
                         <canvas id="chartMensual"></canvas>                    
@@ -551,16 +552,15 @@
         </div>
     </footer>
 
-    <!-- LÓGICA DE SINCRONIZACIÓN Y FILTRADO INTEGRAL -->
+    <!-- LÓGICA DE SINCRONIZACIÓN Y FILTRADO INTEGRAL (SINO-SINC MOTOR) -->
     <script>
         const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH-sGKVHNCt-kPiOoVv1BnmsTSE1onfi0f05kk0hh8Uc0l0kH3V8QzY22UdS23TjA9MCX8tDYwSNe7/pub?gid=1171051655&single=true&output=csv";
         
         let dbRawData = [];
         let filteredData = [];
-        let welcomeModalShown = false; // Flag para desplegar el modal una única vez en la carga
-        let activeTab = 'oms'; // Control del modal de alertas de alta fidelidad
+        let welcomeModalShown = false; // Control de modal
+        let activeTab = 'oms'; 
         
-        // Estructura de almacenamiento de estadísticas de alertas calculadas
         let alertDataStats = {
             totalPositivos: 0,
             sectorCritico: "PACHACÚTEC",
@@ -592,12 +592,11 @@
         window.onload = function() {
             setupUIEventListeners();
             
-            // INTRODUCCIÓN DE LA CARGA EN MICROSEGUNDOS (FAST-CACHE):
             const fastCache = localStorage.getItem("sino_sinc_fast_cache");
             if (fastCache) {
                 try {
                     dbRawData = JSON.parse(fastCache);
-                    addLog("¡Datos de Fast-Cache cargados instantáneamente en microsegundos!");
+                    addLog("¡Datos de Fast-Cache cargados instantáneamente!");
                     
                     calcularMetricasAlertas();
                     buildFiltersDynamic();
@@ -618,26 +617,35 @@
         };
 
         function setupUIEventListeners() {
-            document.getElementById("kardexSearch").addEventListener("input", () => {
-                currentKardexPage = 1;
-                renderKardexTable();
-            });
-
-            document.getElementById("btnPrevPage").addEventListener("click", () => {
-                if (currentKardexPage > 1) {
-                    currentKardexPage--;
+            const searchInput = document.getElementById("kardexSearch");
+            if (searchInput) {
+                searchInput.addEventListener("input", () => {
+                    currentKardexPage = 1;
                     renderKardexTable();
-                }
-            });
+                });
+            }
 
-            document.getElementById("btnNextPage").addEventListener("click", () => {
-                const totalFiltered = getFilteredTableData().length;
-                const maxPage = Math.ceil(totalFiltered / kardexItemsPerPage);
-                if (currentKardexPage < maxPage) {
-                    currentKardexPage++;
-                    renderKardexTable();
-                }
-            });
+            const btnPrev = document.getElementById("btnPrevPage");
+            if (btnPrev) {
+                btnPrev.addEventListener("click", () => {
+                    if (currentKardexPage > 1) {
+                        currentKardexPage--;
+                        renderKardexTable();
+                    }
+                });
+            }
+
+            const btnNext = document.getElementById("btnNextPage");
+            if (btnNext) {
+                btnNext.addEventListener("click", () => {
+                    const totalFiltered = getFilteredTableData().length;
+                    const maxPage = Math.ceil(totalFiltered / kardexItemsPerPage);
+                    if (currentKardexPage < maxPage) {
+                        currentKardexPage++;
+                        renderKardexTable();
+                    }
+                });
+            }
 
             const backToTopBtn = document.getElementById("backToTopBtn");
             if (backToTopBtn) {
@@ -655,7 +663,6 @@
             }
         }
 
-        /* VOLVER AL INICIO */
         function scrollToTop() {
             window.scrollTo({
                 top: 0,
@@ -663,7 +670,6 @@
             });
         }
 
-        /* LÓGICA DE APERTURA / CONTRACCIÓN DE RESUMEN DE PATÓGENOS */
         function toggleSummaryCollapse() {
             const content = document.getElementById("summaryCollapseContent");
             const icon = document.getElementById("summaryCollapseIcon");
@@ -676,7 +682,6 @@
             }
         }
 
-        /* LÓGICA DE LIMPIEZA DE BUSCADOR DE KARDEX SINC */
         function clearKardexSearch() {
             const searchInput = document.getElementById("kardexSearch");
             if (searchInput) {
@@ -687,9 +692,11 @@
             }
         }
 
+        /* FUNCIÓN DE CIERRE DE BIENVENIDA TOTALMENTE PROTEGIDA CONTRA CUELGUES */
         function closeWelcomeModal() {
             const modal = document.getElementById("welcomeModal");
             if (modal) {
+                modal.style.display = "none"; // Fail-safe directo
                 modal.classList.add("opacity-0", "pointer-events-none");
                 const card = modal.querySelector("div");
                 if (card) {
@@ -697,7 +704,7 @@
                     card.classList.add("scale-95");
                 }
                 setTimeout(() => {
-                    modal.remove(); 
+                    try { modal.remove(); } catch(e) {}
                 }, 200);
             }
         }
@@ -714,12 +721,12 @@
             }
         }
 
-        /* CORRECCIÓN DE LA FUNCIÓN DE COINCIDENCIA DE CABECERAS PARA EVITAR FALSOS POSITIVOS */
+        /* */
         function getNormalizedValue(row, possibleKeys, defaultValue = "") {
             const normalizeString = (str) => {
                 if (!str) return "";
                 return str.toLowerCase()
-                          .replace(/[º°ª]/g, "o") // Reemplaza indicadores ordinales por 'o' para que Nº o N° se vuelvan No
+                          .replace(/[º°ª]/g, "o")
                           .replace(/[\s_\-\/\.]/g, "")
                           .normalize("NFD")
                           .replace(/[\u0300-\u036f]/g, ""); 
@@ -727,7 +734,6 @@
             
             const normalizedPossible = possibleKeys.map(k => normalizeString(k));
             
-            // 1. Paso 1: Coincidencia EXACTA
             for (let key in row) {
                 const normKey = normalizeString(key);
                 if (normalizedPossible.includes(normKey)) {
@@ -736,13 +742,12 @@
                 }
             }
             
-            // 2. Paso 2: Coincidencia aproximada segura (excluye claves cortas de 3 caracteres o menos)
             for (let key in row) {
                 const normKey = normalizeString(key);
-                if (normKey.length <= 3) continue; // Evita falsos positivos en claves cortas (como "dia", "se", "hc")
+                if (normKey.length <= 3) continue; 
                 
                 for (let poss of normalizedPossible) {
-                    if (poss.length <= 3) continue; // Evita falsos positivos con claves cortas
+                    if (poss.length <= 3) continue; 
                     if (normKey.includes(poss) || poss.includes(normKey)) {
                         const val = row[key];
                         return val !== undefined && val !== null ? String(val).trim() : defaultValue;
@@ -781,7 +786,7 @@
             const debugNetStatus = document.getElementById("debugNetStatus");
             const debugBytesRead = document.getElementById("debugBytesRead");
 
-            addLog("Iniciando carrera de red en paralelo para conexión en microsegundos...");
+            addLog("Estableciendo conexión por triple túnel alternativo...");
             
             const urlsToTry = [
                 SHEET_URL, 
@@ -791,9 +796,8 @@
 
             try {
                 const fastestResult = await Promise.any(urlsToTry.map((url, idx) => fetchSource(url, `Canal ${idx + 1}`)));
-                
                 const csvText = fastestResult.text;
-                addLog(`¡Carrera ganada por ${fastestResult.sourceName}!`);
+                addLog(`¡Conexión establecida con éxito mediante ${fastestResult.sourceName}!`);
 
                 if (debugNetStatus) debugNetStatus.textContent = `ONLINE (${fastestResult.sourceName})`;
                 if (debugBytesRead) debugBytesRead.textContent = `${Math.round(csvText.length / 1024)} KB`;
@@ -803,7 +807,7 @@
                     skipEmptyLines: true,
                     complete: function(results) {
                         if (results.data && results.data.length > 0) {
-                            addLog(`PapaParse completado con éxito. Filas procesadas: ${results.data.length}`);
+                            addLog(`Filas procesadas correctamente: ${results.data.length}`);
                             procesarFilasSheet(results.data);
                             
                             localStorage.setItem("sino_sinc_fast_cache", JSON.stringify(dbRawData));
@@ -827,16 +831,16 @@
                                 welcomeModalShown = true;
                             }
                         } else {
-                            conectarDatosLocalesSinoSinc("El archivo CSV descargado estaba vacío.");
+                            conectarDatosLocalesSinoSinc("Archivo remoto de Google Sheets sin datos o vacío.");
                         }
                     },
                     error: function(err) {
-                        conectarDatosLocalesSinoSinc(`Fallo en análisis de estructura CSV: ${err}`);
+                        conectarDatosLocalesSinoSinc(`Error de parseo de datos: ${err}`);
                     }
                 });
 
             } catch (err) {
-                conectarDatosLocalesSinoSinc("Todos los canales de red en paralelo fallaron o están bloqueados.");
+                conectarDatosLocalesSinoSinc("Servidor de Google Sheets inalcanzable. Cargando contingencia local.");
             }
         }
 
@@ -866,11 +870,10 @@
             }
 
             dbRawData = cleanRows.map((row, idx) => {
-                // Inteligencia de auto-recuperación para Año
                 let anoStr = getNormalizedValue(row, ['ano', 'año', 'an_notific', 'year', 'anio']);
                 let ano = parseInt(anoStr);
                 if (isNaN(ano)) {
-                    let fechaRaw = getNormalizedValue(row, ['fecha', 'notificacion', 'marca', 'temporal', 'date']);
+                    let fechaRaw = getNormalizedValue(row, ['fecha_notificacion', 'fechanotificacion', 'fecha', 'notificacion', 'marca', 'temporal', 'date']);
                     if (fechaRaw) {
                         let match = fechaRaw.match(/\b(202[0-9])\b/);
                         if (match) {
@@ -887,11 +890,10 @@
                     ano = 2026;
                 }
 
-                // Inteligencia de auto-recuperación para Semana Epidemiológica (S.E.)
                 let semStr = getNormalizedValue(row, ['semana', 'semana_not', 'sem', 'semana_epidemiologica', 'se', 'se_epi', 'semana_epi', 's.e.']);
                 let sem = parseInt(semStr);
                 if (isNaN(sem)) {
-                    let fechaRaw = getNormalizedValue(row, ['fecha', 'notificacion', 'marca', 'temporal', 'date']);
+                    let fechaRaw = getNormalizedValue(row, ['fecha_notificacion', 'fechanotificacion', 'fecha', 'notificacion', 'marca', 'temporal', 'date']);
                     if (fechaRaw) {
                         let dateMatch = fechaRaw.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
                         if (dateMatch) {
@@ -907,7 +909,6 @@
                     sem = 1;
                 }
 
-                // ESTRATEGIA QUIRÚRGICA DE ENRUTAMIENTO DE FECHA DE NOTIFICACIÓN CLÍNICA (IGNORA MARCAS DE TIEMPO)
                 let fecha = getNormalizedValue(row, [
                     'fecha_notificacion', 'fechanotificacion', 'fec_not', 'fec_notif', 'fecnot', 
                     'fecha_de_notificacion', 'fechadenotificacion', 'fecha_noti', 'fech_not', 'fechanoti',
@@ -915,12 +916,10 @@
                 ]).trim();
 
                 if (!fecha || fecha === "undefined" || fecha === "N/A" || fecha === "") {
-                    // Fallback 1: Buscar campos de fecha clínicos alternativos (pero no marca temporal del sistema)
                     fecha = getNormalizedValue(row, ['fecha_ficha', 'fec_ficha', 'fec_registro_clinico', 'fecha_sintomas', 'fec_ini_sin']).trim();
                 }
 
                 if (!fecha || fecha === "undefined" || fecha === "N/A" || fecha === "") {
-                    // Fallback 2: Buscar campo de fecha genérico asegurando no capturar "Marca temporal" de ingreso
                     let tempFecha = getNormalizedValue(row, ['fecha', 'fec', 'date']).trim();
                     if (tempFecha && !tempFecha.toLowerCase().includes("marca") && !tempFecha.toLowerCase().includes("temporal")) {
                         fecha = tempFecha;
@@ -928,7 +927,6 @@
                 }
 
                 if (!fecha || fecha === "undefined" || fecha === "N/A" || fecha === "") {
-                    // Fallback 3: Si no hay absolutamente nada en la fila, autocalcular con base en la S.E. y Año
                     fecha = `${sem < 10 ? '0' : ''}${sem}/11/${ano}`;
                 }
 
@@ -947,20 +945,18 @@
                 let edad = parseInt(getNormalizedValue(row, ['edad', 'edad_anos', 'edad_anios'])) || 0;
                 let sexo = getNormalizedValue(row, ['sexo', 'genero', 'sex'], "M").toUpperCase().trim().charAt(0);
                 
-                // BÚSQUEDA DE HISTORIA CLÍNICA CON DICCIONARIO
                 let hc = getNormalizedValue(row, [
                     'hc', 'h_c', 'historia', 'historia_clinica', 'historiaclinica', 
                     'nro_hc', 'nrohc', 'nohc', 'no_hc', 'nodehc', 'nrodehc',
                     'nro_historia', 'nrohistoria', 'nohistoria', 'no_historia', 
                     'nro_historia_clinica', 'nrohistoriaclinica', 
                     'cod_hc', 'codhc', 'codigo_hc', 'codigohc',
-                    'h.c.', 'h.c.', 'h. c.', 'h c',
+                    'h.c.', 'h.c', 'h. c.', 'h c',
                     'nhc', 'n_hc', 'hist_clinica', 'histclinica', 'hist', 'h_clinica', 'hclinica',
                     'nro_hist', 'nrohist', 'nohist', 'no_hist', 'hist_clin', 'histclin', 
                     'nodeficha', 'ficha', 'nroficha', 'noficha'
                 ], "N/A");
 
-                // FALLBACK INTELIGENTE HEURÍSTICO PARA HISTORIA CLÍNICA (H.C.) - EVITA CAÍDAS DE COLUMNAS
                 if (hc === "N/A") {
                     for (let key in row) {
                         const lKey = key.toLowerCase();
@@ -977,8 +973,8 @@
 
                 let dni = getNormalizedValue(row, ['dni', 'documento', 'identificador', 'codigo'], "N/A");
                 
-                // FALLBACK DE LOCALIDAD PONIENDO "" EN LUGAR DE "VENTANILLA" POR DEFECTO PARA RENDERIZAR "--"
-                let localidad = getNormalizedValue(row, ['localidad', 'distrito', 'procede', 'sector', 'direccion', 'zona', 'procedencia', 'distritosector', 'sectorezonal'], "").toUpperCase().trim();
+                // PRIORIDAD ABSOLUTA A LA COLUMNA DE ZONA DETECTADA
+                let localidad = getNormalizedValue(row, ['zona detectada', 'zonadetectada', 'zona_detectada', 'localidad', 'distrito', 'procede', 'sector', 'direccion', 'zona', 'procedencia', 'distritosector', 'sectorezonal'], "").toUpperCase().trim();
 
                 return { id: idx, ano, sem, fecha, hc, diagnostic, estado, apepat, apemat, nombres, edad, sexo, dni, localidad };
             });
@@ -1076,6 +1072,7 @@
             }
         }
 
+        /* */
         function buildFiltersDynamic() {
             const sYear = document.getElementById("filterYear").value || "ALL";
             const sTest = document.getElementById("filterTestType").value || "ALL";
@@ -1238,6 +1235,7 @@
             return [...matchedData].reverse();
         }
 
+        /* */
         function renderKardexTable() {
             const tbody = document.getElementById("kardexTableBody");
             if (!tbody) return;
@@ -1251,8 +1249,11 @@
                 currentKardexPage = maxPage;
             }
 
-            document.getElementById("btnPrevPage").disabled = currentKardexPage === 1;
-            document.getElementById("btnNextPage").disabled = currentKardexPage === maxPage;
+            const btnPrev = document.getElementById("btnPrevPage");
+            if (btnPrev) btnPrev.disabled = currentKardexPage === 1;
+
+            const btnNext = document.getElementById("btnNextPage");
+            if (btnNext) btnNext.disabled = currentKardexPage === maxPage;
 
             const startIdx = (currentKardexPage - 1) * kardexItemsPerPage;
             document.getElementById("kardexCountLabel").textContent = `Mostrando ${totalFiltered > 0 ? startIdx + 1 : 0} a ${Math.min(startIdx + kardexItemsPerPage, totalFiltered)} de ${totalFiltered} registros`;
@@ -1278,7 +1279,6 @@
                     badgeClass = "bg-rose-100 text-rose-850 border border-rose-250";
                 }
 
-                // Lógica de privacidad extrema: Si no hay búsqueda activa, oculta el nombre, H.C. y DNI por completo
                 const rawHC = r.hc && r.hc !== "N/A" && r.hc.trim() !== "" ? r.hc : "--";
                 const rawDNI = r.dni && r.dni !== "N/A" && r.dni.trim() !== "" ? r.dni : "--";
 
@@ -1300,7 +1300,6 @@
                     displayDNI = `<span class="text-slate-400 font-mono select-none">${rawDNI === "--" ? "--" : "••••••••"}</span>`;
                 }
                 
-                // REEMPLAZO ESTRICTO DE "VENTANILLA" POR "--" SEGÚN INDICACIONES DE LA IMAGEN
                 const zonaVal = r.localidad && r.localidad !== "N/A" && r.localidad.trim() !== "" && r.localidad !== "VENTANILLA" ? r.localidad : "--";
 
                 const tr = document.createElement("tr");
@@ -1319,7 +1318,6 @@
             });
         }
 
-        /* */
         function renderSummaryTable() {
             const summaryTableBody = document.getElementById("summaryTableBody");
             if (!summaryTableBody) return;
@@ -1368,12 +1366,13 @@
             summaryTableBody.innerHTML = html;
         }
 
+        /* */
         function renderCharts() {
             const filterYearVal = document.getElementById("filterYear").value;
             const yearsSuffix = filterYearVal !== "ALL" ? ` - Año ${filterYearVal}` : " - Todos los Años";
 
             document.getElementById("titleChartTrianual").innerHTML = `<i class="fa-solid fa-chart-line text-[#10b981]"></i> Comparativa Interanual de Curvas de Tendencias${yearsSuffix}`;
-            document.getElementById("titleChartMensual").innerText = `Casos por Mes${yearsSuffix}`;
+            document.getElementById("titleChartMensual").innerText = `Casos por Año${yearsSuffix}`;
             document.getElementById("titleChartSemanal").innerText = `Curva S.E${yearsSuffix}`;
             document.getElementById("titleChartPatogenos").innerText = `Tipo De Exámenes${yearsSuffix}`;
             document.getElementById("titleChartResultados").innerText = `Resultados Clínicos${yearsSuffix}`;
@@ -1427,32 +1426,67 @@
                 }
             } catch(err) { console.warn("Gráfico 1: ", err); }
 
-            // ---- GRÁFICO 2: CASOS POR MES ----
+            // ---- MODIFICADO: GRÁFICO 2: CASOS POR AÑO CON BASE DE 2024 Y 2025 (REF: image_cad62f.png) ----
             try {
                 const canvas = document.getElementById('chartMensual');
                 if (canvas) {
-                    const mesesMap = { "Ene":0, "Feb":0, "Mar":0, "Abr":0, "May":0, "Jun":0, "Jul":0, "Ago":0, "Sep":0, "Oct":0, "Nov":0, "Dic":0 };
-                    const mesesNombres = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                    // Inicializar los años base obligatorios (2024, 2025, 2026) para asegurar que siempre aparezcan en el gráfico
+                    const anosMap = { "2024": 0, "2025": 0, "2026": 0 };
+                    
+                    // Agrupar dinámicamente y agregar cualquier año adicional detectado en el Google Sheet (ej: 2027+)
                     filteredData.forEach(d => {
-                        const mesIdx = Math.min(11, Math.floor(d.sem / 4.4));
-                        mesesMap[mesesNombres[mesIdx]]++;
+                        if (d.ano) {
+                            anosMap[d.ano] = (anosMap[d.ano] || 0) + 1;
+                        }
                     });
+
+                    // Ordenar numéricamente los años para la visualización del gráfico de barras
+                    const sortedYears = Object.keys(anosMap).sort((a, b) => parseInt(a) - parseInt(b));
+                    const valuesByYear = sortedYears.map(yr => anosMap[yr]);
 
                     if (chartMensualInstance) chartMensualInstance.destroy();
                     chartMensualInstance = new Chart(canvas.getContext('2d'), {
                         type: 'bar',
                         data: {
-                            labels: Object.keys(mesesMap),
+                            labels: sortedYears.map(yr => `Año ${yr}`),
                             datasets: [{
-                                data: Object.values(mesesMap),
-                                backgroundColor: '#014d3a',
-                                borderRadius: 6
+                                label: 'Casos Totales',
+                                data: valuesByYear,
+                                backgroundColor: sortedYears.map((yr, idx) => {
+                                    if (yr === "2024") return '#0284c7'; // Azul para el 2024
+                                    if (yr === "2025") return '#0a4c41'; // Verde intermedio para el 2025
+                                    return '#10b981';                     // Esmeralda activo para el 2026 y posteriores
+                                }),
+                                borderRadius: 8,
+                                borderWidth: 1,
+                                borderColor: '#014d3a'
                             }]
                         },
-                        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                        options: { 
+                            responsive: true, 
+                            maintainAspectRatio: false, 
+                            plugins: { 
+                                legend: { display: false },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            return ` Casos: ${context.raw}`;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        precision: 0
+                                    }
+                                }
+                            }
+                        }
                     });
                 }
-            } catch(err) { console.warn("Gráfico 2: ", err); }
+            } catch(err) { console.warn("Gráfico 2 (Casos por Año): ", err); }
 
             // ---- GRÁFICO 3: CURVA SEMANAL ----
             try {
@@ -1749,7 +1783,7 @@
 
                         <div class="bg-slate-900/60 p-4 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                             <div class="flex items-center gap-3">
-                                <div class="bg-amber-950 p-2 rounded-lg text-amber-400 text-sm">
+                                <div class="bg-rose-950 p-2 rounded-lg text-rose-400 text-sm">
                                     <i class="fa-solid fa-bug"></i>
                                 </div>
                                 <div class="text-left">
@@ -1795,23 +1829,6 @@
             }
         }
 
-        function showToast(message, type = "success") {
-            const container = document.getElementById("toastContainer");
-            if (!container) return;
-            const toast = document.createElement("div");
-            toast.className = `p-4 rounded-xl shadow-lg border text-xs font-bold flex items-center gap-2 bg-white pointer-events-auto shrink-0 ${
-                type === "success" ? "border-emerald-500 text-emerald-800 animate-slide-in" : 
-                type === "warning" ? "border-amber-500 text-amber-800 animate-slide-in" : "border-rose-500 text-rose-800 animate-slide-in"
-            }`;
-            toast.innerHTML = `
-                <i class="fa-solid ${type === "success" ? "fa-circle-check text-emerald-500" : 
-                                      type === "warning" ? "fa-triangle-exclamation text-amber-500" : "fa-triangle-exclamation text-rose-500"} text-base"></i>
-                <span>${message}</span>
-            `;
-            container.appendChild(toast);
-            setTimeout(() => { toast.remove(); }, 3500);
-        }
-
         function obtenerSemanaEpidemiologicaActual() {
             const hoy = new Date(); 
             const anio = hoy.getFullYear();
@@ -1830,41 +1847,105 @@
             return semana;
         }
 
+        function showToast(message, type = "success") {
+            const container = document.getElementById("toastContainer");
+            if (!container) return;
+            const toast = document.createElement("div");
+            toast.className = `p-4 rounded-xl shadow-lg border text-xs font-bold flex items-center gap-2 bg-white pointer-events-auto shrink-0 ${
+                type === "success" ? "border-emerald-500 text-emerald-800 animate-slide-in" : 
+                type === "warning" ? "border-amber-500 text-amber-800 animate-slide-in" : "border-rose-500 text-rose-800 animate-slide-in"
+            }`;
+            toast.innerHTML = `
+                <i class="fa-solid ${type === "success" ? "fa-circle-check text-emerald-500" : 
+                                      type === "warning" ? "fa-triangle-exclamation text-amber-500" : "fa-triangle-exclamation text-rose-500"} text-base"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3500);
+        }
+
+        /* */
         function cargarDatosSimulados() {
+            let dataset = [];
+            let startDni = 71040501;
+            let idCounter = 1;
+
+            const diagnosticsBreakdown = [
+                { name: "DENGUE", count: 86 },
+                { name: "PANEL RESP", count: 48 },
+                { name: "ARAÑAZO DE GATO", count: 37 },
+                { name: "SARAMPION", count: 2 },
+                { name: "LEISHMANIASIS", count: 2 },
+                { name: "LEPTOSPIROSIS", count: 2 }
+            ];
+
+            const statesPool = [];
+            for (let i = 0; i < 67; i++) statesPool.push("CONFIRMADO");
+            for (let i = 0; i < 75; i++) statesPool.push("DESCARTADO");
+            for (let i = 0; i < 35; i++) statesPool.push("PROBABLE");
+
+            const chronologicalPool = [];
+            
+            // Distribución estacional calibrada para el año 2024 (Total: 45 casos)
+            for (let i = 0; i < 15; i++) chronologicalPool.push({ ano: 2024, sem: 10, date: "10/03/2024" });
+            for (let i = 0; i < 20; i++) chronologicalPool.push({ ano: 2024, sem: 22, date: "02/06/2024" });
+            for (let i = 0; i < 10; i++) chronologicalPool.push({ ano: 2024, sem: 40, date: "01/10/2024" });
+
+            // Distribución estacional calibrada para el año 2025 (Total: 52 casos)
+            for (let i = 0; i < 12; i++) chronologicalPool.push({ ano: 2025, sem: 8, date: "24/02/2025" });
+            for (let i = 0; i < 25; i++) chronologicalPool.push({ ano: 2025, sem: 25, date: "18/06/2025" });
+            for (let i = 0; i < 15; i++) chronologicalPool.push({ ano: 2025, sem: 45, date: "10/11/2025" });
+
+            // Distribución estacional calibrada para el año 2026 (Total: 80 casos)
+            for (let i = 0; i < 10; i++) chronologicalPool.push({ ano: 2026, sem: 2, date: "12/01/2026" });
+            for (let i = 0; i < 20; i++) chronologicalPool.push({ ano: 2026, sem: 12, date: "20/03/2026" });
+            for (let i = 0; i < 35; i++) chronologicalPool.push({ ano: 2026, sem: 20, date: "15/05/2026" });
+            for (let i = 0; i < 15; i++) chronologicalPool.push({ ano: 2026, sem: 23, date: "09/06/2026" });
+
             const apellidos = ["Alvarez", "Bustamante", "Cárdenas", "Delgado", "Espinoza", "Flores", "Gomez", "Huaman", "Ibañez", "Juarez", "López", "Mendoza", "Núñez", "Ospina", "Pérez", "Quispe", "Rojas", "Sanchez", "Torres", "Vargas"];
             const nombresList = ["Juan", "María", "Carlos", "Ana", "Luis", "Carmen", "Pedro", "Rosa", "José", "Sofía", "Miguel", "Lucía", "Jorge", "Elena", "Andrés", "Laura", "Diego", "Clara", "Felipe", "Gabriela"];
-            const enfermedades = ["DENGUE SIN SEÑALES DE ALARMA", "DENGUE CON SEÑALES DE ALARMA", "DENGUE GRAVE", "ZIKA", "CHIKUNGUNYA"];
-            const dnxTipos = ["CONFIRMADO", "PROBABLE", "DESCARTADO", "C", "P", "D"];
-            const localidades = ["COSTA AZUL", "PACHACÚTEC", "MI PERÚ", "VENTANILLA ALTA", "VENTANILLA BAJA", "ANGAMOS", "LICENCIADOS"];
-            
-            let dataset = [];
-            let startDni = 40562381;
+            const localidades = ["COSTA AZUL", "PACHACÚTEC", "MI PERÚ", "VENTANILLA ALTA", "VENTANILLA BAJA", "ANGAMOS", "LICENCIADOS", "VENTANILLA"];
 
-            for (let i = 0; i < 170; i++) {
-                let ano = i < 40 ? 2024 : (i < 110 ? 2025 : 2026);
-                let semana = Math.floor(Math.random() * 52) + 1;
-                let sexo = Math.random() > 0.45 ? "F" : "M";
-                let edad = Math.floor(Math.random() * 80) + 1;
-                let estadoRaw = dnxTipos[Math.floor(Math.random() * dnxTipos.length)];
-                
-                dataset.push({
-                    id: i,
-                    ano: ano,
-                    sem: semana,
-                    fecha: `${semana < 10 ? '0' : ''}${semana}/11/${ano}`,
-                    hc: `${100000 + i}`,
-                    diagnostic: enfermedades[Math.floor(Math.random() * enfermedades.length)],
-                    estado: normalizarEstadoParaFiltros(estadoRaw),
-                    apepat: apellidos[Math.floor(Math.random() * apellidos.length)],
-                    apemat: apellidos[Math.floor(Math.random() * apellidos.length)],
-                    nombres: nombresList[Math.floor(Math.random() * nombresList.length)],
-                    parentName: `${apellidos[Math.floor(Math.random() * apellidos.length)]} ${apellidos[Math.floor(Math.random() * apellidos.length)]} ${nombresList[Math.floor(Math.random() * nombresList.length)]}`,
-                    edad: edad,
-                    sexo: sexo,
-                    dni: String(startDni + i),
-                    localidad: localidades[Math.floor(Math.random() * localidades.length)]
-                });
-            }
+            let chronologicalIndex = 0;
+            let stateIndex = 0;
+
+            diagnosticsBreakdown.forEach(diagGroup => {
+                for (let i = 0; i < diagGroup.count; i++) {
+                    const id = idCounter++;
+                    const crono = chronologicalPool[chronologicalIndex++];
+                    const estado = statesPool[stateIndex++];
+
+                    let ape = apellidos[id % apellidos.length];
+                    let nom = nombresList[id % nombresList.length];
+                    let dniStr = String(startDni + id);
+
+                    if (crono.ano === 2026 && crono.sem === 20 && i === 0) {
+                        ape = "HERRERA";
+                        nom = "JUAN CARLOS";
+                        dniStr = "76740851";
+                    }
+
+                    let loc = localidades[id % localidades.length];
+
+                    dataset.push({
+                        id: id,
+                        ano: crono.ano,
+                        sem: crono.sem,
+                        fecha: crono.date,
+                        hc: String(102400 + id),
+                        diagnostic: diagGroup.name,
+                        estado: estado,
+                        apepat: ape,
+                        apemat: "ALVAREZ",
+                        nombres: nom,
+                        edad: 34,
+                        sexo: "M",
+                        dni: dniStr,
+                        localidad: loc
+                    });
+                }
+            });
+
             return dataset;
         }
     </script>
