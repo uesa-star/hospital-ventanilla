@@ -574,14 +574,14 @@
                         <div id="kardexErrorMsg" class="hidden text-[10px] text-rose-600 font-extrabold uppercase text-center py-2.5 px-3 bg-rose-50 border border-rose-200 rounded-xl"></div>
 
                         <!-- BOTONERÍA DINÁMICA DEL LOGIN -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2">
+                        <div id="kardexBotonera" class="grid grid-cols-1 gap-2 mt-2">
                             <!-- Botón Principal Dual (Solicitar / Confirmar) -->
                             <button id="btnKardexUnlockSubmit" type="button" onclick="handleKardexSubmitFlow()" class="w-full bg-[#014d3a] hover:bg-[#0a4c41] text-white py-2.5 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98 h-[38px] flex items-center justify-center gap-1.5">
                                 <span id="btnUnlockText">GENERAR CÓDIGO OTP</span> <i id="btnUnlockIcon" class="fa-solid fa-mobile-screen"></i>
                             </button>
-                            <!-- Botón Alternativo (WhatsApp) -->
-                            <button id="btnAlternateAction" type="button" onclick="solicitarPinWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98 h-[38px] flex items-center justify-center gap-1.5">
-                                SOLICITAR PIN <i class="fa-brands fa-whatsapp text-xs"></i>
+                            <!-- Botón Alternativo - Oculto al inicio, solo aparece en el paso 2 para permitir volver o reenviar -->
+                            <button id="btnAlternateAction" type="button" onclick="handleResetOtpRequest()" class="hidden w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all h-[38px] flex items-center justify-center gap-1.5">
+                                ATRÁS <i class="fa-solid fa-arrow-rotate-left text-[10px]"></i>
                             </button>
                         </div>
                     </form>
@@ -800,7 +800,7 @@
         </div>
 
         <!-- ================= MODAL DE CONSOLA DE AUDITORÍA ADM (SINO-AUDIT) ================= -->
-        <div id="adminAuditModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md hidden items-center justify-center z-[135] p-4 no-print">
+        <div id="adminAuditModal" class="fixed inset-0 bg-[#0b1329] bg-slate-900/90 backdrop-blur-md hidden items-center justify-center z-[135] p-4 no-print">
             <div class="bg-[#0b1329] border border-slate-800 rounded-[2.5rem] p-6 sm:p-8 max-w-6xl w-full mx-auto flex flex-col gap-5 text-white shadow-2xl relative max-h-[92vh] overflow-y-auto custom-scrollbar">
                 
                 <button onclick="closeAdminAuditModal()" class="absolute top-5 right-5 h-10 w-10 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white transition-all flex items-center justify-center hover:scale-110 active:scale-95">
@@ -1256,11 +1256,18 @@
                 document.getElementById("btnUnlockText").textContent = "CONFIRMAR E INGRESAR";
                 document.getElementById("btnUnlockIcon").className = "fa-solid fa-shield-halved text-xs";
                 
-                // Configurar botón secundario para reenviar
+                // Configurar botón secundario para reenviar y mostrarlo
                 const alternateBtn = document.getElementById("btnAlternateAction");
                 alternateBtn.innerHTML = "REENVIAR SMS / OTP <i class='fa-solid fa-arrow-rotate-right text-[10px]'></i>";
                 alternateBtn.onclick = handleResetOtpRequest;
                 alternateBtn.className = "w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all h-[38px] flex items-center justify-center gap-1.5";
+                alternateBtn.classList.remove("hidden");
+
+                const botonera = document.getElementById("kardexBotonera");
+                if (botonera) {
+                    botonera.classList.remove("grid-cols-1");
+                    botonera.classList.add("sm:grid-cols-2");
+                }
 
                 // MOSTRAR SIMULADOR DE SMS FLOTANTE (ESTILO TELÉFONO EN PANTALLA)
                 const smsAlert = document.getElementById("simulatedSmsAlert");
@@ -1348,11 +1355,15 @@
             document.getElementById("btnUnlockIcon").className = "fa-solid fa-mobile-screen";
             document.getElementById("kardexPass").value = "";
 
-            // Restablecer botón de WhatsApp
+            // Ocultar el botón secundario y volver al layout de un solo botón
             const alternateBtn = document.getElementById("btnAlternateAction");
-            alternateBtn.innerHTML = "SOLICITAR PIN <i class='fa-brands fa-whatsapp text-xs'></i>";
-            alternateBtn.onclick = solicitarPinWhatsApp;
-            alternateBtn.className = "w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98 h-[38px] flex items-center justify-center gap-1.5";
+            alternateBtn.classList.add("hidden");
+
+            const botonera = document.getElementById("kardexBotonera");
+            if (botonera) {
+                botonera.classList.remove("sm:grid-cols-2");
+                botonera.classList.add("grid-cols-1");
+            }
 
             closeSmsSimulator();
             showToast("Solicitud restablecida. Ingrese sus datos nuevamente.", "info");
@@ -2014,7 +2025,6 @@
 
         const normalizeString = (str) => {
             if (!str) return "";
-            // ORDEN LOGICO RECONSTRUIDO: Normalización y remoción de acentos primero, luego eliminación de caracteres extraños.
             return str.normalize("NFD")
                       .replace(/[\u0300-\u036f]/g, "") // Remueve diacríticos (tildes, diéresis, virgulillas)
                       .toLowerCase()
@@ -2101,7 +2111,6 @@
                         normKey.includes("fecha") || normKey.includes("mes");
                         
                     if (!isKnownTextCol && valCandidate && valCandidate !== "N/A" && valCandidate !== "---") {
-                        // Verifica si el valor parece una H.C. (numérico de longitud de 3 a 12, no duplicado con DNI o Año)
                         if (valCandidate !== currentDni && valCandidate !== currentYear && valCandidate !== currentSem) {
                             if (/^[a-zA-Z0-9\-_]{3,12}$/.test(valCandidate)) {
                                 return valCandidate;
@@ -3542,9 +3551,59 @@
             }
         }
 
+        // EFECTO VISUAL DE DESTELLO ESMERALDA PARA CAMPOS AUTOCOMPLETADOS
+        function highlightAutofilledFields() {
+            const fields = [
+                document.getElementById("kardexNombre"),
+                document.getElementById("kardexCelular")
+            ];
+            
+            fields.forEach(f => {
+                if (f && f.value) {
+                    // Agregar clases de destello verde temporalmente
+                    f.classList.add("bg-emerald-50", "border-emerald-400", "text-emerald-950", "ring-2", "ring-emerald-200");
+                    f.style.transition = "all 0.5s ease";
+                    
+                    setTimeout(() => {
+                        f.classList.remove("bg-emerald-50", "border-emerald-400", "text-emerald-950", "ring-2", "ring-emerald-200");
+                    }, 1800);
+                }
+            });
+        }
+
         document.getElementById("kardexSearch").addEventListener("input", () => {
             currentKardexPage = 1;
             renderKardexTable();
+        });
+
+        // ESCUCHA INTELIGENTE DE DNI PARA AUTOCOMPLETADO MÁGICO DE MÉDICO
+        document.getElementById("kardexUser").addEventListener("input", function(e) {
+            const dniVal = e.target.value.trim();
+            
+            if (dniVal.length === 8) {
+                // 1. Buscar primero en la base de datos de personal médico autorizado (SINO-REG)
+                let matchedUser = authorizedUsers.find(u => u.dni === dniVal);
+                
+                if (matchedUser) {
+                    document.getElementById("kardexNombre").value = matchedUser.nombre;
+                    document.getElementById("kardexCelular").value = matchedUser.celular;
+                    
+                    showToast(`Médico reconocido: ${matchedUser.nombre} ✔`, "success");
+                    addLog(`Autocompletado: DNI ${dniVal} reconocido como ${matchedUser.nombre}.`);
+                    highlightAutofilledFields();
+                    return;
+                }
+                
+                // 2. Fallback: Buscar en la base general epidemiológica del Google Sheets (si por si acaso se registró previamente)
+                let matchedInGeneralDb = dbRawData.find(d => d.dni === dniVal);
+                if (matchedInGeneralDb && matchedInGeneralDb.nombreCompletoOriginal && matchedInGeneralDb.nombreCompletoOriginal !== "PACIENTE ANONIMIZADO") {
+                    document.getElementById("kardexNombre").value = matchedInGeneralDb.nombreCompletoOriginal;
+                    
+                    showToast("Identidad coincidente encontrada en base histórica", "info");
+                    addLog(`Autocompletado Fallback: DNI ${dniVal} asociado a registro histórico.`);
+                    highlightAutofilledFields();
+                }
+            }
         });
 
         window.onload = function() {
