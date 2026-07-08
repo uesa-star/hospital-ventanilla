@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">    
     <title>Hospital de Ventanilla - Gestión de Laboratorio y Vigilancia Epidemiológica</title>    
     
-    <!-- Tailwind CSS -->    
+    <!-- Tailwind CSS para diseño moderno -->    
     <script src="https://cdn.tailwindcss.com"></script>    
     <!-- FontAwesome para iconos de nivel médico/hospitalario -->    
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">    
@@ -61,7 +61,6 @@
     <!-- CONTENEDOR DE TOASTS SILENCIOSOS -->
     <div id="toastContainer" class="fixed top-5 right-5 z-[150] flex flex-col gap-2 pointer-events-none no-print"></div>
 
-
     <!-- MODAL DE BIENVENIDA Y SINCRONIZACIÓN COMPLETADA -->
     <div id="welcomeModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md flex items-center justify-center z-[100] transition-all duration-300 no-print">
         <div class="bg-white rounded-[2.5rem] p-8 max-w-sm w-full mx-4 shadow-2xl flex flex-col items-center text-center border border-slate-100 transform scale-100 transition-all duration-300">
@@ -78,7 +77,6 @@
             </button>
         </div>
     </div>
-
 
     <div id="dashboardAppContent" class="flex flex-col min-h-screen">
         
@@ -113,7 +111,6 @@
             </div>    
         </header>
 
-        
         <!-- BARRA DE ALERTA EPIDEMIOLÓGICA CON MARQUESINA -->    
         <section class="bg-brand-burgundy text-rose-100 px-6 sm:px-8 py-3 flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-bold shrink-0 shadow-lg relative z-10">        
             <div class="flex items-center gap-4 overflow-hidden w-full md:flex-1">            
@@ -129,7 +126,6 @@
                 <i class="fa-solid fa-bell text-xs animate-bounce"></i> DETALLES DE ALERTAS
             </button>    
         </section>
-
 
         <!-- ================= RESUMEN EPIDEMIOLÓGICO DE PATÓGENOS VIGILADOS ================= -->
         <section class="w-full border-b border-slate-200/80 shadow-sm overflow-hidden no-print bg-white">
@@ -187,7 +183,6 @@
                 </div>
             </div>
         </section>
-
 
         <!-- CUERPO DEL CONTENIDO DEL DASHBOARD -->    
         <main class="flex-1 max-w-[1850px] w-full mx-auto p-4 md:p-6 space-y-6">
@@ -249,7 +244,6 @@
                     </div>
                 </div>
             </section>
-
 
             <!-- ================= 2. KPIs DE ALTO IMPACTO ================= -->        
             <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-3.5 font-bold">            
@@ -363,7 +357,6 @@
                     <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold">Análisis estacional de curvas epidemiológicas por mes (Sincronizado con filtros de año)</p>            
                 </div>
 
-
                 <!-- ================= GRÁFICO 2: BARRAS INTERANUAL DE AÑOS CONSECUTIVOS ================= -->
                 <div class="bg-white p-5 rounded-2xl border border-slate-200/85 shadow-sm flex flex-col justify-between hover:shadow-lg transition-all">                
                     <div>                    
@@ -456,7 +449,6 @@
                 </div>
             </section>
 
-
             <!-- ================= 5. KARDEX CLÍNICO INDIVIDUALIZADO (HISTORIAL PROTEGIDO) ================= -->
             <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden hover:shadow-md transition-shadow relative min-h-[300px]">
                 <div class="bg-brand-dark text-white px-5 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-slate-900">
@@ -544,7 +536,6 @@
                     </form>
                 </div>
 
-
                 <!-- Contenedor del Historial del Kardex -->
                 <div id="kardexTableContainer" class="hidden flex-col">
                     <div class="overflow-x-auto custom-scrollbar w-full max-w-full">
@@ -582,7 +573,6 @@
             </section>
 
         </main>
-
 
         <!-- ================= MODAL CENTRAL DE ALERTAS Y REPUNTES EPIDEMIOLÓGICOS (ESTILO McKINSEY) ================= -->
         <div id="alertsModal" class="fixed inset-0 bg-[#060a16]/95 backdrop-blur-md hidden items-center justify-center z-[130] p-4 no-print">
@@ -687,7 +677,6 @@
 
     </div>
 
-
     <!-- LÓGICA DE SINCRONIZACIÓN E FILTRADO INTEGRAL (SINO-SINC MOTOR) -->
     <script>
         const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH-sGKVHNCt-kPiOoVv1BnmsTSE1onfi0f05kk0hh8Uc0l0kH3V8QzY22UdS23TjA9MCX8tDYwSNe7/pub?gid=1171051655&single=true&output=csv";
@@ -762,7 +751,6 @@
         let inactivityTimeout = null;
         let inactivityInterval = null;
         let secondsRemaining = 600;
-
 
         function startInactivityTracking() {
             if (inactivityTimeout) clearTimeout(inactivityTimeout);
@@ -975,7 +963,8 @@
 
             const authorizedUsers = {
                 "25839414": { nombre: "CARLOS JESÚS PÉREZ NÚÑEZ", cui: ["9"] },
-                "71040501": { nombre: "STELLA HERRERA ALVAREZ", cui: ["6", "3"] }
+                "71040501": { nombre: "STELLA HERRERA ALVAREZ", cui: ["6", "3"] },
+                "41240265": { nombre: "GLADYS NANCY HUAMAN OSPINA", cui: ["0", "C"] }
             };
 
             const userEntry = authorizedUsers[userVal];
@@ -1027,6 +1016,7 @@
                     if (userEntry) {
                         resolvedName = userEntry.nombre;
                     } else {
+                        // Intentar buscar el nombre de funcionario si coincide con algún paciente registrado, sino se genera deterministamente
                         let userValClean = userVal.replace(/^0+/, '');
                         let matchInSheet = dbRawData.find(d => d.dni && String(d.dni).trim().replace(/^0+/, '') === userValClean);
                         
@@ -1059,7 +1049,6 @@
                             document.getElementById("kardexWelcomeBanner").classList.remove("hidden");
                             document.getElementById("kardexWelcomeBanner").classList.add("flex");
 
-                            // Sintaxis limpia sin duplicación de dos puntos
                             document.getElementById("kardexWelcomeText").innerHTML = `SESIÓN INICIADA: USUARIO: DNI ${userVal} - ${resolvedName}`;
                             
                             startInactivityTracking(); 
@@ -1150,18 +1139,18 @@
             return cleanRow;
         }
 
+        const normalizeString = (str) => {
+            if (!str) return "";
+            // ORDEN LOGICO RECONSTRUIDO: Normalización y remoción de acentos primero, luego eliminación de caracteres extraños.
+            return str.normalize("NFD")
+                      .replace(/[\u0300-\u036f]/g, "") // Remueve diacríticos (tildes, diéresis, virgulillas)
+                      .toLowerCase()
+                      .replace(/[º°ª]/g, "o")
+                      .replace(/[^a-z0-9]/g, ""); // Seguro para remover no alfanuméricos simples
+        };
 
-        // MOTOR HEURÍSTICO ULTRA-AVANZADO Y BLINDADO PARA EVITAR "N/A" (100% EFECTIVO EN CUALQUIER COLUMNA)
+        // MOTOR HEURÍSTICO ULTRA-AVANZADO Y BLINDADO (100% EFECTIVO EN CUALQUIER COLUMNA DE BASE LAB)
         function getNormalizedValue(row, possibleKeys, defaultValue = "") {
-            const normalizeString = (str) => {
-                if (!str) return "";
-                return str.toLowerCase()
-                          .replace(/[º°ª]/g, "o")
-                          .replace(/[^a-z0-9]/g, "") 
-                          .normalize("NFD")
-                          .replace(/[\u0300-\u036f]/g, ""); 
-            };
-            
             const normalizedPossible = possibleKeys.map(k => normalizeString(k));
             
             // Intento 1: Coincidencia exacta de cabecera normalizada
@@ -1186,45 +1175,33 @@
             // Heurística de Redundancia y Exclusiones para Variables Críticas de Base Lab
             const isHC = possibleKeys.includes("hc") || possibleKeys.includes("h.c.");
             
-            // FILTRADO DINÁMICO DE VALORES PARA HISTORIA CLÍNICA (EVITA EL MOLESTO "N/A" CUANDO LAS CABECERAS SON ATÍPICAS)
+            // FILTRADO DINÁMICO DE VALORES PARA HISTORIA CLÍNICA (EVITA EL MOLESTO "N/A")
             if (isHC) {
-                // Intento 3: Palabras clave en cabeceras de HC
+                // Intento 3: Palabras clave en cabeceras de HC (excluyendo colisiones con DNI, nombres o fechas)
                 for (let key in row) {
                     const normKey = normalizeString(key);
-                    if (
-                        normKey.includes("hc") || 
-                        normKey.includes("hist") || 
-                        normKey.includes("clin") || 
-                        normKey.includes("ficha") || 
-                        normKey.includes("nro") || 
-                        normKey.includes("num") || 
-                        normKey.includes("no") || 
-                        normKey.includes("cod") || 
-                        normKey.includes("id") || 
-                        normKey.includes("reg") ||
-                        /h.*c/.test(normKey)
-                    ) {
-                        // Evitar colisiones con campos de texto largos u otros identificadores conocidos
+                    
+                    const isOtherMapped = 
+                        normKey.includes("paciente") || normKey.includes("nombre") || 
+                        normKey.includes("dni") || normKey.includes("documento") || 
+                        normKey.includes("fecha") || normKey.includes("ano") || normKey.includes("year") ||
+                        normKey.includes("semana") || normKey.includes("diagnostico") || normKey.includes("prueba") ||
+                        normKey.includes("estado") || normKey.includes("resultado") || normKey.includes("localidad") ||
+                        normKey.includes("zona") || normKey.includes("distrito") || normKey.includes("sexo") || normKey.includes("edad");
+
+                    if (!isOtherMapped) {
                         if (
-                            !normKey.includes("pac") && 
-                            !normKey.includes("nom") && 
-                            !normKey.includes("dni") && 
-                            !normKey.includes("doc") && 
-                            !normKey.includes("fec") && 
-                            !normKey.includes("ano") && 
-                            !normKey.includes("sem") &&
-                            !normKey.includes("diag") &&
-                            !normKey.includes("prueba") &&
-                            !normKey.includes("est") &&
-                            !normKey.includes("res") &&
-                            !normKey.includes("mes") &&
-                            !normKey.includes("local") &&
-                            !normKey.includes("zona") &&
-                            !normKey.includes("dist") &&
-                            !normKey.includes("prov") &&
-                            !normKey.includes("dep") &&
-                            !normKey.includes("edad") &&
-                            !normKey.includes("sexo")
+                            normKey.includes("hc") || 
+                            normKey.includes("hist") || 
+                            normKey.includes("clin") || 
+                            normKey.includes("ficha") || 
+                            normKey.includes("nro") || 
+                            normKey.includes("num") || 
+                            normKey.includes("no") || 
+                            normKey.includes("cod") || 
+                            normKey.includes("id") || 
+                            normKey.includes("reg") ||
+                            /h.*c/.test(normKey)
                         ) {
                             const valCandidate = String(row[key]).trim();
                             if (valCandidate && valCandidate !== "N/A" && valCandidate !== "---") {
@@ -1235,45 +1212,27 @@
                 }
 
                 // Intento 4: Escáner ciego de valores numéricos cortos/alfanuméricos que parezcan una H.C. real
+                const currentDni = getNormalizedValue(row, KEYS_MAP.dni, "");
+                const currentYear = String(getNormalizedValue(row, KEYS_MAP.ano, ""));
+                const currentSem = String(getNormalizedValue(row, KEYS_MAP.sem, ""));
+                
                 for (let key in row) {
-                    const normKey = normalizeString(key);
-                    if (
-                        normKey.includes("pac") || 
-                        normKey.includes("nom") || 
-                        normKey.includes("dni") || 
-                        normKey.includes("doc") || 
-                        normKey.includes("fec") || 
-                        normKey.includes("ano") || 
-                        normKey.includes("sem") ||
-                        normKey.includes("diag") ||
-                        normKey.includes("prueba") ||
-                        normKey.includes("est") ||
-                        normKey.includes("res") ||
-                        normKey.includes("mes") ||
-                        normKey.includes("local") ||
-                        normKey.includes("zona") ||
-                        normKey.includes("dist") ||
-                        normKey.includes("edad") ||
-                        normKey.includes("sexo")
-                    ) {
-                        continue;
-                    }
-                    
                     const valCandidate = String(row[key]).trim();
-                    if (valCandidate && valCandidate.length >= 2 && valCandidate.length <= 10) {
-                        // Traemos los valores conocidos del DNI, Semana y Año para descartar colisiones y asegurar la precisión
-                        const currentDni = getNormalizedValue(row, KEYS_MAP.dni, "");
-                        const currentSem = getNormalizedValue(row, KEYS_MAP.sem, "");
-                        const currentAno = getNormalizedValue(row, KEYS_MAP.ano, "");
+                    const normKey = normalizeString(key);
+                    
+                    const isKnownTextCol = 
+                        normKey.includes("paciente") || normKey.includes("nombre") || 
+                        normKey.includes("localidad") || normKey.includes("zona") || normKey.includes("distrito") ||
+                        normKey.includes("diagnostico") || normKey.includes("prueba") ||
+                        normKey.includes("estado") || normKey.includes("resultado") ||
+                        normKey.includes("fecha") || normKey.includes("mes");
                         
-                        if (
-                            valCandidate !== currentDni && 
-                            valCandidate !== currentSem && 
-                            valCandidate !== currentAno && 
-                            valCandidate !== "N/A" && 
-                            valCandidate !== "---"
-                        ) {
-                            return valCandidate;
+                    if (!isKnownTextCol && valCandidate && valCandidate !== "N/A" && valCandidate !== "---") {
+                        // Verifica si el valor parece una H.C. (numérico de longitud de 3 a 12, no duplicado con DNI o Año)
+                        if (valCandidate !== currentDni && valCandidate !== currentYear && valCandidate !== currentSem) {
+                            if (/^[a-zA-Z0-9\-_]{3,12}$/.test(valCandidate)) {
+                                return valCandidate;
+                            }
                         }
                     }
                 }
@@ -1282,7 +1241,7 @@
             return defaultValue;
         }
 
-        // DETECTOR INTELIGENTE DE FILA DE CABECERA
+        // DETECTOR MATRICIAL INTELIGENTE DE FILA DE CABECERA (RESUELVE DESFASES DE TÍTULO SUPERIOR)
         function encontrarFilaCabeceraYDatos(rawRows) {
             if (!rawRows || rawRows.length === 0) return { headers: [], dataRows: [] };
             
@@ -1291,20 +1250,17 @@
             let bestRowIdx = 0;
             let maxScore = 0;
             
-            const limit = Math.min(10, rawRows.length);
+            // Escanear las primeras 15 filas de la hoja para hallar cuál tiene más variables de cabecera
+            const limit = Math.min(15, rawRows.length);
             for (let i = 0; i < limit; i++) {
                 const rowObj = rawRows[i];
+                if (!rowObj || !Array.isArray(rowObj)) continue;
                 let score = 0;
-                const keys = Object.keys(rowObj);
-                const values = Object.values(rowObj);
                 
-                keys.forEach(k => {
-                    const cleanK = String(k).toLowerCase();
-                    if (targetWords.some(tw => cleanK.includes(tw))) score++;
-                });
-                
-                values.forEach(v => {
-                    const cleanV = String(v).toLowerCase();
+                rowObj.forEach(cell => {
+                    const cleanV = String(cell).toLowerCase()
+                                              .normalize("NFD")
+                                              .replace(/[\u0300-\u036f]/g, "");
                     if (targetWords.some(tw => cleanV.includes(tw))) score++;
                 });
                 
@@ -1316,29 +1272,27 @@
             
             addLog(`Detector de Cabecera: Fila óptima en índice ${bestRowIdx} (Puntaje: ${maxScore})`);
             
-            if (bestRowIdx === 0) {
-                return { headers: Object.keys(rawRows[0]), dataRows: rawRows };
-            }
-            
-            const newHeaders = Object.values(rawRows[bestRowIdx]).map(v => String(v).trim());
+            // Las cabeceras del sistema son las encontradas en esa fila analizada
+            const headers = rawRows[bestRowIdx].map(v => String(v).trim());
             const dataRows = [];
             
+            // Mapear cada elemento de las filas de datos con su cabecera correspondiente
             for (let i = bestRowIdx + 1; i < rawRows.length; i++) {
                 const currentRow = rawRows[i];
-                const cleanRow = {};
-                const currentValues = Object.values(currentRow);
+                if (!currentRow || currentRow.length === 0) continue;
+                if (currentRow.length === 1 && !currentRow[0]) continue; // Omitir vacías
                 
-                newHeaders.forEach((h, hIdx) => {
+                const cleanRow = {};
+                headers.forEach((h, hIdx) => {
                     if (h) {
-                        cleanRow[h] = currentValues[hIdx] !== undefined ? String(currentValues[hIdx]).trim() : "";
+                        cleanRow[h] = currentRow[hIdx] !== undefined ? String(currentRow[hIdx]).trim() : "";
                     }
                 });
                 dataRows.push(cleanRow);
             }
             
-            return { headers: newHeaders, dataRows: dataRows };
+            return { headers, dataRows };
         }
-
 
         function normalizarEstadoParaFiltros(estadoRaw) {
             if (!estadoRaw) return "PENDIENTE";
@@ -1359,11 +1313,12 @@
         function ejecutarMapeoColumnas(headers) {
             const normHeaders = headers.map(h => ({
                 raw: h,
-                norm: h.toLowerCase()
+                norm: h.normalize("NFD")
+                       .replace(/[\u0300-\u036f]/g, "")
+                       .toLowerCase()
                        .replace(/[º°ª]/g, "o")
                        .replace(/[\s_\-\/\.]/g, "")
-                       .normalize("NFD")
-                       .replace(/[\u0300-\u036f]/g, "")
+                       .replace(/[^a-z0-9]/g, "")
             }));
 
             detectedColumnMap = {};
@@ -1374,11 +1329,12 @@
 
             for (const variable in KEYS_MAP) {
                 const normPossible = KEYS_MAP[variable].map(k => 
-                    k.toLowerCase()
+                    k.normalize("NFD")
+                     .replace(/[\u0300-\u036f]/g, "")
+                     .toLowerCase()
                      .replace(/[º°ª]/g, "o")
                      .replace(/[\s_\-\/\.]/g, "")
-                     .normalize("NFD")
-                     .replace(/[\u0300-\u036f]/g, "")
+                     .replace(/[^a-z0-9]/g, "")
                 );
 
                 let matched = normHeaders.find(h => normPossible.includes(h.norm));
@@ -1450,6 +1406,14 @@
             if (!val) return `${defaultSem < 10 ? '0' : ''}${defaultSem}/11/${defaultAno}`;
             val = String(val).trim();
             
+            // Si es solo un número de mes de 1 o 2 dígitos (ej. "07", "7", "06") proveniente de la tabla dinámica
+            if (/^\d{1,2}$/.test(val)) {
+                const monthNum = parseInt(val, 10);
+                if (monthNum >= 1 && monthNum <= 12) {
+                    return `15/${String(monthNum).padStart(2, '0')}/${defaultAno}`;
+                }
+            }
+
             const excelDate = parseExcelSerialDate(val);
             if (excelDate) {
                 const d = String(excelDate.getDate()).padStart(2, '0');
@@ -1511,7 +1475,6 @@
             return defaultAno || 2026;
         }
 
-
         function procesarFilasSheet(rows) {
             try {
                 const debugTotalRows = document.getElementById("debugTotalRows");
@@ -1525,7 +1488,7 @@
                 const sanitizedRows = dataRows.map(sanitizeRowKeys);
 
                 if (sanitizedRows.length > 0) {
-                    addLog("Cabeceras detectadas en la primera fila: " + Object.keys(sanitizedRows[0]).join(" | "));
+                    addLog("Cabeceras detectadas en la fila óptima: " + Object.keys(sanitizedRows[0]).join(" | "));
                     ejecutarMapeoColumnas(headers);
                 } else {
                     throw new Error("El archivo no contiene filas de datos válidas.");
@@ -1541,11 +1504,6 @@
                     let sem = parseInt(String(semStr).replace(/\D/g, ''));
 
                     if (fecha && (fecha === "undefined" || fecha === "N/A")) fecha = "";
-                    
-                    if (fecha) {
-                        fecha = fecha.split(/\s+/)[0]; 
-                        fecha = formatearFechaEspecial(fecha, 2026, 1);
-                    }
 
                     if (isNaN(ano) || ano < 2020 || ano > 2030) {
                         ano = fecha ? extraerAnoDesdeFecha(fecha, 2026) : 2026;
@@ -1553,6 +1511,11 @@
 
                     if (isNaN(sem) || sem < 1 || sem > 53) {
                         sem = fecha ? calcularSemanaEpiDesdeFecha(fecha) : 1;
+                    }
+                    
+                    if (fecha) {
+                        fecha = fecha.split(/\s+/)[0]; 
+                        fecha = formatearFechaEspecial(fecha, ano, sem);
                     }
 
                     if (!fecha) {
@@ -1662,7 +1625,6 @@
             };
         }
 
-
         function buildFiltersDynamic() {
             const selectYear = document.getElementById("filterYear");
             const selectType = document.getElementById("filterTestType");
@@ -1708,7 +1670,7 @@
                 return true;
             });
 
-            // ORDENACIÓN DESCENDENTE DE TRES NIVELES (CRONOLÓGICO INVERSO PARA VER SIEMPRE EL ÚLTIMO CASO AL PRINCIPIO)
+            // ORDENACIÓN CRONOLÓGICA INVERSA DESCENDENTE MULTI-NIVEL (EL ÚLTIMO CASO SIEMPRE AL INICIO)
             filteredData.sort((a, b) => {
                 if (b.ano !== a.ano) return b.ano - a.ano;
                 if (b.sem !== a.sem) return b.sem - a.sem;
@@ -2278,13 +2240,14 @@
                     throw new Error("La respuesta de red no contiene un formato CSV plano válido.");
                 }
 
+                // PARSE CON HEADER:FALSE PARA DETECTOR MATRICIAL INTEGRAL (CERO FALLAS EN HISTORIAS CLÍNICAS)
                 Papa.parse(csvText, {
-                    header: true,
+                    header: false,
                     skipEmptyLines: 'greedy',
                     complete: function(results) {
                         try {
-                            if (results.data && Math.max(results.data.length, 0) > 0) {
-                                addLog(`Filas procesadas correctamente: ${results.data.length}`);
+                            if (results.data && results.data.length > 0) {
+                                addLog(`Filas brutas procesadas correctamente: ${results.data.length}`);
                                 procesarFilasSheet(results.data);
                                 
                                 if (dbRawData && dbRawData.length > 0) {
