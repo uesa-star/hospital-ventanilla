@@ -563,7 +563,7 @@
                         </div>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
-                        <span id="kardexTimerBadge" class="hidden bg-amber-500/15 border border-amber-500/30 text-amber-800 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">CIERRE EN: 10:00 ⏳</span>
+                        <span id="kardexTimerBadge" class="hidden bg-amber-500/15 border border-amber-500/30 text-amber-800 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">CIERRE EN: 05:00 ⏳</span>
                         <span class="bg-emerald-200/50 border border-emerald-300/40 text-emerald-800 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">PADRÓN REGISTRAL VERIFICADO ✔</span>
                     </div>
                 </div>
@@ -1207,18 +1207,18 @@
         
         let inactivityTimeout = null;
         let inactivityInterval = null;
-        let secondsRemaining = 600;
+        let secondsRemaining = 300;
 
         function startInactivityTracking() {
             if (inactivityTimeout) clearTimeout(inactivityTimeout);
             if (inactivityInterval) clearInterval(inactivityInterval);
             
-            secondsRemaining = 600; // 10 minutos
+            secondsRemaining = 300; // 5 minutos
             const timerBadge = document.getElementById("kardexTimerBadge");
             if (timerBadge) {
                 timerBadge.classList.remove("hidden");
                 timerBadge.className = "bg-amber-500/15 border border-amber-500/30 text-amber-800 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider";
-                timerBadge.textContent = "CIERRE EN: 10:00 ⏳";
+                timerBadge.textContent = "CIERRE EN: 05:00 ⏳";
             }
 
             inactivityInterval = setInterval(() => {
@@ -1228,8 +1228,8 @@
                     const secs = (secondsRemaining % 60).toString().padStart(2, '0');
                     timerBadge.textContent = `CIERRE EN: ${mins}:${secs} ⏳`;
 
-                    // ALERTA CROMÁTICA ROJA Y PULSANTE A LOS 5 MINUTOS (300 segundos)
-                    if (secondsRemaining < 300) {
+                    // ALERTA CROMÁTICA ROJA Y PULSANTE A LOS 2 MINUTOS (120 segundos)
+                    if (secondsRemaining < 120) {
                         timerBadge.className = "bg-red-600 border border-red-500 text-white text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider animate-pulse shadow-md shadow-red-500/30";
                     } else {
                         timerBadge.className = "bg-amber-500/15 border border-amber-500/30 text-amber-800 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider";
@@ -1261,6 +1261,23 @@
         const activityEvents = ['mousemove', 'keydown', 'mousedown', 'click', 'scroll', 'touchstart'];
         activityEvents.forEach(evt => {
             window.addEventListener(evt, resetInactivityTimer, { passive: true });
+        });
+        
+        // Detectar si el usuario cambia de pestaña, minimiza o va a otra app en el móvil
+        document.addEventListener("visibilitychange", function() {
+            if (document.hidden && isKardexUnlocked) {
+                logActiveSessionEnd("BLOQUEADO (CAMBIO DE PESTAÑA/APP)");
+                lockKardex();
+                showToast("Sesión bloqueada automáticamente por seguridad al salir de la pantalla.", "warning");
+            }
+        });
+
+        window.addEventListener("blur", function() {
+            if (isKardexUnlocked) {
+                logActiveSessionEnd("BLOQUEADO (FALTA DE FOCO)");
+                lockKardex();
+                showToast("Sesión bloqueada automáticamente por pérdida de foco de seguridad.", "warning");
+            }
         });
         
         let currentKardexPage = 1;
