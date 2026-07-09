@@ -47,7 +47,7 @@
         /* ESTILOS DE IMPRESIÓN SEGUROS */
         @media print {
             body { background: white !important; color: black !important; }
-            header, section.bg-brand-burgundy, #alertsModal, #welcomeModal, #kardexLockOverlay, select, button, .no-print, #debugToggle, #whatsappPinModal {
+            header, section.bg-brand-burgundy, #alertsModal, #welcomeModal, #kardexLockOverlay, select, button, .no-print, #debugToggle, #whatsappPinModal, #pinRecoveryModal, #newPinDisplayModal {
                 display: none !important;
             }
             main { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
@@ -60,20 +60,6 @@
     
     <!-- CONTENEDOR DE TOASTS SILENCIOSOS -->
     <div id="toastContainer" class="fixed top-5 right-5 z-[150] flex flex-col gap-2 pointer-events-none no-print"></div>
-
-    <!-- NOTIFICACIÓN DE SMS SIMULADO (SINO-OTP DISPATCHER) -->
-    <div id="simulatedSmsAlert" class="fixed top-24 right-5 bg-slate-950 text-white p-4 rounded-3xl shadow-2xl border border-emerald-500/30 max-w-xs transition-all duration-500 transform translate-x-80 opacity-0 z-[150] pointer-events-auto font-sans select-none no-print">
-        <div class="flex items-center justify-between mb-2 border-b border-slate-800 pb-2">
-            <div class="flex items-center gap-2">
-                <i class="fa-solid fa-comment-sms text-emerald-400 animate-pulse"></i>
-                <span class="text-[10px] font-black uppercase text-slate-400 tracking-wider">SMS Recibido (Red-OTP)</span>
-            </div>
-            <button onclick="closeSmsSimulator()" class="text-slate-500 hover:text-white transition-colors"><i class="fa-solid fa-xmark text-[10px]"></i></button>
-        </div>
-        <p class="text-[11px] font-bold text-slate-200 leading-normal">
-            💬 <strong class="text-emerald-400 font-black">[HOSP-VENTANILLA]</strong> Su código de seguridad temporal es: <span id="smsOtpCode" class="text-emerald-300 font-black text-xs tracking-widest bg-emerald-950 px-2 py-0.5 rounded border border-emerald-500/20 select-all">######</span>. Válido por 3 min. No lo comparta.
-        </p>
-    </div>
 
     <!-- MODAL DE BIENVENIDA Y SINCRONIZACIÓN COMPLETADA -->
     <div id="welcomeModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-md flex items-center justify-center z-[100] transition-all duration-300 no-print">
@@ -89,6 +75,76 @@
             <button onclick="closeWelcomeModal()" class="w-full bg-[#014d3a] hover:bg-[#0a4c41] text-white py-3.5 px-6 rounded-2xl text-[11px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98">
                 ENTRAR AL MÓDULO
             </button>
+        </div>
+    </div>
+
+    <!-- MODAL: EXPOSITOR SEGURO DE PIN NUEVO / REGENERADO -->
+    <div id="newPinDisplayModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[145] p-4 no-print">
+        <div class="bg-white rounded-[2.5rem] p-8 max-w-sm w-full mx-auto flex flex-col items-center text-center border border-slate-100 shadow-2xl">
+            <div class="bg-emerald-100 text-emerald-600 rounded-full h-16 w-16 flex items-center justify-center mb-4 shadow-inner">
+                <i class="fa-solid fa-key text-3xl text-emerald-500"></i>
+            </div>
+            <h3 id="pinModalTitle" class="text-lg font-black text-slate-800 uppercase tracking-tight">PIN DE ACCESO GENERADO</h3>
+            <span class="text-[9px] font-black text-emerald-600 tracking-widest uppercase mb-4 block">RED DE VIGILANCIA ASISTENCIAL</span>
+            
+            <p class="text-[11px] text-slate-500 font-bold mb-6 max-w-xs">
+                Este es su código PIN único asistencial de tipo numérico. Por su seguridad, apúntelo bien para sus accesos futuros.
+            </p>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 w-full mb-6 flex flex-col items-center justify-center">
+                <span class="text-[9px] uppercase tracking-wider text-slate-400 font-black">SU PIN NUMÉRICO DE ACCESO</span>
+                <div class="flex items-center gap-3 mt-1.5">
+                    <span id="newPinValue" class="text-3xl font-mono font-black text-[#014d3a] tracking-widest select-all">######</span>
+                    <button onclick="copyGeneratedPinToClipboard()" class="text-slate-400 hover:text-[#10b981] transition-colors" title="Copiar PIN">
+                        <i class="fa-solid fa-copy text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button onclick="closeNewPinModal()" class="w-full bg-[#014d3a] hover:bg-[#0a4c41] text-white py-3 px-6 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md">
+                ENTENDIDO, IR AL LOGIN
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL: RECUPERACIÓN DE PIN POR FECHA DE NACIMIENTO (CUMPLEAÑOS) -->
+    <div id="pinRecoveryModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[140] p-4 no-print">
+        <div class="bg-white rounded-[2.5rem] p-6 sm:p-8 max-w-sm w-full mx-auto flex flex-col gap-4 text-left border border-slate-100 shadow-2xl">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                <div class="bg-amber-100 text-amber-700 rounded-xl h-10 w-10 flex items-center justify-center shadow-inner">
+                    <i class="fa-solid fa-cake-candles text-lg text-amber-600"></i>
+                </div>
+                <div>
+                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 leading-none">Recuperación de PIN</h3>
+                    <p class="text-[8px] text-slate-400 font-black uppercase tracking-widest mt-1">FILTRO DE FECHA DE NACIMIENTO</p>
+                </div>
+            </div>
+
+            <p class="text-[10px] text-slate-500 font-bold leading-relaxed mb-1">
+                Para recuperar su PIN de acceso, el sistema verificará su DNI y su fecha de nacimiento registrada previamente.
+            </p>
+
+            <form onsubmit="handleForgotPasswordSubmit(event)" class="space-y-3 font-bold text-xs text-left">
+                <div>
+                    <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">DNI del Profesional</label>
+                    <input id="recoveryDni" type="text" maxlength="8" placeholder="DNI (8 dígitos)" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px]">
+                </div>
+                <div>
+                    <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Fecha de Nacimiento</label>
+                    <input id="recoveryBirthday" type="date" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px]">
+                </div>
+
+                <div id="recoveryErrorMsg" class="hidden text-[10px] text-rose-600 font-extrabold uppercase text-center py-2 px-3 bg-rose-50 border border-rose-200 rounded-xl"></div>
+
+                <div class="grid grid-cols-2 gap-2 pt-2">
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md h-[36px]">
+                        RECUPERAR PIN
+                    </button>
+                    <button type="button" onclick="closePinRecoveryModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all h-[36px]">
+                        REGRESAR
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -109,14 +165,14 @@
                 </div>                        
                 
                 <div class="flex flex-row items-center gap-3 shrink-0 no-print">                
-            <!-- BOTÓN DE CONTROL DE ADMINISTRADOR - UBICADO SEGÚN EL RECUADRO ROJO DE LA IMAGEN image_4917fc.png -->
-            <button onclick="openAdminLoginModal()" class="bg-teal-950/60 hover:bg-teal-900 text-emerald-300 hover:text-white text-xs px-4 py-2 rounded-xl border border-emerald-500/30 flex items-center gap-2 font-black select-none h-[38px] leading-none transition-all duration-300 shadow-md">
-                <i class="fa-solid fa-user-shield text-emerald-400"></i>
-                <span>CONTROL ADM</span>
-            </button>
+                    <!-- BOTÓN DE CONTROL DE ADMINISTRADOR -->
+                    <button onclick="openAdminLoginModal()" class="bg-teal-950/60 hover:bg-teal-900 text-emerald-300 hover:text-white text-xs px-4 py-2 rounded-xl border border-emerald-500/30 flex items-center gap-2 font-black select-none h-[38px] leading-none transition-all duration-300 shadow-md">
+                        <i class="fa-solid fa-user-shield text-emerald-400"></i>
+                        <span>CONTROL ADM</span>
+                    </button>
 
-            <button onclick="toggleDebugConsole()" id="updateSuccessBadge" class="bg-teal-950/40 hover:bg-teal-900 text-emerald-300 text-xs px-4 py-2 rounded-full border border-emerald-500/30 flex items-center gap-2 font-black select-none shadow-inner h-[38px] leading-none transition-colors">
-                <span class="relative flex h-2 w-2">
+                    <button onclick="toggleDebugConsole()" id="updateSuccessBadge" class="bg-teal-950/40 hover:bg-teal-900 text-emerald-300 text-xs px-4 py-2 rounded-full border border-emerald-500/30 flex items-center gap-2 font-black select-none shadow-inner h-[38px] leading-none transition-colors">
+                        <span class="relative flex h-2 w-2">
                             <span id="badgeDotPing" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span id="badgeDot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                         </span>
@@ -447,7 +503,6 @@
                             <canvas id="chartResultados"></canvas>                    
                         </div>                
                     </div>                
-                    <p class="text-[10px] text-slate-400 text-center mt-3 font-semibold"></p>
                 </div>
 
                 <!-- ================= GRÁFICO 6: CASOS POR SECTOR ================= -->
@@ -509,56 +564,77 @@
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         <span id="kardexTimerBadge" class="hidden bg-amber-500/15 border border-amber-500/30 text-amber-800 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">CIERRE EN: 10:00 ⏳</span>
-                        <span class="bg-emerald-200/50 border border-emerald-300/40 text-emerald-800 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">RENIEC VERIFICADO ✔</span>
+                        <span class="bg-emerald-200/50 border border-emerald-300/40 text-emerald-800 text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">PADRÓN REGISTRAL VERIFICADO ✔</span>
                     </div>
                 </div>
 
-                <!-- Panel de Bloqueo por Permiso (Lock Overlay sin CUI) -->
+                <!-- Panel de Bloqueo por Permiso (Formulario de Login/Registro Dinámico) -->
                 <div id="kardexLockOverlay" class="flex flex-col items-center justify-center p-8 py-10 text-center bg-slate-50/50">
                     <div class="bg-amber-100 text-amber-700 rounded-full h-14 w-14 flex items-center justify-center mb-4 shadow-inner">
                         <i class="fa-solid fa-shield-virus text-2xl text-amber-600 animate-pulse"></i>
                     </div>
-                    <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-tight mb-1">REGISTRO DE ACCESO - RED DE VIGILANCIA ASISTENCIAL</h3>
-                    <p class="text-[10px] text-slate-500 font-bold max-w-[450px] leading-relaxed mb-6">
-                        Bajo los lineamientos de la Ley N° 29733 de Protección de Datos Personales, el sistema requiere la validación de un PIN temporal dinámico autogenerado (MFA OTP) en su dispositivo móvil registrado.
+                    
+                    <!-- PESTAÑAS LOGIN VS REGISTRO -->
+                    <div class="flex gap-2 w-full max-w-xs mb-6 bg-slate-200/60 p-1 rounded-2xl border border-slate-300/30">
+                        <button id="btnTabLogin" onclick="switchKardexTab('login')" class="flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all bg-[#014d3a] text-white shadow-sm">
+                            Iniciar Sesión
+                        </button>
+                        <button id="btnTabRegister" onclick="switchKardexTab('register')" class="flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-slate-600 hover:text-slate-900">
+                            Registro Nuevo
+                        </button>
+                    </div>
+
+                    <h3 id="kardexFormTitle" class="text-sm font-extrabold text-slate-800 uppercase tracking-tight mb-1">ACCESO - RED DE VIGILANCIA ASISTENCIAL</h3>
+                    <p id="kardexFormDescription" class="text-[10px] text-slate-500 font-bold max-w-[450px] leading-relaxed mb-6">
+                        Bajo los lineamientos de la Ley N° 29733 de Protección de Datos Personales, el sistema requiere validar su **PIN Único Numérico**. Si es un profesional nuevo, complete sus datos para generar su PIN.
                     </p>
                     
-                    <form onsubmit="handleKardexUnlock(event)" class="w-full max-w-md flex flex-col gap-3 font-bold text-xs text-left">
+                    <form onsubmit="handleKardexFormSubmit(event)" class="w-full max-w-md flex flex-col gap-3 font-bold text-xs text-left">
                         
-                        <!-- PASO 1: DATOS DE IDENTIDAD (DNI, Celular, Nombre) -->
-                        <div id="otpStep1" class="flex flex-col gap-3 transition-all duration-300">
+                        <!-- CONTENEDOR CAMPOS REGISTRO (Escondidos por defecto en login) -->
+                        <div id="registroFieldsContainer" class="hidden flex-col gap-3 transition-all duration-300">
+                            <div>
+                                <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Nombres y Apellidos Completos</label>
+                                <input id="regNombre" type="text" placeholder="Ej. DR. CARLOS SÁNCHEZ" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px] uppercase">
+                            </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
-                                    <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">DNI del Profesional</label>
-                                    <input id="kardexUser" type="text" maxlength="8" placeholder="DNI (8 dígitos)" required class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px]">
+                                    <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Celular de Contacto</label>
+                                    <input id="regCelular" type="text" maxlength="9" placeholder="Celular (9 dígitos)" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px]">
                                 </div>
                                 <div>
-                                    <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Celular de Contacto</label>
-                                    <input id="kardexCelular" type="text" maxlength="9" placeholder="Celular (9 dígitos)" required class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px]">
+                                    <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Fecha de Nacimiento</label>
+                                    <input id="regBirthday" type="date" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px]">
                                 </div>
                             </div>
-
                             <div>
-                                <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Nombre y Apellidos Completos</label>
-                                <input id="kardexNombre" type="text" placeholder="Ej. DR. CARLOS SÁNCHEZ" required class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px] uppercase">
+                                <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Cargo / Especialidad</label>
+                                <select id="regCargo" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px]">
+                                    <option value="MÉDICO EPIDEMIÓLOGO">MÉDICO EPIDEMIÓLOGO</option>
+                                    <option value="MÉDICO ASISTENCIAL" selected>MÉDICO ASISTENCIAL</option>
+                                    <option value="LIC. EN ENFERMERÍA">LIC. EN ENFERMERÍA</option>
+                                    <option value="ANALISTA DE LABORATORIO">ANALISTA DE LABORATORIO</option>
+                                </select>
                             </div>
                         </div>
 
-                        <!-- PASO 2: INGRESO DE PIN OTP GENERADO (Nace oculto) -->
-                        <div id="otpStep2" class="hidden flex-col gap-3 transition-all duration-300 bg-emerald-50/50 p-4 rounded-2xl border border-emerald-500/20">
-                            <div class="text-center mb-1">
-                                <span class="text-[9px] text-emerald-700 bg-emerald-100 border border-emerald-300/30 px-3 py-1 rounded-full uppercase font-black tracking-wider">CÓDIGO DE ACCESO ENVIADO 📲</span>
-                                <p class="text-[10px] text-slate-500 font-bold mt-2">Hemos despachado un código único a su número móvil. Revise su SMS o solicite soporte por WhatsApp.</p>
+                        <!-- CAMPOS LOGIN (DNI + PIN Siempre se usan) -->
+                        <div id="loginFieldsContainer" class="flex flex-col gap-3">
+                            <div>
+                                <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">DNI del Profesional</label>
+                                <input id="loginUserDni" type="text" maxlength="8" placeholder="DNI (8 dígitos)" required class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px]">
                             </div>
-                            
-                            <div class="flex flex-col items-center">
-                                <label class="block text-slate-500 uppercase tracking-wide mb-1.5 font-black text-[9px] text-center">Código OTP de Seguridad</label>
-                                <input id="kardexPass" type="text" maxlength="6" placeholder="• • • • • •" required class="w-48 text-center bg-white border-2 border-emerald-500/30 text-emerald-950 text-base font-black tracking-[0.6em] rounded-xl py-2 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 h-[44px] uppercase shadow-inner">
-                                <span id="otpCountdownLabel" class="text-[9px] text-slate-500 font-bold mt-2 uppercase">El código expira en: <strong class="text-rose-600 font-black" id="otpTimerDisplay">03:00</strong></span>
+
+                            <div id="loginPassContainer">
+                                <div class="flex items-center justify-between mb-1">
+                                    <label class="block text-slate-500 uppercase tracking-wide font-black text-[8px]">PIN de Acceso (Solo Números)</label>
+                                    <button type="button" onclick="openPinRecoveryModal()" class="text-[#10b981] hover:underline uppercase text-[8px] font-black tracking-wide">¿Me olvidé mi PIN?</button>
+                                </div>
+                                <input id="loginUserPin" type="password" maxlength="6" placeholder="PIN de 6 dígitos" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px] font-mono tracking-widest text-center text-lg">
                             </div>
                         </div>
 
-                        <!-- Panel de Progreso Dinámico de validación -->
+                        <!-- Panel de Progreso de Validación -->
                         <div id="reniecProgressContainer" class="hidden flex-col gap-2 bg-slate-100/80 p-3.5 rounded-xl border border-slate-200 mt-2 font-bold text-[10px] text-slate-500">
                             <span class="text-brand-dark uppercase tracking-wider block font-black text-[9px] mb-1.5"><i class="fa-solid fa-cloud-arrow-down animate-bounce"></i> Validación de Red Asistencial:</span>
                             <div id="stepQuery" class="flex items-center justify-between text-slate-400">
@@ -566,7 +642,7 @@
                                 <i id="iconQuery" class="fa-solid fa-spinner animate-spin text-[11px]"></i>
                             </div>
                             <div id="stepCUI" class="flex items-center justify-between text-slate-400">
-                                <span>2. Verificando Código OTP de Un Solo Uso...</span>
+                                <span>2. Verificando PIN de Acceso Privado...</span>
                                 <i id="iconCUI" class="fa-solid fa-clock text-[11px]"></i>
                             </div>
                         </div>
@@ -574,14 +650,9 @@
                         <div id="kardexErrorMsg" class="hidden text-[10px] text-rose-600 font-extrabold uppercase text-center py-2.5 px-3 bg-rose-50 border border-rose-200 rounded-xl"></div>
 
                         <!-- BOTONERÍA DINÁMICA DEL LOGIN -->
-                        <div id="kardexBotonera" class="grid grid-cols-1 gap-2 mt-2">
-                            <!-- Botón Principal Dual (Solicitar / Confirmar) -->
-                            <button id="btnKardexUnlockSubmit" type="button" onclick="handleKardexSubmitFlow()" class="w-full bg-[#014d3a] hover:bg-[#0a4c41] text-white py-2.5 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98 h-[38px] flex items-center justify-center gap-1.5">
-                                <span id="btnUnlockText">GENERAR CÓDIGO OTP</span> <i id="btnUnlockIcon" class="fa-solid fa-mobile-screen"></i>
-                            </button>
-                            <!-- Botón Alternativo - Oculto al inicio, solo aparece en el paso 2 para permitir volver o reenviar -->
-                            <button id="btnAlternateAction" type="button" onclick="handleResetOtpRequest()" class="hidden w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all h-[38px] flex items-center justify-center gap-1.5">
-                                ATRÁS <i class="fa-solid fa-arrow-rotate-left text-[10px]"></i>
+                        <div class="grid grid-cols-1 gap-2 mt-2">
+                            <button id="btnKardexUnlockSubmit" type="submit" class="w-full bg-[#014d3a] hover:bg-[#0a4c41] text-white py-2.5 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98 h-[38px] flex items-center justify-center gap-1.5">
+                                <span id="btnUnlockText">INGRESAR AL PANEL</span> <i id="btnUnlockIcon" class="fa-solid fa-shield-halved"></i>
                             </button>
                         </div>
                     </form>
@@ -628,7 +699,7 @@
         <!-- MODAL DE SOLICITUD DE PIN POR WHATSAPP (CON CÓDIGO QR SEGURO) -->
         <div id="whatsappPinModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md hidden items-center justify-center z-[140] p-4 no-print">
             <div class="bg-white border border-slate-200 rounded-[2.5rem] p-6 sm:p-8 max-w-md w-full mx-auto flex flex-col gap-5 text-slate-800 shadow-2xl relative text-center">
-                <button onclick="closeWhatsappPinModal()" class="absolute top-5 right-5 h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-all flex items-center justify-center hover:scale-110 active:scale-95">
+                <button onclick="closeWhatsappPinModal()" class="absolute top-5 right-5 h-8 w-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-white transition-all flex items-center justify-center hover:scale-110 active:scale-95">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
 
@@ -637,17 +708,17 @@
                         <i class="fa-brands fa-whatsapp text-2xl"></i>
                     </div>
                     <div>
-                        <h3 class="text-xs font-black uppercase tracking-wider text-emerald-800">Solicitud de PIN Asistencial</h3>
+                        <h3 class="text-xs font-black uppercase tracking-wider text-emerald-800">Solicitud de Soporte de Red</h3>
                         <p class="text-[9px] text-slate-500 font-bold uppercase mt-1">Conectando con la Red de Vigilancia</p>
                     </div>
                 </div>
 
                 <div class="flex flex-col items-center justify-center gap-4 py-2 bg-slate-50 rounded-2xl border border-slate-100">
                     <p class="text-[10px] text-slate-500 font-bold max-w-[280px] leading-relaxed">
-                        Si está en una PC del Hospital con acceso restringido, <strong>apunte la cámara de su celular personal</strong> a este código QR para enviar la solicitud al instante:
+                        Si tiene problemas de acceso, apunte la cámara al QR para contactar con soporte técnico asistencial:
                     </p>
                     <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100">
-                        <img id="whatsappQrImg" src="" alt="Código QR de WhatsApp" class="w-[160px] h-[160px] rounded-xl">
+                        <img id="whatsappQrImg" src="https://placehold.co/160x160/014d3a/ffffff?text=WHATSAPP" alt="Código QR de WhatsApp" class="w-[160px] h-[160px] rounded-xl">
                     </div>
                 </div>
 
@@ -657,14 +728,10 @@
                         <i class="fa-solid fa-phone text-emerald-600 mt-0.5 shrink-0"></i>
                         <p class="text-slate-600">Escriba manualmente un WhatsApp al: <span class="text-slate-900 font-extrabold select-all">959 031 034</span></p>
                     </div>
-                    <div class="flex items-start gap-2 text-[11px] pt-1">
-                        <i class="fa-solid fa-mobile-screen-button text-blue-500 mt-0.5 shrink-0"></i>
-                        <p class="text-slate-600">Si está en celular o tablet, use el botón directo:</p>
-                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 gap-2">
-                    <a id="btnWhatsappDirectLink" href="#" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98 h-[38px] flex items-center justify-center gap-1.5 no-underline">
+                    <a id="btnWhatsappDirectLink" href="https://wa.me/51959031034?text=Hola,%20requiero%20soporte%20asistencial%20con%20el%20sistema%20de%20Vigilancia%20Epidemiologica." target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98 h-[38px] flex items-center justify-center gap-1.5 no-underline">
                         ABRIR WHATSAPP DIRECTO <i class="fa-brands fa-whatsapp text-xs"></i>
                     </a>
                     <button onclick="closeWhatsappPinModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all h-[38px]">
@@ -918,6 +985,10 @@
                                 <input id="regUserNombre" type="text" placeholder="Ej. DR. CARLOS REYNA" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 uppercase">
                             </div>
                             <div>
+                                <label class="block text-slate-400 uppercase text-[8px] mb-1">Fecha de Nacimiento (Cumpleaños)</label>
+                                <input id="regUserCumple" type="date" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            </div>
+                            <div>
                                 <label class="block text-slate-400 uppercase text-[8px] mb-1">Celular de Contacto</label>
                                 <input id="regUserCelular" type="text" maxlength="9" placeholder="Celular (9 dígitos)" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                             </div>
@@ -947,9 +1018,10 @@
                                     <thead>
                                         <tr class="text-slate-500 uppercase bg-black/30 border-b border-slate-800 text-[8px] tracking-wider">
                                             <th class="p-2">Identidad / Cargo</th>
-                                            <th class="p-2">DNI</th>
+                                            <th class="p-2">DNI / PIN</th>
+                                            <th class="p-2">Cumpleaños</th>
                                             <th class="p-2">Celular</th>
-                                            <th class="p-2 text-center">Estado de Acceso</th>
+                                            <th class="p-2 text-center">Estado</th>
                                             <th class="p-2 text-center">Acciones</th>
                                         </tr>
                                     </thead>
@@ -970,6 +1042,69 @@
             </div>
         </div>
 
+        <!-- MODAL: EDICIÓN DE USUARIO DESDE EL PANEL DE ADMINISTRACIÓN -->
+        <div id="editUserModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[150] p-4 no-print">
+            <div class="bg-[#0b1329] border border-slate-800 rounded-[2.5rem] p-6 max-w-sm w-full mx-auto flex flex-col gap-4 text-white shadow-2xl relative">
+                <button onclick="closeEditUserModal()" class="absolute top-4 right-4 h-8 w-8 rounded-full bg-slate-800/50 border border-slate-700/50 text-slate-400 hover:text-white transition-all flex items-center justify-center text-sm">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+                <div class="flex items-center gap-2.5 border-b border-slate-800 pb-2 mb-1">
+                    <div class="bg-amber-500/15 text-amber-400 p-2 rounded-xl border border-amber-500/20">
+                        <i class="fa-solid fa-user-pen"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-[11px] font-black uppercase text-slate-200 leading-none">Editar Datos de Personal</h3>
+                        <span class="text-[8px] text-slate-500 font-bold uppercase tracking-wider block mt-1.5">SINO-REG CONTROL</span>
+                    </div>
+                </div>
+                <form onsubmit="handleEditUserSubmit(event)" class="space-y-3 font-bold text-xs text-left">
+                    <input type="hidden" id="editOriginalDni">
+                    <div>
+                        <label class="block text-slate-400 uppercase text-[8px] mb-1">DNI del Profesional (No editable)</label>
+                        <input id="editUserDni" type="text" disabled class="w-full bg-slate-950 border border-slate-800 text-slate-500 rounded-xl px-3 py-2 h-[36px]">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase text-[8px] mb-1">Nombre Completo</label>
+                        <input id="editUserNombre" type="text" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 h-[36px] uppercase">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase text-[8px] mb-1">PIN Numérico Único</label>
+                        <div class="flex gap-1.5">
+                            <input id="editUserPin" type="text" maxlength="6" required class="w-full bg-slate-950 border border-slate-800 text-amber-400 font-mono font-bold rounded-xl px-3 py-2 h-[36px] uppercase tracking-widest text-center text-lg">
+                            <button type="button" onclick="regeneratePinInEditForm()" class="bg-amber-600/20 text-amber-400 border border-amber-500/30 px-3 rounded-xl hover:bg-amber-650 hover:text-white transition-all text-[11px]" title="Autogenerar PIN Numérico">
+                                <i class="fa-solid fa-arrows-rotate"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase text-[8px] mb-1">Fecha de Nacimiento</label>
+                        <input id="editUserCumple" type="date" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 h-[36px]">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase text-[8px] mb-1">Celular de Contacto</label>
+                        <input id="editUserCelular" type="text" maxlength="9" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 h-[36px]">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 uppercase text-[8px] mb-1">Cargo / Especialidad</label>
+                        <select id="editUserCargo" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 h-[36px]">
+                            <option value="MÉDICO EPIDEMIÓLOGO">MÉDICO EPIDEMIÓLOGO</option>
+                            <option value="MÉDICO ASISTENCIAL">MÉDICO ASISTENCIAL</option>
+                            <option value="LIC. EN ENFERMERÍA">LIC. EN ENFERMERÍA</option>
+                            <option value="ANALISTA DE LABORATORIO">ANALISTA DE LABORATORIO</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 pt-2">
+                        <button type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-xl text-[9px] font-black tracking-widest uppercase transition-all shadow-md h-[36px]">
+                            GUARDAR <i class="fa-solid fa-floppy-disk"></i>
+                        </button>
+                        <button type="button" onclick="closeEditUserModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-xl text-[9px] font-black tracking-widest uppercase transition-all h-[36px]">
+                            CANCELAR
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- PIE DE PÁGINA -->
         <footer class="bg-brand-dark text-slate-400 text-center py-4 px-4 border-t border-slate-900 shrink-0 text-[8px] font-bold tracking-wider uppercase select-none w-full">
             <div class="max-w-[1850px] mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
@@ -986,19 +1121,13 @@
         
         // BASE DE DATOS DE AUDITORÍA DE INGRESO Y PERMANENCIA (MOCKS DE AUDITORÍA HISTÓRICOS REALISTAS)
         let auditLogs = [
-            { id: 101, fecha: "08/07/2026", hora: "08:14:22", usuario: "DR. CARLOS JESÚS PÉREZ NÚÑEZ", dni: "25839414", celular: "987654321", equipo: "PC Oficina (Win11 / Chrome)", red: "Intranet Hospital", estado: "FINALIZADO", permanencia: "25 min" },
-            { id: 102, fecha: "08/07/2026", hora: "09:30:15", usuario: "DRA. STELLA HERRERA ALVAREZ", dni: "71040501", celular: "959031034", equipo: "Smartphone (iOS / Safari)", red: "4G Entel", estado: "EXPIRADO (INACTIVO)", permanencia: "10 min" },
-            { id: 103, fecha: "08/07/2026", hora: "11:05:40", usuario: "LIC. GLADYS NANCY HUAMAN OSPINA", dni: "41240265", celular: "981234567", equipo: "Tablet (Android / Chrome)", red: "Wi-Fi Adm", estado: "FINALIZADO", permanencia: "18 min" },
-            { id: 104, fecha: "08/07/2026", hora: "13:22:11", usuario: "DNI NO RECONOCIDO", dni: "45302918", celular: "940291029", equipo: "PC Oficina (Win10 / Edge)", red: "Intranet Emergencia", estado: "BLOQUEADO (PIN ERRONEO)", permanencia: "0 min" },
-            { id: 105, fecha: "08/07/2026", hora: "14:45:02", usuario: "DR. CARLOS JESÚS PÉREZ NÚÑEZ", dni: "25839414", celular: "987654321", equipo: "PC Oficina (Win11 / Chrome)", red: "Intranet Hospital", estado: "FINALIZADO", permanencia: "42 min" }
+            { id: 101, fecha: "08/07/2026", hora: "08:14:22", usuario: "DR. ENRIQUE FLORES", dni: "44109283", celular: "981293847", equipo: "PC Oficina (Win11 / Chrome)", red: "Intranet Hospital", estado: "FINALIZADO", permanencia: "25 min" },
+            { id: 102, fecha: "08/07/2026", hora: "09:30:15", usuario: "DRA. PATRICIA ALVAREZ", dni: "43928172", celular: "959031034", equipo: "Smartphone (iOS / Safari)", red: "4G Entel", estado: "EXPIRADO (INACTIVO)", permanencia: "10 min" },
+            { id: 103, fecha: "08/07/2026", hora: "11:05:40", usuario: "LIC. GLADYS HUAMAN OSPINA", dni: "41240265", celular: "981234567", equipo: "Tablet (Android / Chrome)", red: "Wi-Fi Adm", estado: "FINALIZADO", permanencia: "18 min" }
         ];
 
-        // BASE DE DATOS DINÁMICA DE PERSONAL AUTORIZADO (SINO-REG)
-        let authorizedUsers = [
-            { dni: "25839414", nombre: "CARLOS JESÚS PÉREZ NÚÑEZ", celular: "987654321", cargo: "MÉDICO EPIDEMIÓLOGO", estado: "ACTIVO" },
-            { dni: "71040501", nombre: "STELLA HERRERA ALVAREZ", celular: "959031034", cargo: "DIRECTORA UESA", estado: "ACTIVO" },
-            { dni: "41240265", nombre: "GLADYS NANCY HUAMAN OSPINA", celular: "981234567", cargo: "LIC. EN ENFERMERÍA", estado: "ACTIVO" }
-        ];
+        // BASE DE DATOS LIMPIA DE PERSONAL AUTORIZADO (Se llena dinámicamente con registros en vivo)
+        let authorizedUsers = [];
 
         let isAdminLoggedIn = false;
         let chartAuditDevicesInstance = null;
@@ -1007,11 +1136,7 @@
         let sessionUser = "";
         let sessionCelular = "";
 
-        // VARIABLES DE SEGURIDAD SINO-OTP
-        let currentGeneratedOTP = null;
-        let otpExpirationTimestamp = null;
-        let otpFlowStep = 1; // 1: Pedir datos, 2: Pedir OTP
-        let otpTimerInterval = null;
+        let currentLockTab = 'login'; // 'login' o 'register'
 
         // DICCIONARIO DE MAPEO GLOBAL Y SINÓNIMOS EXTENDIDO PARA CALLAO/MINSA
         const KEYS_MAP = {
@@ -1112,10 +1237,7 @@
                 }
                 if (secondsRemaining <= 0) {
                     clearInterval(inactivityInterval);
-                    
-                    // LOGUEAR EXPIRACIÓN DE SESIÓN EN LA AUDITORÍA ANTES DE BLOQUEAR
                     logActiveSessionEnd("EXPIRADO (INACTIVO)");
-                    
                     lockKardex();
                     showToast("Sesión cerrada automáticamente por inactividad.", "warning");
                 }
@@ -1184,7 +1306,7 @@
         function startLockoutCountdown(duration) {
             const submitBtn = document.getElementById("btnKardexUnlockSubmit");
             const errorMsg = document.getElementById("kardexErrorMsg");
-            const inputs = [document.getElementById("kardexUser"), document.getElementById("kardexPass"), document.getElementById("kardexNombre"), document.getElementById("kardexCelular")];
+            const inputs = [document.getElementById("loginUserDni"), document.getElementById("loginUserPin")];
             
             inputs.forEach(i => i.disabled = true);
             submitBtn.disabled = true;
@@ -1210,7 +1332,7 @@
                     clearInterval(lockoutInterval);
                     inputs.forEach(i => i.disabled = false);
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = `GENERAR CÓDIGO OTP <i class="fa-solid fa-mobile-screen"></i>`;
+                    submitBtn.innerHTML = `INGRESAR AL PANEL <i class="fa-solid fa-shield-halved"></i>`;
                     if (errorMsg) errorMsg.classList.add("hidden");
                     attemptsLeft = 3;
                     localStorage.removeItem("kardex_blocked_until");
@@ -1219,225 +1341,258 @@
             }, 1000);
         }
 
-        // CONTROL DE FLUIDEZ DEL LOGIN POR CONTRASEÑA DE UN SOLO USO (OTP)
-        function handleKardexSubmitFlow() {
-            if (checkLockoutState()) return;
-
-            const userVal = document.getElementById("kardexUser").value.trim();
-            const celVal = document.getElementById("kardexCelular").value.trim();
-            const nombreVal = document.getElementById("kardexNombre").value.trim().toUpperCase();
-            const errorMsg = document.getElementById("kardexErrorMsg");
-
-            // VALIDACIÓN INICIAL DE CAMPOS EN PASO 1
-            if (otpFlowStep === 1) {
-                if (userVal.length !== 8 || isNaN(userVal) || celVal.length !== 9 || isNaN(celVal) || nombreVal.length < 5) {
-                    if (errorMsg) {
-                        errorMsg.innerHTML = "❌ Los campos de identidad son obligatorios y deben tener formato válido.";
-                        errorMsg.classList.remove("hidden");
-                    }
-                    triggerShakingEffect(document.getElementById("otpStep1"));
-                    showToast("Por favor, complete sus datos de acceso.", "error");
-                    return;
-                }
-
-                if (errorMsg) errorMsg.classList.add("hidden");
-
-                // AUTOGENERAR CÓDIGO OTP EN TIEMPO REAL
-                currentGeneratedOTP = String(Math.floor(100000 + Math.random() * 900000)); // 6 dígitos
-                otpExpirationTimestamp = Date.now() + 3 * 60 * 1000; // Válido por 3 min (180 seg)
-
-                addLog(`Código OTP generado para DNI ${userVal}: ${currentGeneratedOTP}`);
-
-                // TRANSICIÓN DE UI: OCULTAR PASO 1, MOSTRAR PASO 2
-                document.getElementById("otpStep1").classList.add("hidden");
-                document.getElementById("otpStep2").classList.remove("hidden");
-
-                // Configurar botón principal para confirmar OTP
-                document.getElementById("btnUnlockText").textContent = "CONFIRMAR E INGRESAR";
-                document.getElementById("btnUnlockIcon").className = "fa-solid fa-shield-halved text-xs";
-                
-                // Configurar botón secundario para reenviar y mostrarlo
-                const alternateBtn = document.getElementById("btnAlternateAction");
-                alternateBtn.innerHTML = "REENVIAR SMS / OTP <i class='fa-solid fa-arrow-rotate-right text-[10px]'></i>";
-                alternateBtn.onclick = handleResetOtpRequest;
-                alternateBtn.className = "w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-2.5 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all h-[38px] flex items-center justify-center gap-1.5";
-                alternateBtn.classList.remove("hidden");
-
-                const botonera = document.getElementById("kardexBotonera");
-                if (botonera) {
-                    botonera.classList.remove("grid-cols-1");
-                    botonera.classList.add("sm:grid-cols-2");
-                }
-
-                // MOSTRAR SIMULADOR DE SMS FLOTANTE (ESTILO TELÉFONO EN PANTALLA)
-                const smsAlert = document.getElementById("simulatedSmsAlert");
-                const smsCodeSpan = document.getElementById("smsOtpCode");
-                if (smsAlert && smsCodeSpan) {
-                    smsCodeSpan.textContent = currentGeneratedOTP;
-                    smsAlert.classList.remove("opacity-0", "translate-x-80");
-                    smsAlert.classList.add("opacity-100", "translate-x-0");
-                }
-
-                // INICIAR CRONÓMETRO DE EXPIRACIÓN OTP (3 MINUTOS)
-                startOtpTimerCountdown();
-
-                showToast("Código OTP temporal generado exitosamente.", "success");
-                otpFlowStep = 2; // Avanzar paso
-                
-                // Enfocar el input de contraseña
-                setTimeout(() => {
-                    document.getElementById("kardexPass").focus();
-                }, 100);
-
-            } else if (otpFlowStep === 2) {
-                // PROCEDER A ENVIAR EL FORMULARIO PARA SU VALIDACIÓN FINAL
-                document.getElementById("btnKardexUnlockSubmit").closest("form").requestSubmit();
-            }
+        // GENERAR PIN ÚNICO COMPUESTO EXCLUSIVAMENTE POR NÚMEROS (6 DÍGITOS)
+        function generateNumericPin() {
+            return Math.floor(100000 + Math.random() * 900000).toString(); // PIN de 6 dígitos numéricos
         }
 
-        // CRONÓMETRO EPIDEMIOLÓGICO SINO-OTP
-        function startOtpTimerCountdown() {
-            if (otpTimerInterval) clearInterval(otpTimerInterval);
+        // EVENTO: ABRIR MODAL DE RECUPERACIÓN DE PIN
+        function openPinRecoveryModal() {
+            document.getElementById("recoveryDni").value = "";
+            document.getElementById("recoveryBirthday").value = "";
+            document.getElementById("recoveryErrorMsg").classList.add("hidden");
             
-            const timerDisplay = document.getElementById("otpTimerDisplay");
-            const countdownLabel = document.getElementById("otpCountdownLabel");
-            
-            let secondsLeft = 180; // 3 minutos
-
-            const updateTimerText = () => {
-                const mins = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
-                const secs = (secondsLeft % 60).toString().padStart(2, '0');
-                if (timerDisplay) timerDisplay.textContent = `${mins}:${secs}`;
-                
-                if (secondsLeft < 30) {
-                    if (timerDisplay) timerDisplay.className = "text-rose-600 font-black animate-pulse";
-                } else {
-                    if (timerDisplay) timerDisplay.className = "text-rose-600 font-black";
-                }
-            };
-
-            updateTimerText();
-
-            otpTimerInterval = setInterval(() => {
-                secondsLeft--;
-                updateTimerText();
-
-                if (secondsLeft <= 0) {
-                    clearInterval(otpTimerInterval);
-                    currentGeneratedOTP = null; // invalidar OTP
-                    if (countdownLabel) {
-                        countdownLabel.innerHTML = "<strong class='text-rose-600 font-black'>CÓDIGO OTP EXPIRADO 🚨</strong>";
-                    }
-                    showToast("Su código PIN dinámico ha expirado. Reenvíe uno nuevo.", "warning");
-                    addLog("El código OTP expiró por tiempo límite.");
-                }
-            }, 1000);
-        }
-
-        function closeSmsSimulator() {
-            const smsAlert = document.getElementById("simulatedSmsAlert");
-            if (smsAlert) {
-                smsAlert.classList.add("opacity-0", "translate-x-80");
-                smsAlert.classList.remove("opacity-100", "translate-x-0");
-            }
-        }
-
-        // REGRESAR AL PASO 1 PARA SOLICITAR UN NUEVO CÓDIGO
-        function handleResetOtpRequest() {
-            if (otpTimerInterval) clearInterval(otpTimerInterval);
-            currentGeneratedOTP = null;
-            otpFlowStep = 1;
-
-            document.getElementById("otpStep2").classList.add("hidden");
-            document.getElementById("otpStep1").classList.remove("hidden");
-
-            document.getElementById("btnUnlockText").textContent = "GENERAR CÓDIGO OTP";
-            document.getElementById("btnUnlockIcon").className = "fa-solid fa-mobile-screen";
-            document.getElementById("kardexPass").value = "";
-
-            // Ocultar el botón secundario y volver al layout de un solo botón
-            const alternateBtn = document.getElementById("btnAlternateAction");
-            alternateBtn.classList.add("hidden");
-
-            const botonera = document.getElementById("kardexBotonera");
-            if (botonera) {
-                botonera.classList.remove("sm:grid-cols-2");
-                botonera.classList.add("grid-cols-1");
-            }
-
-            closeSmsSimulator();
-            showToast("Solicitud restablecida. Ingrese sus datos nuevamente.", "info");
-        }
-
-        // REDIRECCIÓN MANUAL ADAPTADA PARA CONTROL EN PC DEL HOSPITAL (SISTEMAS RESTRINGIDOS)
-        function solicitarPinWhatsApp() {
-            const dni = document.getElementById("kardexUser").value.trim();
-            const nombre = document.getElementById("kardexNombre").value.trim().toUpperCase();
-            const celular = document.getElementById("kardexCelular").value.trim();
-
-            if (!dni || !nombre || !celular) {
-                showToast("Por favor complete su DNI, Nombre y Celular para solicitar el PIN.", "warning");
-                return;
-            }
-
-            // Celular oficial de la administración del hospital
-            const miCelular = "51959031034"; 
-            
-            // Si hay un OTP activo, enviamos el mensaje con el código dinámico, si no un mensaje genérico.
-            let codeText = currentGeneratedOTP ? `Mi código temporal generado es: *${currentGeneratedOTP}*` : `Solicito código temporal OTP de seguridad de un solo uso.`;
-
-            const mensaje = `Hola, solicito el acceso para el Módulo de Vigilancia Epidemiológica del Hospital de Ventanilla.\n\n*Mis datos de acceso son:*\n• *Nombre:* ${nombre}\n• *DNI:* ${dni}\n• *Celular:* ${celular}\n• ${codeText}`;
-            const whatsappLink = `https://wa.me/${miCelular}?text=${encodeURIComponent(mensaje)}`;
-            
-            // Generación dinámica del código QR usando api.qrserver.com
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(whatsappLink)}`;
-            
-            // Inyectar datos en el Modal QR
-            document.getElementById("whatsappQrImg").src = qrUrl;
-            document.getElementById("btnWhatsappDirectLink").href = whatsappLink;
-            
-            // Abrir Modal QR
-            const modal = document.getElementById("whatsappPinModal");
+            const modal = document.getElementById("pinRecoveryModal");
             if (modal) {
                 modal.classList.remove("hidden");
                 modal.classList.add("flex");
-                showToast("Solicitud generada en pantalla de red.", "info");
             }
         }
 
-        function closeWhatsappPinModal() {
-            const modal = document.getElementById("whatsappPinModal");
+        function closePinRecoveryModal() {
+            const modal = document.getElementById("pinRecoveryModal");
             if (modal) {
                 modal.classList.add("hidden");
                 modal.classList.remove("flex");
             }
         }
 
-        // VALIDACIÓN DE AUTENTICACIÓN FINAL CON CÓDIGO OTP DINÁMICO
-        function handleKardexUnlock(event) {
+        // EVENTO: COPIAR PIN GENERADO AL PORTAPAPELES
+        function copyGeneratedPinToClipboard() {
+            const pinVal = document.getElementById("newPinValue").innerText;
+            const el = document.createElement('textarea');
+            el.value = pinVal;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("¡PIN copiado al portapapeles!", "success");
+        }
+
+        function closeNewPinModal() {
+            const modal = document.getElementById("newPinDisplayModal");
+            if (modal) {
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+            }
+        }
+
+        // CONTROLADOR: RECUPERACIÓN DE PIN POR DNI Y FECHA DE NACIMIENTO
+        function handleForgotPasswordSubmit(event) {
+            event.preventDefault();
+            const dni = document.getElementById("recoveryDni").value.trim();
+            const birthday = document.getElementById("recoveryBirthday").value; 
+            const errorMsg = document.getElementById("recoveryErrorMsg");
+
+            const matchedUser = authorizedUsers.find(u => u.dni === dni);
+
+            if (!matchedUser) {
+                errorMsg.innerText = "❌ El DNI ingresado no está registrado en el sistema.";
+                errorMsg.classList.remove("hidden");
+                triggerShakingEffect(event.target);
+                showToast("DNI no registrado", "error");
+                return;
+            }
+
+            // Comparar cumpleaños
+            if (matchedUser.nacimiento !== birthday) {
+                errorMsg.innerText = "❌ Validación fallida. La fecha de nacimiento no coincide.";
+                errorMsg.classList.remove("hidden");
+                triggerShakingEffect(event.target);
+                showToast("Fecha de nacimiento incorrecta", "error");
+                return;
+            }
+
+            // ÉXITO: Validado correctamente. Se revela su PIN numérico actual.
+            errorMsg.classList.add("hidden");
+            closePinRecoveryModal();
+
+            // Desplegar Modal con el PIN recuperado
+            document.getElementById("pinModalTitle").innerText = "SU PIN HA SIDO RECUPERADO";
+            document.getElementById("newPinValue").innerText = matchedUser.pin;
+            const displayModal = document.getElementById("newPinDisplayModal");
+            if (displayModal) {
+                displayModal.classList.remove("hidden");
+                displayModal.classList.add("flex");
+            }
+
+            showToast("Identidad validada. PIN recuperado con éxito.", "success");
+            addLog(`PIN recuperado para ${matchedUser.nombre} tras autenticarse por cumpleaños.`);
+        }
+
+        // CONTROLADOR DE PESTAÑAS LOGIN VS REGISTRO NUEVO
+        function switchKardexTab(tabName) {
+            currentLockTab = tabName;
+            
+            const btnLogin = document.getElementById("btnTabLogin");
+            const btnRegister = document.getElementById("btnTabRegister");
+            
+            const regFields = document.getElementById("registroFieldsContainer");
+            const loginFields = document.getElementById("loginFieldsContainer");
+            
+            const btnText = document.getElementById("btnUnlockText");
+            const btnIcon = document.getElementById("btnUnlockIcon");
+            const formTitle = document.getElementById("kardexFormTitle");
+            const formDesc = document.getElementById("kardexFormDescription");
+
+            const errorMsg = document.getElementById("kardexErrorMsg");
+            if (errorMsg) errorMsg.classList.add("hidden");
+
+            if (tabName === 'login') {
+                btnLogin.className = "flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all bg-[#014d3a] text-white shadow-sm";
+                btnRegister.className = "flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-slate-600 hover:text-slate-900";
+                
+                regFields.classList.add("hidden");
+                loginFields.classList.remove("hidden");
+                
+                btnText.textContent = "INGRESAR AL PANEL";
+                btnIcon.className = "fa-solid fa-shield-halved";
+                formTitle.textContent = "ACCESO - RED DE VIGILANCIA ASISTENCIAL";
+                formDesc.textContent = "Bajo los lineamientos de la Ley N° 29733 de Protección de Datos Personales, el sistema requiere validar su PIN Único Numérico.";
+                
+                // Hacer que el DNI no sea requerido si estamos solo en login (ya se maneja globalmente)
+                document.getElementById("loginUserDni").required = true;
+                document.getElementById("loginUserPin").required = true;
+                
+                document.getElementById("regNombre").required = false;
+                document.getElementById("regCelular").required = false;
+                document.getElementById("regBirthday").required = false;
+
+            } else {
+                btnRegister.className = "flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all bg-[#014d3a] text-white shadow-sm";
+                btnLogin.className = "flex-1 py-2 px-3 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all text-slate-600 hover:text-slate-900";
+                
+                regFields.classList.remove("hidden");
+                loginFields.classList.remove("hidden"); // El DNI se sigue pidiendo en Registro
+                
+                // Ocultar campo de PIN para registro nuevo
+                document.getElementById("loginPassContainer").classList.add("hidden");
+                
+                btnText.textContent = "REGISTRARME Y OBTENER PIN";
+                btnIcon.className = "fa-solid fa-user-plus";
+                formTitle.textContent = "REGISTRO DE NUEVO PROFESIONAL";
+                formDesc.textContent = "Complete sus datos personales para dar de alta sus credenciales asistenciales y recibir su PIN numérico único.";
+                
+                document.getElementById("loginUserDni").required = true;
+                document.getElementById("loginUserPin").required = false;
+                
+                document.getElementById("regNombre").required = true;
+                document.getElementById("regCelular").required = true;
+                document.getElementById("regBirthday").required = true;
+            }
+        }
+
+        // FUNCIÓN: CONTROL DEL ENVÍO DEL FORMULARIO DE ACCESO (PROCESA LOGIN Y REGISTRO NUEVO)
+        function handleKardexFormSubmit(event) {
             event.preventDefault();
             
             if (checkLockoutState()) return;
 
-            const userVal = document.getElementById("kardexUser").value.trim();
-            const celVal = document.getElementById("kardexCelular").value.trim();
-            const nombreVal = document.getElementById("kardexNombre").value.trim().toUpperCase();
-            const passVal = document.getElementById("kardexPass").value.trim().toUpperCase();
+            const dniVal = document.getElementById("loginUserDni").value.trim();
+            const pinVal = document.getElementById("loginUserPin").value.trim();
             const errorMsg = document.getElementById("kardexErrorMsg");
             const progressContainer = document.getElementById("reniecProgressContainer");
-            const form = event.target;
             const submitBtn = document.getElementById("btnKardexUnlockSubmit");
             const lockOverlay = document.getElementById("kardexLockOverlay");
 
-            if (!userVal || !celVal || !passVal) {
-                showToast("Complete los datos requeridos.", "error");
+            if (errorMsg) errorMsg.classList.add("hidden");
+
+            // FLUJO A: REGISTRO NUEVO DE PROFESIONAL
+            if (currentLockTab === 'register') {
+                const nombreVal = document.getElementById("regNombre").value.trim().toUpperCase();
+                const celularVal = document.getElementById("regCelular").value.trim();
+                const birthdayVal = document.getElementById("regBirthday").value;
+                const cargoVal = document.getElementById("regCargo").value;
+
+                if (!dniVal || !nombreVal || !celularVal || !birthdayVal) {
+                    showToast("Por favor complete todos los datos requeridos.", "error");
+                    return;
+                }
+
+                if (dniVal.length !== 8 || isNaN(dniVal)) {
+                    showToast("El DNI debe tener 8 dígitos numéricos.", "error");
+                    return;
+                }
+
+                if (celularVal.length !== 9 || isNaN(celularVal)) {
+                    showToast("El Celular debe tener 9 dígitos numéricos.", "error");
+                    return;
+                }
+
+                // Verificar si ya existe el DNI
+                const exists = authorizedUsers.some(u => u.dni === dniVal);
+                if (exists) {
+                    showToast("Este DNI ya está registrado en el padrón local.", "warning");
+                    if (errorMsg) {
+                        errorMsg.innerHTML = "❌ El DNI ingresado ya tiene credenciales. Diríjase a Iniciar Sesión.";
+                        errorMsg.classList.remove("hidden");
+                    }
+                    return;
+                }
+
+                submitBtn.disabled = true;
+                progressContainer.classList.remove("hidden");
+
+                setTimeout(() => {
+                    // Generar PIN puramente numérico
+                    const generatedPin = generateNumericPin();
+                    const newUserObj = {
+                        dni: dniVal,
+                        nombre: nombreVal,
+                        celular: celularVal,
+                        cargo: cargoVal,
+                        estado: "ACTIVO",
+                        pin: generatedPin,
+                        nacimiento: birthdayVal
+                    };
+
+                    authorizedUsers.push(newUserObj);
+                    progressContainer.classList.add("hidden");
+                    submitBtn.disabled = false;
+
+                    // Mostrar modal del PIN numérico obtenido
+                    document.getElementById("pinModalTitle").innerText = "REGISTRO DE RED COMPLETADO";
+                    document.getElementById("newPinValue").innerText = generatedPin;
+                    const displayModal = document.getElementById("newPinDisplayModal");
+                    if (displayModal) {
+                        displayModal.classList.remove("hidden");
+                        displayModal.classList.add("flex");
+                    }
+
+                    // Resetear formulario a modo Login
+                    switchKardexTab('login');
+                    document.getElementById("loginUserDni").value = dniVal;
+                    document.getElementById("loginUserPin").value = "";
+                    document.getElementById("loginPassContainer").classList.remove("hidden");
+
+                    // Limpiar campos de registro
+                    document.getElementById("regNombre").value = "";
+                    document.getElementById("regCelular").value = "";
+                    document.getElementById("regBirthday").value = "";
+
+                    showToast("¡Registro exitoso! Anote su PIN numérico.", "success");
+                    addLog(`Nuevo médico registrado: ${nombreVal} (DNI ${dniVal}). PIN asignado: ${generatedPin}`);
+                    logAuditEvent(nombreVal, dniVal, celularVal, "PC Auto-Reg", "Intranet", "AUTOREGISTRO COMPLETADO", "-");
+                }, 1500);
+
                 return;
             }
 
-            if (errorMsg) errorMsg.classList.add("hidden");
-
-            // VALIDAR OTP: Compara el código ingresado con el autogenerado localmente y su expiración
-            const isOTPCorrect = (currentGeneratedOTP !== null && passVal === currentGeneratedOTP && Date.now() < otpExpirationTimestamp);
+            // FLUJO B: INICIAR SESIÓN CON PIN EXISTENTE
+            if (!dniVal || !pinVal) {
+                showToast("Por favor, ingrese su DNI y su PIN de seguridad.", "error");
+                return;
+            }
 
             submitBtn.disabled = true;
             progressContainer.classList.remove("hidden");
@@ -1473,54 +1628,54 @@
             };
 
             resetStep("stepQuery", "iconQuery", "1. Validando Identidad con Padrón...");
-            resetStep("stepCUI", "iconCUI", "2. Verificando Código OTP de Un Solo Uso...");
+            resetStep("stepCUI", "iconCUI", "2. Verificando PIN de Acceso Privado...");
 
             startStep("stepQuery", "iconQuery");
 
             setTimeout(() => {
-                const isValidationSuccessful = isOTPCorrect;
-                let resolvedName = nombreVal;
+                // Buscar usuario en el padrón
+                let matchedUser = authorizedUsers.find(u => u.dni === dniVal);
 
-                if (isValidationSuccessful) {
-                    // Verificar base de datos del personal en memoria (SINO-REG)
-                    let existingUser = authorizedUsers.find(u => u.dni === userVal);
-
-                    if (!existingUser) {
-                        // Flujo de Auto-Registro transparente para nuevos médicos
-                        existingUser = {
-                            dni: userVal,
-                            nombre: nombreVal,
-                            celular: celVal,
-                            cargo: "MÉDICO ASISTENCIAL (AUTO-REGISTRO)",
-                            estado: "ACTIVO"
-                        };
-                        authorizedUsers.push(existingUser);
-                        addLog(`Auto-Registro: Nuevo personal médico ${nombreVal} (DNI ${userVal}) registrado.`);
-                        showToast("¡Auto-registro de red exitoso!", "info");
-                    } else if (existingUser.estado !== "ACTIVO") {
-                        // Validar si el usuario pre-cargado ha sido suspendido por un Administrador
-                        progressContainer.classList.add("hidden");
-                        submitBtn.disabled = false;
-                        failStep("stepQuery", "iconQuery", "Acceso Denegado.");
-                        failStep("stepCUI", "iconCUI", "Personal Suspendido.");
-                        
-                        if (errorMsg) {
-                            errorMsg.innerHTML = "❌ Su acceso ha sido SUSPENDIDO por la dirección de red.";
-                            errorMsg.classList.remove("hidden");
-                        }
-                        triggerShakingEffect(document.getElementById("otpStep2"));
-                        logAuditEvent(existingUser.nombre, userVal, celVal, "PC Intento", "Externa", "RECHAZADO (SUSPENDIDO)", "0 min");
-                        return;
-                    } else {
-                        resolvedName = existingUser.nombre;
+                if (!matchedUser) {
+                    failStep("stepQuery", "iconQuery", "DNI no registrado.");
+                    progressContainer.classList.add("hidden");
+                    submitBtn.disabled = false;
+                    
+                    if (errorMsg) {
+                        errorMsg.innerHTML = "❌ Su DNI no se encuentra en el padrón. Por favor, regístrese primero.";
+                        errorMsg.classList.remove("hidden");
                     }
+                    triggerShakingEffect(document.getElementById("loginFieldsContainer"));
+                    showToast("Usuario no autorizado.", "error");
+                    return;
+                }
 
-                    completeStep("stepQuery", "iconQuery", `Personal validado: ${resolvedName}.`);
-                    startStep("stepCUI", "iconCUI");
+                if (matchedUser.estado !== "ACTIVO") {
+                    progressContainer.classList.add("hidden");
+                    submitBtn.disabled = false;
+                    failStep("stepQuery", "iconQuery", "Acceso Denegado.");
+                    failStep("stepCUI", "iconCUI", "Personal Suspendido.");
+                    
+                    if (errorMsg) {
+                        errorMsg.innerHTML = "❌ Acceso suspendido temporalmente por la dirección médica.";
+                        errorMsg.classList.remove("hidden");
+                    }
+                    triggerShakingEffect(document.getElementById("loginFieldsContainer"));
+                    logAuditEvent(matchedUser.nombre, dniVal, matchedUser.celular, "PC Intento", "Intranet", "RECHAZADO (SUSPENDIDO)", "0 min");
+                    return;
+                }
 
-                    setTimeout(() => {
-                        completeStep("stepCUI", "iconCUI", "OTP validado con éxito. Acceso concedido.");
-                        
+                completeStep("stepQuery", "iconQuery", `Personal validado: ${matchedUser.nombre}.`);
+                startStep("stepCUI", "iconCUI");
+
+                setTimeout(() => {
+                    // Validar si el PIN es correcto
+                    const isPinCorrect = (pinVal === matchedUser.pin);
+
+                    if (isPinCorrect) {
+                        completeStep("stepCUI", "iconCUI", "PIN validado. Acceso concedido.");
+                        triggerSecurityLoginNotification(matchedUser);
+
                         setTimeout(() => {
                             isKardexUnlocked = true;
                             attemptsLeft = 3; 
@@ -1537,58 +1692,52 @@
                             document.getElementById("kardexWelcomeBanner").classList.remove("hidden");
                             document.getElementById("kardexWelcomeBanner").classList.add("flex");
 
-                            document.getElementById("kardexWelcomeText").innerHTML = `SESIÓN INICIADA: USUARIO: DNI ${userVal} - ${resolvedName} (${existingUser.cargo})`;
+                            document.getElementById("kardexWelcomeText").innerHTML = `SESIÓN INICIADA: DNI ${dniVal} - ${matchedUser.nombre} (${matchedUser.cargo})`;
                             
-                            // REGISTRAR EVENTO DE INGRESO EXITOSO EN AUDITORÍA
+                            // REGISTRAR INGRESO EN LA AUDITORÍA
                             sessionStartTime = new Date();
-                            sessionDni = userVal;
-                            sessionUser = resolvedName;
-                            sessionCelular = celVal;
-                            logAuditEvent(resolvedName, userVal, celVal, "PC Oficina (Win11 / Chrome)", "Intranet Hospital", "ACTIVO", "-");
-
-                            // Cerrar simulador de SMS flotante
-                            closeSmsSimulator();
+                            sessionDni = dniVal;
+                            sessionUser = matchedUser.nombre;
+                            sessionCelular = matchedUser.celular;
+                            
+                            logAuditEvent(matchedUser.nombre, dniVal, matchedUser.celular, "PC Oficina (Win11 / Chrome)", "Intranet Hospital", "ACTIVO", "-");
 
                             startInactivityTracking(); 
-                            showToast(`Acceso Concedido: Credenciales de red validadas con éxito.`, "success");
+                            showToast(`Acceso Concedido. Bienvenido Dr(a). ${matchedUser.nombre}`, "success");
                             renderKardexTable();
                         }, 600);
 
-                    }, 900);
+                    } else {
+                        failStep("stepCUI", "iconCUI", "PIN de acceso erróneo.");
+                        
+                        setTimeout(() => {
+                            progressContainer.classList.add("hidden");
+                            submitBtn.disabled = false;
+                            attemptsLeft--;
 
-                } else {
-                    failStep("stepQuery", "iconQuery", "Validación fallida.");
-                    failStep("stepCUI", "iconCUI", "Código OTP inválido o expirado.");
-                    
-                    setTimeout(() => {
-                        progressContainer.classList.add("hidden");
-                        submitBtn.disabled = false;
-                        attemptsLeft--;
+                            logAuditEvent(matchedUser.nombre, dniVal, matchedUser.celular, "PC Desconocido", "Externa", "FALLO ACCESO (PIN ERRÓNEO)", "0 min");
 
-                        // REGISTRAR EVENTO DE INGRESO FALLIDO/BLOQUEADO EN AUDITORÍA
-                        logAuditEvent(resolvedName || "INTENTO ACCESO", userVal, celVal, "PC Desconocido", "Externa", "BLOQUEADO (OTP ERRÓNEO)", "0 min");
-
-                        if (attemptsLeft <= 0) {
-                            const tenMinutes = 10 * 60 * 1000;
-                            const blockUntil = new Date().getTime() + tenMinutes;
-                            localStorage.setItem("kardex_blocked_until", blockUntil);
-                            startLockoutCountdown(tenMinutes);
-                            showToast("Formulario de autenticación bloqueado temporalmente por seguridad.", "error");
-                        } else {
-                            if (errorMsg) {
-                                errorMsg.innerHTML = `❌ PIN OTP incorrecto o expirado.<br>Le quedan ${attemptsLeft} intentos adicionales.`;
-                                errorMsg.className = "text-[10px] text-rose-600 font-extrabold uppercase text-center py-2.5 px-3 bg-rose-50 border border-rose-200 rounded-xl block mt-2";
-                                errorMsg.classList.remove("hidden");
+                            if (attemptsLeft <= 0) {
+                                const tenMinutes = 10 * 60 * 1000;
+                                const blockUntil = new Date().getTime() + tenMinutes;
+                                localStorage.setItem("kardex_blocked_until", blockUntil);
+                                startLockoutCountdown(tenMinutes);
+                                showToast("Formulario de autenticación bloqueado por exceso de intentos.", "error");
+                            } else {
+                                if (errorMsg) {
+                                    errorMsg.innerHTML = `❌ PIN de seguridad numérico incorrecto.<br>Le quedan ${attemptsLeft} intentos adicionales.`;
+                                    errorMsg.classList.remove("hidden");
+                                }
+                                triggerShakingEffect(document.getElementById("loginFieldsContainer"));
+                                showToast(`Acceso denegado. Le quedan ${attemptsLeft} intentos.`, "error");
                             }
-                            triggerShakingEffect(document.getElementById("otpStep2"));
-                            showToast(`Acceso denegado. Le quedan ${attemptsLeft} intentos.`, "error");
-                        }
-                    }, 1000);
-                }
+                        }, 1000);
+                    }
+                }, 900);
             }, 1200);
         }
 
-        // CERRAR SESIÓN DE PACIENTES Y BLOQUEAR KARDEX
+        // BLOQUEAR KARDEX Y REGRESAR AL ESTADO INICIAL
         function lockKardex() {
             stopInactivityTracking();
             isKardexUnlocked = false;
@@ -1604,11 +1753,10 @@
 
             document.getElementById("kardexLockOverlay").classList.remove("hidden");
             
-            // Restablecer valores de formulario y pasos del OTP
-            handleResetOtpRequest();
-            document.getElementById("kardexUser").value = "";
-            document.getElementById("kardexCelular").value = "";
-            document.getElementById("kardexNombre").value = "";
+            // Forzar volver al login limpio
+            switchKardexTab('login');
+            document.getElementById("loginUserDni").value = "";
+            document.getElementById("loginUserPin").value = "";
 
             showToast("Panel de Pacientes bloqueado de forma segura.", "warning");
         }
@@ -1654,7 +1802,6 @@
                 permanencia
             };
 
-            // Insertar al inicio de la bitácora para visualización inmediata
             auditLogs.unshift(newLog);
 
             if (isAdminLoggedIn) {
@@ -1691,6 +1838,11 @@
             if (!tbody) return;
 
             tbody.innerHTML = "";
+            if (authorizedUsers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500 italic">No hay personal registrado en el sistema actualmente.</td></tr>`;
+                return;
+            }
+
             authorizedUsers.forEach((usr, idx) => {
                 const badgeClass = usr.estado === "ACTIVO" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-400 border-rose-500/20";
                 const toggleBtnText = usr.estado === "ACTIVO" ? "Suspender" : "Activar";
@@ -1702,7 +1854,11 @@
                             <span class="block text-slate-100 font-extrabold uppercase">${usr.nombre}</span>
                             <span class="block text-slate-500 text-[8px] uppercase">${usr.cargo}</span>
                         </td>
-                        <td class="p-2 font-mono text-slate-300">${usr.dni}</td>
+                        <td class="p-2">
+                            <span class="block font-mono text-slate-300">DNI: ${usr.dni}</span>
+                            <span class="block font-mono text-emerald-400 font-extrabold">PIN: ${usr.pin}</span>
+                        </td>
+                        <td class="p-2 font-mono text-slate-300">${usr.nacimiento}</td>
                         <td class="p-2 font-mono text-slate-300">${usr.celular}</td>
                         <td class="p-2 text-center">
                             <span class="px-2 py-0.5 rounded-full border text-[8px] uppercase font-black tracking-wider ${badgeClass}">
@@ -1710,7 +1866,10 @@
                             </span>
                         </td>
                         <td class="p-2 text-center">
-                            <div class="flex gap-1.5 justify-center">
+                            <div class="flex gap-1 flex-wrap justify-center">
+                                <button onclick="openEditUserModal('${usr.dni}')" class="bg-amber-950/40 hover:bg-amber-900 text-amber-300 border border-amber-850/30 px-2 py-1 rounded-lg text-[8px] font-black uppercase transition-all" title="Editar PIN/Datos">
+                                    Editar
+                                </button>
                                 <button onclick="toggleUserStatus('${usr.dni}')" class="px-2 py-1 rounded-lg text-[8px] font-black uppercase transition-all ${toggleBtnClass}">
                                     ${toggleBtnText}
                                 </button>
@@ -1722,6 +1881,150 @@
                     </tr>
                 `;
             });
+        }
+
+        function openEditUserModal(dni) {
+            const user = authorizedUsers.find(u => u.dni === dni);
+            if (!user) return;
+            
+            document.getElementById("editOriginalDni").value = user.dni;
+            document.getElementById("editUserDni").value = user.dni;
+            document.getElementById("editUserNombre").value = user.nombre;
+            document.getElementById("editUserPin").value = user.pin;
+            document.getElementById("editUserCumple").value = user.nacimiento;
+            document.getElementById("editUserCelular").value = user.celular;
+            document.getElementById("editUserCargo").value = user.cargo;
+            
+            const modal = document.getElementById("editUserModal");
+            if (modal) {
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+            }
+        }
+
+        function closeEditUserModal() {
+            const modal = document.getElementById("editUserModal");
+            if (modal) {
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+            }
+        }
+
+        function regeneratePinInEditForm() {
+            const newPin = generateNumericPin();
+            document.getElementById("editUserPin").value = newPin;
+            showToast("Se ha generado un nuevo PIN numérico de 6 dígitos.", "info");
+        }
+
+        function handleEditUserSubmit(event) {
+            event.preventDefault();
+            const originalDni = document.getElementById("editOriginalDni").value;
+            const nombre = document.getElementById("editUserNombre").value.trim().toUpperCase();
+            const pin = document.getElementById("editUserPin").value.trim();
+            const cumple = document.getElementById("editUserCumple").value;
+            const celular = document.getElementById("editUserCelular").value.trim();
+            const cargo = document.getElementById("editUserCargo").value;
+
+            if (isNaN(pin) || pin.length !== 6) {
+                showToast("El PIN de seguridad debe ser únicamente numérico de 6 dígitos.", "error");
+                return;
+            }
+
+            const user = authorizedUsers.find(u => u.dni === originalDni);
+            if (user) {
+                user.nombre = nombre;
+                user.pin = pin;
+                user.nacimiento = cumple;
+                user.celular = celular;
+                user.cargo = cargo;
+
+                showToast(`Datos de ${nombre} actualizados con éxito`, "success");
+                addLog(`Admin editó datos de DNI ${originalDni}. Nuevo PIN: ${pin}`);
+                renderUsersTable();
+                closeEditUserModal();
+            }
+        }
+
+        function playAlertBeep() {
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (!audioCtx) return;
+                
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+                
+                osc1.type = "sine";
+                osc1.frequency.setValueAtTime(880, audioCtx.currentTime); 
+                gain1.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+                
+                osc1.start();
+                osc1.stop(audioCtx.currentTime + 0.3);
+                
+                setTimeout(() => {
+                    const osc2 = audioCtx.createOscillator();
+                    const gain2 = audioCtx.createGain();
+                    osc2.connect(gain2);
+                    gain2.connect(audioCtx.destination);
+                    osc2.type = "sine";
+                    osc2.frequency.setValueAtTime(1046.5, audioCtx.currentTime); 
+                    gain2.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+                    osc2.start();
+                    osc2.stop(audioCtx.currentTime + 0.4);
+                }, 120);
+            } catch(e) {
+                console.warn("No se pudo iniciar el audio de alerta:", e);
+            }
+        }
+
+        function triggerSecurityLoginNotification(usr) {
+            playAlertBeep();
+            
+            const notifyBox = document.createElement("div");
+            notifyBox.className = "fixed top-4 left-1/2 transform -translate-x-1/2 z-[200] max-w-sm w-full bg-slate-950/95 border-2 border-emerald-500 rounded-3xl p-4 shadow-2xl text-white font-sans flex flex-col gap-2 transition-all duration-500 translate-y-[-100px] opacity-0";
+            
+            notifyBox.innerHTML = `
+                <div class="flex items-start gap-3">
+                    <div class="bg-emerald-500/15 text-emerald-400 p-2.5 rounded-xl border border-emerald-500/30 shrink-0 animate-pulse">
+                        <i class="fa-solid fa-shield-halved text-lg"></i>
+                    </div>
+                    <div class="flex-1 min-w-0 text-left">
+                        <span class="text-[8px] text-emerald-400 font-black tracking-widest uppercase block leading-none">ALERTA DE SEGURIDAD SINO-SINC</span>
+                        <h4 class="text-[11px] font-black uppercase text-slate-100 mt-1.5 truncate">${usr.nombre}</h4>
+                        <p class="text-[9px] text-slate-300 font-semibold mt-0.5 uppercase">${usr.cargo}</p>
+                    </div>
+                    <button onclick="this.closest('.fixed').remove()" class="text-slate-500 hover:text-white transition-colors text-xs shrink-0">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="bg-black/40 border border-slate-800 p-2.5 rounded-xl text-[9px] font-semibold text-slate-400 flex flex-col gap-1 font-mono text-left">
+                    <p>● EVENTO: <span class="text-emerald-400 font-black">ACCESO AL PANEL PACIENTES</span></p>
+                    <p>● IDENTIDAD: DNI ${usr.dni}</p>
+                    <p>● TIEMPO: ${new Date().toLocaleTimeString()}</p>
+                </div>
+                <div class="flex gap-2 justify-end mt-1">
+                    <button onclick="this.closest('.fixed').remove(); openAdminLoginModal();" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[8px] px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all shadow-md">
+                        VER AUDITORÍA ADM <i class="fa-solid fa-angle-right ml-0.5"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notifyBox);
+            
+            setTimeout(() => {
+                notifyBox.classList.remove("translate-y-[-100px]", "opacity-0");
+                notifyBox.classList.add("translate-y-0", "opacity-100");
+            }, 50);
+            
+            setTimeout(() => {
+                if (notifyBox.parentNode) {
+                    notifyBox.classList.add("translate-y-[-100px]", "opacity-0");
+                    setTimeout(() => notifyBox.remove(), 500);
+                }
+            }, 8000);
         }
 
         function toggleUserStatus(dni) {
@@ -1750,9 +2053,10 @@
             const dni = document.getElementById("regUserDni").value.trim();
             const nombre = document.getElementById("regUserNombre").value.trim().toUpperCase();
             const celular = document.getElementById("regUserCelular").value.trim();
+            const cumple = document.getElementById("regUserCumple").value;
             const cargo = document.getElementById("regUserCargo").value;
 
-            if (dni.length !== 8 || isNaN(dni) || celular.length !== 9 || isNaN(celular) || nombre.length < 5) {
+            if (dni.length !== 8 || isNaN(dni) || celular.length !== 9 || isNaN(celular) || nombre.length < 5 || !cumple) {
                 showToast("Por favor complete los campos con formatos válidos.", "error");
                 return;
             }
@@ -1763,16 +2067,35 @@
                 return;
             }
 
-            const newUser = { dni, nombre, celular, cargo, estado: "ACTIVO" };
+            const generatedPin = generateNumericPin();
+
+            const newUser = { 
+                dni, 
+                nombre, 
+                celular, 
+                cargo, 
+                estado: "ACTIVO", 
+                pin: generatedPin, 
+                nacimiento: cumple 
+            };
             authorizedUsers.push(newUser);
 
             document.getElementById("regUserDni").value = "";
             document.getElementById("regUserNombre").value = "";
             document.getElementById("regUserCelular").value = "";
+            document.getElementById("regUserCumple").value = "";
 
             showToast(`¡${nombre} registrado correctamente!`, "success");
-            addLog(`Admin registró manualmente a ${nombre} (DNI ${dni}) como ${cargo}`);
+            addLog(`Admin registró a ${nombre}. PIN generado: ${generatedPin}`);
             renderUsersTable();
+
+            document.getElementById("pinModalTitle").innerText = "REGISTRO DE RED COMPLETADO";
+            document.getElementById("newPinValue").innerText = generatedPin;
+            const displayModal = document.getElementById("newPinDisplayModal");
+            if (displayModal) {
+                displayModal.classList.remove("hidden");
+                displayModal.classList.add("flex");
+            }
         }
 
         function openAdminAuditModal() {
@@ -1780,7 +2103,7 @@
             if (modal) {
                 modal.classList.remove("hidden");
                 modal.classList.add("flex");
-                switchAdminAuditTab('logs'); // Reiniciar a pestaña por defecto
+                switchAdminAuditTab('logs'); 
                 renderAuditTable();
                 renderAuditChart();
             }
@@ -1794,14 +2117,12 @@
             const diffMin = Math.round(diffMs / 60000);
             const durationStr = diffMin === 0 ? "1 min" : `${diffMin} min`;
 
-            // Buscar la sesión activa en el array de auditoría y actualizar su estado y permanencia
             const activeSession = auditLogs.find(l => l.dni === sessionDni && l.estado === "ACTIVO");
             if (activeSession) {
                 activeSession.estado = estadoFinal;
                 activeSession.permanencia = durationStr;
             }
 
-            // Resetear sesión local
             sessionStartTime = null;
             sessionDni = "";
             sessionUser = "";
@@ -1813,7 +2134,6 @@
             }
         }
 
-        // FUNCIONES DE CONTROL DE ACCESO ADM
         function openAdminLoginModal() {
             document.getElementById("adminUser").value = "";
             document.getElementById("adminPass").value = "";
@@ -1840,29 +2160,16 @@
             const pass = document.getElementById("adminPass").value.trim();
             const errorMsg = document.getElementById("adminLoginError");
 
-            // VALIDACIÓN DE CREDENCIALES ADMINISTRADOR
             if (user === "ADMIN" && pass === "VIGILANCIA2026") {
                 errorMsg.classList.add("hidden");
                 closeAdminLoginModal();
                 isAdminLoggedIn = true;
-                
-                // Abrir pantalla de auditoría y renderizar sus componentes
                 openAdminAuditModal();
                 showToast("Acceso de Administrador validado con éxito.", "success");
             } else {
                 errorMsg.innerText = "❌ Credenciales incorrectas para el rol ADM.";
                 errorMsg.classList.remove("hidden");
                 triggerShakingEffect(event.target);
-            }
-        }
-
-        function openAdminAuditModal() {
-            const modal = document.getElementById("adminAuditModal");
-            if (modal) {
-                modal.classList.remove("hidden");
-                modal.classList.add("flex");
-                renderAuditTable();
-                renderAuditChart();
             }
         }
 
@@ -1889,7 +2196,7 @@
 
             logsToRender.forEach(log => {
                 let statusClass = "text-emerald-400";
-                if (log.estado.includes("BLOQUEADO")) statusClass = "text-rose-400";
+                if (log.estado.includes("BLOQUEADO") || log.estado.includes("FALLIDO")) statusClass = "text-rose-400";
                 else if (log.estado.includes("EXPIRADO")) statusClass = "text-amber-400";
                 else if (log.estado === "ACTIVO") statusClass = "text-blue-400 animate-pulse";
 
@@ -1914,10 +2221,9 @@
                 `;
             });
 
-            // Actualizar KPIs de Auditoría en Vivo
             document.getElementById("auditKpiLogins").textContent = auditLogs.length;
             document.getElementById("auditKpiActive").textContent = auditLogs.filter(l => l.estado === "ACTIVO").length;
-            document.getElementById("auditKpiBlocked").textContent = auditLogs.filter(l => l.estado.includes("BLOQUEADO")).length;
+            document.getElementById("auditKpiBlocked").textContent = auditLogs.filter(l => l.estado.includes("BLOQUEADO") || l.estado.includes("FALLIDO")).length;
         }
 
         function filterAuditLogs() {
@@ -1948,7 +2254,6 @@
             const canvas = document.getElementById("chartAuditDevices");
             if (!canvas) return;
 
-            // Agrupar tipos de equipos
             let pcCount = 0;
             let mobileCount = 0;
             let tabletCount = 0;
@@ -1960,9 +2265,8 @@
                 else if (eq.includes("tablet") || eq.includes("ipad")) tabletCount++;
             });
 
-            // En caso no haya logs para pintar el gráfico
             if (pcCount === 0 && mobileCount === 0 && tabletCount === 0) {
-                pcCount = 1; // Muestra fallback de 1
+                pcCount = 1; 
             }
 
             if (chartAuditDevicesInstance) chartAuditDevicesInstance.destroy();
@@ -2026,17 +2330,15 @@
         const normalizeString = (str) => {
             if (!str) return "";
             return str.normalize("NFD")
-                      .replace(/[\u0300-\u036f]/g, "") // Remueve diacríticos (tildes, diéresis, virgulillas)
+                      .replace(/[\u0300-\u036f]/g, "") 
                       .toLowerCase()
                       .replace(/[º°ª]/g, "o")
-                      .replace(/[^a-z0-9]/g, ""); // Seguro para remover no alfanuméricos simples
+                      .replace(/[^a-z0-9]/g, ""); 
         };
 
-        // MOTOR HEURÍSTICO ULTRA-AVANZADO Y BLINDADO (100% EFECTIVO EN CUALQUIER COLUMNA DE BASE LAB)
         function getNormalizedValue(row, possibleKeys, defaultValue = "") {
             const normalizedPossible = possibleKeys.map(k => normalizeString(k));
             
-            // Intento 1: Coincidencia exacta de cabecera normalizada
             for (let key in row) {
                 const normKey = normalizeString(key);
                 if (normalizedPossible.includes(normKey)) {
@@ -2044,7 +2346,6 @@
                 }
             }
             
-            // Intento 2: Búsqueda por subcadena
             for (let key in row) {
                 const normKey = normalizeString(key);
                 for (let poss of normalizedPossible) {
@@ -2055,12 +2356,9 @@
                 }
             }
 
-            // Heurística de Redundancia y Exclusiones para Variables Críticas de Base Lab
             const isHC = possibleKeys.includes("hc") || possibleKeys.includes("h.c.");
             
-            // FILTRADO DINÁMICO DE VALORES PARA HISTORIA CLÍNICA (EVITA EL MOLESTO "N/A")
             if (isHC) {
-                // Intento 3: Palabras clave en cabeceras de HC (excluyendo colisiones con DNI, nombres o fechas)
                 for (let key in row) {
                     const normKey = normalizeString(key);
                     
@@ -2094,7 +2392,6 @@
                     }
                 }
 
-                // Intento 4: Escáner ciego de valores numéricos cortos/alfanuméricos que parezcan una H.C. real
                 const currentDni = getNormalizedValue(row, KEYS_MAP.dni, "");
                 const currentYear = String(getNormalizedValue(row, KEYS_MAP.ano, ""));
                 const currentSem = String(getNormalizedValue(row, KEYS_MAP.sem, ""));
@@ -2123,7 +2420,6 @@
             return defaultValue;
         }
 
-        // DETECTOR MATRICIAL INTELIGENTE DE FILA DE CABECERA (RESUELVE DESFASES DE TÍTULO SUPERIOR)
         function encontrarFilaCabeceraYDatos(rawRows) {
             if (!rawRows || rawRows.length === 0) return { headers: [], dataRows: [] };
             
@@ -2132,7 +2428,6 @@
             let bestRowIdx = 0;
             let maxScore = 0;
             
-            // Escanear las primeras 15 filas de la hoja para hallar cuál tiene más variables de cabecera
             const limit = Math.min(15, rawRows.length);
             for (let i = 0; i < limit; i++) {
                 const rowObj = rawRows[i];
@@ -2154,15 +2449,13 @@
             
             addLog(`Detector de Cabecera: Fila óptima en índice ${bestRowIdx} (Puntaje: ${maxScore})`);
             
-            // Las cabeceras del sistema son las encontradas en esa fila analizada
             const headers = rawRows[bestRowIdx].map(v => String(v).trim());
             const dataRows = [];
             
-            // Mapear cada elemento de las filas de datos con su cabecera correspondiente
             for (let i = bestRowIdx + 1; i < rawRows.length; i++) {
                 const currentRow = rawRows[i];
                 if (!currentRow || currentRow.length === 0) continue;
-                if (currentRow.length === 1 && !currentRow[0]) continue; // Omitir vacías
+                if (currentRow.length === 1 && !currentRow[0]) continue; 
                 
                 const cleanRow = {};
                 headers.forEach((h, hIdx) => {
@@ -2288,7 +2581,6 @@
             if (!val) return `${defaultSem < 10 ? '0' : ''}${defaultSem}/11/${defaultAno}`;
             val = String(val).trim();
             
-            // Si es solo un número de mes de 1 o 2 dígitos (ej. "07", "7", "06") proveniente de la tabla dinámica
             if (/^\d{1,2}$/.test(val)) {
                 const monthNum = parseInt(val, 10);
                 if (monthNum >= 1 && monthNum <= 12) {
@@ -2552,7 +2844,6 @@
                 return true;
             });
 
-            // ORDENACIÓN CRONOLÓGICA INVERSA DESCENDENTE MULTI-NIVEL (EL ÚLTIMO CASO SIEMPRE AL INICIO)
             filteredData.sort((a, b) => {
                 if (b.ano !== a.ano) return b.ano - a.ano;
                 if (b.sem !== a.sem) return b.sem - a.sem;
@@ -3122,7 +3413,6 @@
                     throw new Error("La respuesta de red no contiene un formato CSV plano válido.");
                 }
 
-                // PARSE CON HEADER:FALSE PARA DETECTOR MATRICIAL INTEGRAL (CERO FALLAS EN HISTORIAS CLÍNICAS)
                 Papa.parse(csvText, {
                     header: false,
                     skipEmptyLines: 'greedy',
@@ -3551,61 +3841,15 @@
             }
         }
 
-        // EFECTO VISUAL DE DESTELLO ESMERALDA PARA CAMPOS AUTOCOMPLETADOS
-        function highlightAutofilledFields() {
-            const fields = [
-                document.getElementById("kardexNombre"),
-                document.getElementById("kardexCelular")
-            ];
-            
-            fields.forEach(f => {
-                if (f && f.value) {
-                    // Agregar clases de destello verde temporalmente
-                    f.classList.add("bg-emerald-50", "border-emerald-400", "text-emerald-950", "ring-2", "ring-emerald-200");
-                    f.style.transition = "all 0.5s ease";
-                    
-                    setTimeout(() => {
-                        f.classList.remove("bg-emerald-50", "border-emerald-400", "text-emerald-950", "ring-2", "ring-emerald-200");
-                    }, 1800);
-                }
-            });
+        function closeWhatsappPinModal() {
+            const modal = document.getElementById("whatsappPinModal");
+            if (modal) {
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+            }
         }
 
-        document.getElementById("kardexSearch").addEventListener("input", () => {
-            currentKardexPage = 1;
-            renderKardexTable();
-        });
-
-        // ESCUCHA INTELIGENTE DE DNI PARA AUTOCOMPLETADO MÁGICO DE MÉDICO
-        document.getElementById("kardexUser").addEventListener("input", function(e) {
-            const dniVal = e.target.value.trim();
-            
-            if (dniVal.length === 8) {
-                // 1. Buscar primero en la base de datos de personal médico autorizado (SINO-REG)
-                let matchedUser = authorizedUsers.find(u => u.dni === dniVal);
-                
-                if (matchedUser) {
-                    document.getElementById("kardexNombre").value = matchedUser.nombre;
-                    document.getElementById("kardexCelular").value = matchedUser.celular;
-                    
-                    showToast(`Médico reconocido: ${matchedUser.nombre} ✔`, "success");
-                    addLog(`Autocompletado: DNI ${dniVal} reconocido como ${matchedUser.nombre}.`);
-                    highlightAutofilledFields();
-                    return;
-                }
-                
-                // 2. Fallback: Buscar en la base general epidemiológica del Google Sheets (si por si acaso se registró previamente)
-                let matchedInGeneralDb = dbRawData.find(d => d.dni === dniVal);
-                if (matchedInGeneralDb && matchedInGeneralDb.nombreCompletoOriginal && matchedInGeneralDb.nombreCompletoOriginal !== "PACIENTE ANONIMIZADO") {
-                    document.getElementById("kardexNombre").value = matchedInGeneralDb.nombreCompletoOriginal;
-                    
-                    showToast("Identidad coincidente encontrada en base histórica", "info");
-                    addLog(`Autocompletado Fallback: DNI ${dniVal} asociado a registro histórico.`);
-                    highlightAutofilledFields();
-                }
-            }
-        });
-
+        // EVENTOS AL INICIAR LA PÁGINA
         window.onload = function() {
             addLog("Módulo epidemiológico iniciado.");
             checkLockoutState();
@@ -3615,7 +3859,7 @@
                 if (cachedData) {
                     dbRawData = JSON.parse(cachedData);
                     if (dbRawData && dbRawData.length > 0) {
-                        addLog(`Caché local rápido cargado de manera instantánea: ${dbRawData.length} registros clínicos.`);
+                        addLog(`Caché local rápido cargado: ${dbRawData.length} registros clínicos.`);
                         calcularMetricasAlertas();
                         buildFiltersDynamic();
                         applyFilters();
