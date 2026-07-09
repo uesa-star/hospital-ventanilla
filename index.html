@@ -1983,33 +1983,62 @@
         function triggerSecurityLoginNotification(usr) {
             playAlertBeep();
             
+            // Detección dinámica del tipo de dispositivo del usuario
+            let deviceType = "PC de Escritorio / Laptop";
+            const ua = navigator.userAgent.toLowerCase();
+            let isOtherDevice = false;
+            
+            if (ua.includes("tablet") || ua.includes("ipad")) {
+                deviceType = "Tablet / iPad";
+                isOtherDevice = true;
+            } else if (ua.includes("mobile") || ua.includes("android") || ua.includes("iphone")) {
+                deviceType = "Móvil / Smartphone";
+                isOtherDevice = true;
+            }
+
             const notifyBox = document.createElement("div");
             notifyBox.className = "fixed top-4 left-1/2 transform -translate-x-1/2 z-[200] max-w-sm w-full bg-slate-950/95 border-2 border-emerald-500 rounded-3xl p-4 shadow-2xl text-white font-sans flex flex-col gap-2 transition-all duration-500 translate-y-[-100px] opacity-0";
             
+            // Mensaje de advertencia si accede desde otro dispositivo (no PC estándar)
+            let otherDeviceWarning = "";
+            if (isOtherDevice) {
+                otherDeviceWarning = `
+                    <div class="mt-2 bg-amber-500/25 border border-amber-500/40 text-amber-300 rounded-xl p-2.5 text-[9px] font-black uppercase tracking-wider text-center animate-pulse">
+                        ⚠️ Usarás este dispositivo se registrará en auditoría
+                    </div>
+                `;
+                // Alerta pasiva adicional en el sistema
+                setTimeout(() => {
+                    showToast("Usarás este dispositivo se registrará en auditoría", "warning");
+                }, 800);
+            }
+
+            const currentDateStr = new Date().toLocaleDateString();
+            const currentTimeStr = new Date().toLocaleTimeString();
+
+            // Renderizado del saludo estructurado (eliminando el botón según image_580ffe.png)
             notifyBox.innerHTML = `
                 <div class="flex items-start gap-3">
                     <div class="bg-emerald-500/15 text-emerald-400 p-2.5 rounded-xl border border-emerald-500/30 shrink-0 animate-pulse">
-                        <i class="fa-solid fa-shield-halved text-lg"></i>
+                        <i class="fa-solid fa-hand-holding-hand text-lg text-emerald-400"></i>
                     </div>
                     <div class="flex-1 min-w-0 text-left">
-                        <span class="text-[8px] text-emerald-400 font-black tracking-widest uppercase block leading-none">ALERTA DE SEGURIDAD SINO-SINC</span>
-                        <h4 class="text-[11px] font-black uppercase text-slate-100 mt-1.5 truncate">${usr.nombre}</h4>
+                        <span class="text-[8px] text-emerald-400 font-black tracking-widest uppercase block leading-none">BIENVENIDA DE RED SINO-SINC</span>
+                        <h4 class="text-[11px] font-black uppercase text-slate-100 mt-1.5 truncate">¡HOLA, ${usr.nombre}!</h4>
                         <p class="text-[9px] text-slate-300 font-semibold mt-0.5 uppercase">${usr.cargo}</p>
                     </div>
                     <button onclick="this.closest('.fixed').remove()" class="text-slate-500 hover:text-white transition-colors text-xs shrink-0">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
-                <div class="bg-black/40 border border-slate-800 p-2.5 rounded-xl text-[9px] font-semibold text-slate-400 flex flex-col gap-1 font-mono text-left">
-                    <p>● EVENTO: <span class="text-emerald-400 font-black">ACCESO AL PANEL PACIENTES</span></p>
-                    <p>● IDENTIDAD: DNI ${usr.dni}</p>
-                    <p>● TIEMPO: ${new Date().toLocaleTimeString()}</p>
+                <div class="bg-black/40 border border-slate-800 p-2.5 rounded-xl text-[9px] font-semibold text-slate-400 flex flex-col gap-1.5 font-mono text-left">
+                    <p>● PROFESIONAL: <span class="text-emerald-400 font-black">${usr.nombre}</span></p>
+                    <p>● IDENTIDAD: <span class="text-slate-250">DNI ${usr.dni}</span></p>
+                    <p>● FECHA: <span class="text-slate-200">${currentDateStr}</span></p>
+                    <p>● HORA: <span class="text-slate-200">${currentTimeStr}</span></p>
+                    <p>● DISPOSITIVO: <span class="text-teal-400 font-bold uppercase">${deviceType}</span></p>
                 </div>
-                <div class="flex gap-2 justify-end mt-1">
-                    <button onclick="this.closest('.fixed').remove(); openAdminLoginModal();" class="bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[8px] px-3 py-1.5 rounded-lg uppercase tracking-wider transition-all shadow-md">
-                        VER AUDITORÍA ADM <i class="fa-solid fa-angle-right ml-0.5"></i>
-                    </button>
-                </div>
+                ${otherDeviceWarning}
             `;
             
             document.body.appendChild(notifyBox);
