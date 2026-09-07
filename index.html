@@ -540,7 +540,7 @@
                             <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-400">
                                 <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
                             </span>
-                            <input id="kardexSearch" type="text" placeholder="Buscar por DNI, H.C. o apellidos..." class="w-full bg-white/10 border border-white/20 text-white text-xs rounded-lg pl-8 pr-2.5 py-1.5 placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-accent h-[32px]">
+                            <input id="kardexSearch" oninput="handleKardexSearchInput()" type="text" placeholder="Buscar por DNI, H.C. o apellidos..." class="w-full bg-white/10 border border-white/20 text-white text-xs rounded-lg pl-8 pr-2.5 py-1.5 placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-brand-accent h-[32px]">
                         </div>
                         <button onclick="clearKardexSearch()" class="bg-[#007c65] hover:bg-[#006351] text-white px-3.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-98 h-[32px] flex items-center justify-center gap-1.5 border border-teal-500/20">
                             <i class="fa-solid fa-eraser"></i> LIMPIAR
@@ -853,6 +853,24 @@
                         <input id="adminPass" type="password" placeholder="••••••••••••••" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[38px]">
                     </div>
                     <div id="adminLoginError" class="hidden text-[10px] text-rose-600 font-extrabold uppercase text-center py-2 px-3 bg-rose-50 border border-rose-200 rounded-xl mt-1"></div>
+                    <button type="button" onclick="toggleAdminRecovery()" class="text-[#0b5443] hover:underline uppercase text-[9px] font-black tracking-wider text-center w-full">¿Olvidó clave ADM? Recuperar solo titular UESA</button>
+                    <div id="adminRecoveryBox" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-3 flex-col gap-2">
+                        <label class="block text-slate-500 uppercase tracking-wide font-black text-[8px]">Correo titular UESA</label>
+                        <input id="adminRecoveryEmail" type="email" placeholder="uesa@hospitaldeventanilla.gob.pe" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px]">
+                        <button type="button" onclick="handleAdminSendCode()" class="w-full bg-[#014d3a] hover:bg-[#0a4c41] text-white py-2 rounded-xl text-[9px] font-black tracking-widest uppercase transition-all h-[34px]">ENVIAR CÓDIGO AL CORREO</button>
+                        <div id="adminRecoveryStep2" class="hidden flex-col gap-2">
+                            <label class="block text-slate-500 uppercase tracking-wide font-black text-[8px]">Código de 6 dígitos (demo en pantalla, real por correo en producción)</label>
+                            <input id="adminRecoveryCode" type="text" maxlength="6" placeholder="000000" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px] font-mono tracking-widest text-center">
+                            <button type="button" onclick="handleAdminVerifyCode()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-xl text-[9px] font-black tracking-widest uppercase transition-all h-[34px]">VERIFICAR CÓDIGO</button>
+                        </div>
+                        <div id="adminRecoveryStep3" class="hidden flex-col gap-2">
+                            <label class="block text-slate-500 uppercase tracking-wide font-black text-[8px]">Nueva clave ADM</label>
+                            <input id="adminNewPass1" type="password" placeholder="Nueva clave min 6" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px]">
+                            <input id="adminNewPass2" type="password" placeholder="Repetir nueva clave" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px]">
+                            <button type="button" onclick="handleAdminSetNewPass()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-xl text-[9px] font-black tracking-widest uppercase transition-all h-[34px]">GUARDAR NUEVA CLAVE</button>
+                        </div>
+                        <div id="adminRecoveryMsg" class="hidden text-[10px] font-extrabold uppercase text-center py-2 px-3 rounded-xl"></div>
+                    </div>
                     
                     <div class="grid grid-cols-2 gap-2 mt-2">
                         <button type="submit" class="w-full bg-[#014d3a] hover:bg-[#0a4c41] text-white py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98 h-[38px] flex items-center justify-center gap-1.5">
@@ -1128,6 +1146,9 @@
 
         // BASE DE DATOS LIMPIA DE PERSONAL AUTORIZADO (Se llena dinámicamente con registros en vivo)
         let authorizedUsers = [];
+        function saveUsersLS() { try { localStorage.setItem("sino_users", JSON.stringify(authorizedUsers)); } catch(e){} }
+        function loadUsersLS() { try { const c = localStorage.getItem("sino_users"); if (c) { const a = JSON.parse(c); if (Array.isArray(a)) authorizedUsers = a; } } catch(e){} }
+        loadUsersLS();
 
         let isAdminLoggedIn = false;
         let chartAuditDevicesInstance = null;
@@ -1430,21 +1451,24 @@
                 return;
             }
 
-            // ÉXITO: Validado correctamente. Se revela su PIN numérico actual.
+            // ÉXITO: Validado correctamente. Se genera PIN NUEVO permanente, anterior queda invalidado.
             errorMsg.classList.add("hidden");
+            const newPinRec = generateNumericPin();
+            matchedUser.pin = newPinRec;
+            saveUsersLS();
             closePinRecoveryModal();
 
-            // Desplegar Modal con el PIN recuperado
-            document.getElementById("pinModalTitle").innerText = "SU PIN HA SIDO RECUPERADO";
-            document.getElementById("newPinValue").innerText = matchedUser.pin;
+            // Desplegar Modal con el PIN NUEVO permanente
+            document.getElementById("pinModalTitle").innerText = "NUEVO PIN PERMANENTE GENERADO";
+            document.getElementById("newPinValue").innerText = newPinRec;
             const displayModal = document.getElementById("newPinDisplayModal");
             if (displayModal) {
                 displayModal.classList.remove("hidden");
                 displayModal.classList.add("flex");
             }
 
-            showToast("Identidad validada. PIN recuperado con éxito.", "success");
-            addLog(`PIN recuperado para ${matchedUser.nombre} tras autenticarse por cumpleaños.`);
+            showToast("Nuevo PIN permanente generado. El anterior quedó invalidado.", "success");
+            addLog(`PIN NUEVO permanente para ${matchedUser.nombre} por recupero cumpleaños. Uso único y permanente, si olvida usar recuperar.`);
         }
 
         // CONTROLADOR DE PESTAÑAS LOGIN VS REGISTRO NUEVO
@@ -1574,6 +1598,7 @@
                     };
 
                     authorizedUsers.push(newUserObj);
+                    saveUsersLS();
                     progressContainer.classList.add("hidden");
                     submitBtn.disabled = false;
 
@@ -1954,6 +1979,7 @@
                 user.nacimiento = cumple;
                 user.celular = celular;
                 user.cargo = cargo;
+                saveUsersLS();
 
                 showToast(`Datos de ${nombre} actualizados con éxito`, "success");
                 addLog(`Admin editó datos de DNI ${originalDni}. Nuevo PIN: ${pin}`);
@@ -2077,6 +2103,7 @@
             const user = authorizedUsers.find(u => u.dni === dni);
             if (user) {
                 user.estado = user.estado === "ACTIVO" ? "SUSPENDIDO" : "ACTIVO";
+                saveUsersLS();
                 showToast(`Estado de ${user.nombre} cambiado a ${user.estado}`, "info");
                 addLog(`Admin cambió estado de acceso de DNI ${dni} a ${user.estado}`);
                 renderUsersTable();
@@ -2088,6 +2115,7 @@
             if (idx !== -1) {
                 const name = authorizedUsers[idx].nombre;
                 authorizedUsers.splice(idx, 1);
+                saveUsersLS();
                 showToast(`Se revocaron los permisos para ${name}`, "warning");
                 addLog(`Admin eliminó credenciales de acceso de DNI ${dni}`);
                 renderUsersTable();
@@ -2125,6 +2153,7 @@
                 nacimiento: cumple 
             };
             authorizedUsers.push(newUser);
+            saveUsersLS();
 
             document.getElementById("regUserDni").value = "";
             document.getElementById("regUserNombre").value = "";
@@ -2205,8 +2234,9 @@
             const user = document.getElementById("adminUser").value.trim().toUpperCase();
             const pass = document.getElementById("adminPass").value.trim();
             const errorMsg = document.getElementById("adminLoginError");
+            const savedPass = localStorage.getItem("sino_adm_pass") || "VIGILANCIA2026";
 
-            if (user === "ADMIN" && pass === "VIGILANCIA2026") {
+            if (user === "ADMIN" && pass === savedPass) {
                 errorMsg.classList.add("hidden");
                 closeAdminLoginModal();
                 isAdminLoggedIn = true;
@@ -2217,6 +2247,83 @@
                 errorMsg.classList.remove("hidden");
                 triggerShakingEffect(event.target);
             }
+        }
+
+        let admRecoveryCode = null;
+
+        function toggleAdminRecovery() {
+            const box = document.getElementById("adminRecoveryBox");
+            const msg = document.getElementById("adminRecoveryMsg");
+            if (!box) return;
+            if (msg) msg.classList.add("hidden");
+            if (box.classList.contains("hidden")) {
+                box.classList.remove("hidden");
+                box.classList.add("flex");
+            } else {
+                box.classList.add("hidden");
+                box.classList.remove("flex");
+            }
+        }
+
+        function handleAdminSendCode() {
+            const email = (document.getElementById("adminRecoveryEmail").value || "").trim().toLowerCase();
+            const msg = document.getElementById("adminRecoveryMsg");
+            if (email !== "uesa@hospitaldeventanilla.gob.pe") {
+                msg.innerText = "❌ Solo titular UESA autorizado.";
+                msg.className = "text-[10px] font-extrabold uppercase text-center py-2 px-3 rounded-xl text-rose-600 bg-rose-50 border border-rose-200";
+                msg.classList.remove("hidden");
+                showToast("Correo no autorizado para recupero ADM.", "error");
+                return;
+            }
+            admRecoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
+            const s2 = document.getElementById("adminRecoveryStep2");
+            s2.classList.remove("hidden");
+            s2.classList.add("flex");
+            document.getElementById("adminRecoveryStep3").classList.add("hidden");
+            msg.innerHTML = "✔ CÓDIGO DEMO: " + admRecoveryCode + "<br>En producción llegará a tu correo UESA.";
+            msg.className = "text-[10px] font-extrabold uppercase text-center py-2 px-3 rounded-xl text-emerald-700 bg-emerald-50 border border-emerald-200";
+            msg.classList.remove("hidden");
+            showToast("Código generado solo titular (demo en pantalla).", "success");
+            addLog("Código recupero ADM generado para titular UESA.");
+        }
+
+        function handleAdminVerifyCode() {
+            const code = (document.getElementById("adminRecoveryCode").value || "").trim();
+            const msg = document.getElementById("adminRecoveryMsg");
+            if (!admRecoveryCode || code !== admRecoveryCode) {
+                msg.innerText = "❌ Código incorrecto.";
+                msg.className = "text-[10px] font-extrabold uppercase text-center py-2 px-3 rounded-xl text-rose-600 bg-rose-50 border border-rose-200";
+                msg.classList.remove("hidden");
+                showToast("Código incorrecto.", "error");
+                return;
+            }
+            const s3 = document.getElementById("adminRecoveryStep3");
+            s3.classList.remove("hidden");
+            s3.classList.add("flex");
+            msg.innerText = "✔ Código verificado. Define tu nueva clave.";
+            msg.className = "text-[10px] font-extrabold uppercase text-center py-2 px-3 rounded-xl text-emerald-700 bg-emerald-50 border border-emerald-200";
+            msg.classList.remove("hidden");
+        }
+
+        function handleAdminSetNewPass() {
+            const p1 = (document.getElementById("adminNewPass1").value || "").trim();
+            const p2 = (document.getElementById("adminNewPass2").value || "").trim();
+            const msg = document.getElementById("adminRecoveryMsg");
+            if (p1.length < 6 || p1 !== p2) {
+                msg.innerText = "❌ Claves no coinciden o muy corta min 6.";
+                msg.className = "text-[10px] font-extrabold uppercase text-center py-2 px-3 rounded-xl text-rose-600 bg-rose-50 border border-rose-200";
+                msg.classList.remove("hidden");
+                return;
+            }
+            localStorage.setItem("sino_adm_pass", p1);
+            admRecoveryCode = null;
+            document.getElementById("adminUser").value = "ADMIN";
+            document.getElementById("adminPass").value = p1;
+            msg.innerText = "✔ Nueva clave guardada solo en tu Chrome UESA.";
+            msg.className = "text-[10px] font-extrabold uppercase text-center py-2 px-3 rounded-xl text-emerald-700 bg-emerald-50 border border-emerald-200";
+            msg.classList.remove("hidden");
+            showToast("Nueva clave ADM guardada.", "success");
+            addLog("Titular UESA cambió clave ADM local.");
         }
 
         function closeAdminAuditModal() {
@@ -3317,20 +3424,29 @@
             renderSummaryTable();
         }
 
+        function getKardexFiltered() {
+            const el = document.getElementById("kardexSearch");
+            const searchValue = (el ? el.value : "").toLowerCase().trim();
+            if (searchValue === "") return filteredData;
+            return filteredData.filter(d => {
+                const pacName = String(d.nombreCompletoOriginal || "").toLowerCase();
+                const dni = String(d.dni || "").toLowerCase();
+                const hc = String(d.hc || "").toLowerCase();
+                return pacName.includes(searchValue) || dni.includes(searchValue) || hc.includes(searchValue);
+            });
+        }
+
+        function handleKardexSearchInput() {
+            currentKardexPage = 1;
+            renderKardexTable();
+        }
+
         function renderKardexTable() {
             const tbody = document.getElementById("kardexTableBody");
             const countLabel = document.getElementById("kardexCountLabel");
             if (!tbody) return;
 
-            const searchValue = document.getElementById("kardexSearch").value.toLowerCase().trim();
-
-            let recordsToRender = filteredData;
-            if (searchValue !== "") {
-                recordsToRender = filteredData.filter(d => {
-                    const pacName = d.nombreCompletoOriginal.toLowerCase();
-                    return pacName.includes(searchValue) || d.dni.includes(searchValue) || d.hc.includes(searchValue);
-                });
-            }
+            let recordsToRender = getKardexFiltered();
 
             const totalRecords = recordsToRender.length;
             const totalPages = Math.max(1, Math.ceil(totalRecords / kardexItemsPerPage));
@@ -3346,6 +3462,9 @@
             if (totalRecords === 0) {
                 tbody.innerHTML = `<tr><td colspan="9" class="p-8 text-center text-slate-400 italic">No se encontraron pacientes para mostrar.</td></tr>`;
                 if (countLabel) countLabel.textContent = "Mostrando 0 de 0 registros";
+                document.getElementById("currentPageLabel").textContent = "1";
+                document.getElementById("btnPrevPage").disabled = true;
+                document.getElementById("btnNextPage").disabled = true;
                 return;
             }
 
@@ -3393,14 +3512,7 @@
         }
 
         function nextKardexPage() {
-            const searchValue = document.getElementById("kardexSearch").value.toLowerCase().trim();
-            let recordsToRender = filteredData;
-            if (searchValue !== "") {
-                recordsToRender = filteredData.filter(d => {
-                    const pacName = d.nombreCompletoOriginal.toLowerCase();
-                    return pacName.includes(searchValue) || d.dni.includes(searchValue) || d.hc.includes(searchValue);
-                });
-            }
+            const recordsToRender = getKardexFiltered();
             const totalRecords = recordsToRender.length;
             const totalPages = Math.ceil(totalRecords / kardexItemsPerPage);
             if (currentKardexPage < totalPages) {
