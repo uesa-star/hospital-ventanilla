@@ -2,7 +2,9 @@
 <html lang="es" class="bg-slate-50 font-sans">
 <head>    
     <meta charset="UTF-8">    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- SEGURIDAD: Política de seguridad de contenido + anti-clickjacking -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com data:; img-src 'self' data: https:; connect-src 'self' https://docs.google.com https://api.allorigins.win https://api.codetabs.com https://corsproxy.io; frame-ancestors 'none'; object-src 'none'; base-uri 'self';">
     <title>Hospital de Ventanilla - Gestión de Laboratorio y Vigilancia Epidemiológica</title>    
     
     <!-- Tailwind CSS para diseño moderno -->    
@@ -87,7 +89,7 @@
             <h3 id="pinModalTitle" class="text-lg font-black text-slate-800 uppercase tracking-tight">PIN DE ACCESO GENERADO</h3>
             <span class="text-[9px] font-black text-emerald-600 tracking-widest uppercase mb-4 block">RED DE VIGILANCIA ASISTENCIAL</span>
             
-            <p class="text-[11px] text-slate-500 font-bold mb-6 max-w-xs">
+            <p id="pinModalDesc" class="text-[11px] text-slate-500 font-bold mb-6 max-w-xs">
                 Este es su código PIN único asistencial de tipo numérico. Por su seguridad, apúntelo bien para sus accesos futuros.
             </p>
 
@@ -121,17 +123,21 @@
             </div>
 
             <p class="text-[10px] text-slate-500 font-bold leading-relaxed mb-1">
-                Para recuperar su PIN de acceso, el sistema verificará su DNI y su fecha de nacimiento registrada previamente.
+                Para recuperar su PIN de acceso, el sistema verificará su DNI, su fecha de nacimiento y su celular registrados previamente.
             </p>
 
             <form onsubmit="handleForgotPasswordSubmit(event)" class="space-y-3 font-bold text-xs text-left">
                 <div>
                     <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">DNI del Profesional</label>
-                    <input id="recoveryDni" type="text" maxlength="8" placeholder="DNI (8 dígitos)" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px]">
+                    <input id="recoveryDni" type="text" maxlength="8" pattern="[0-9]{8}" inputmode="numeric" placeholder="DNI (8 dígitos)" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px]">
                 </div>
                 <div>
                     <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Fecha de Nacimiento</label>
                     <input id="recoveryBirthday" type="date" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px]">
+                </div>
+                <div>
+                    <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Celular Registrado</label>
+                    <input id="recoveryCelular" type="text" maxlength="9" pattern="[0-9]{9}" inputmode="numeric" title="9 dígitos numéricos" placeholder="Celular (9 dígitos)" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px]">
                 </div>
 
                 <div id="recoveryErrorMsg" class="hidden text-[10px] text-rose-600 font-extrabold uppercase text-center py-2 px-3 bg-rose-50 border border-rose-200 rounded-xl"></div>
@@ -145,6 +151,95 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CAMBIO DE PIN EN SESIÓN -->
+    <div id="changePinModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[140] p-4 no-print">
+        <div class="bg-white rounded-[2.5rem] p-6 sm:p-8 max-w-sm w-full mx-auto flex flex-col gap-4 text-left border border-slate-100 shadow-2xl">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
+                <div class="bg-teal-100 text-teal-700 rounded-xl h-10 w-10 flex items-center justify-center shadow-inner">
+                    <i class="fa-solid fa-key text-lg text-teal-600"></i>
+                </div>
+                <div>
+                    <h3 class="text-xs font-black uppercase tracking-wider text-slate-800 leading-none">Cambiar mi PIN</h3>
+                    <p class="text-[8px] text-slate-400 font-black uppercase tracking-widest mt-1">SESIÓN VERIFICADA</p>
+                </div>
+            </div>
+
+            <p class="text-[10px] text-slate-500 font-bold leading-relaxed mb-1">
+                Ingrese su PIN actual y defina el nuevo PIN de 6 dígitos numéricos.
+            </p>
+
+            <form onsubmit="handleChangePinSubmit(event)" class="space-y-3 font-bold text-xs text-left">
+                <div>
+                    <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">PIN Actual</label>
+                    <input id="changeCurrentPin" type="password" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" title="6 dígitos numéricos" placeholder="PIN actual (6 dígitos)" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px] font-mono tracking-widest text-center">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">PIN Nuevo</label>
+                        <input id="changeNewPin1" type="password" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" title="6 dígitos numéricos" placeholder="Nuevo PIN" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px] font-mono tracking-widest text-center">
+                    </div>
+                    <div>
+                        <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Confirmar PIN</label>
+                        <input id="changeNewPin2" type="password" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" title="6 dígitos numéricos" placeholder="Repetir PIN" required class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px] font-mono tracking-widest text-center">
+                    </div>
+                </div>
+
+                <div id="changePinErrorMsg" class="hidden text-[10px] text-rose-600 font-extrabold uppercase text-center py-2 px-3 bg-rose-50 border border-rose-200 rounded-xl"></div>
+
+                <div class="grid grid-cols-2 gap-2 pt-2">
+                    <button type="submit" class="w-full bg-teal-700 hover:bg-teal-800 text-white py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md h-[36px]">
+                        GUARDAR PIN
+                    </button>
+                    <button type="button" onclick="closeChangePinModal()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all h-[36px]">
+                        CANCELAR
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: AVISO DE INACTIVIDAD (60 SEG PARA EL CIERRE) -->
+    <div id="inactivityWarnModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[145] p-4 no-print">
+        <div class="bg-white rounded-[2.5rem] p-8 max-w-sm w-full mx-auto flex flex-col items-center text-center border border-amber-200 shadow-2xl">
+            <div class="bg-amber-100 text-amber-600 rounded-full h-16 w-16 flex items-center justify-center mb-4 shadow-inner animate-pulse">
+                <i class="fa-solid fa-hourglass-half text-3xl"></i>
+            </div>
+            <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">¿Sigues ahí?</h3>
+            <p class="text-[11px] text-slate-500 font-bold leading-relaxed mb-2 max-w-xs">
+                Tu sesión del kardex se cerrará por inactividad en <span id="warnCountdown" class="text-rose-600 font-black">60</span> segundos.
+            </p>
+            <div class="grid grid-cols-2 gap-2 w-full mt-4">
+                <button onclick="extendSession()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md">
+                    SEGUIR AQUÍ
+                </button>
+                <button onclick="lockKardex()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all">
+                    SALIR AHORA
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: RECORDATORIO DE RESPALDO (cada 7 días) -->
+    <div id="backupRemindModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md hidden items-center justify-center z-[145] p-4 no-print">
+        <div class="bg-white rounded-[2.5rem] p-8 max-w-sm w-full mx-auto flex flex-col items-center text-center border border-sky-200 shadow-2xl">
+            <div class="bg-sky-100 text-sky-600 rounded-full h-16 w-16 flex items-center justify-center mb-4 shadow-inner">
+                <i class="fa-solid fa-database text-3xl"></i>
+            </div>
+            <h3 class="text-lg font-black text-slate-800 uppercase tracking-tight">Respaldo pendiente</h3>
+            <p id="backupRemindText" class="text-[11px] text-slate-500 font-bold leading-relaxed mb-2 max-w-xs">
+                Tu último respaldo tiene más de 7 días. ¿Exportamos ahora?
+            </p>
+            <div class="grid grid-cols-2 gap-2 w-full mt-4">
+                <button onclick="backupRemindNow()" class="w-full bg-sky-700 hover:bg-sky-600 text-white py-3 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md">
+                    EXPORTAR AHORA
+                </button>
+                <button onclick="backupRemindLater()" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 py-3 px-4 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all">
+                    DESPUÉS
+                </button>
+            </div>
         </div>
     </div>
 
@@ -548,6 +643,9 @@
                         <button onclick="lockKardex()" class="bg-rose-900/60 hover:bg-rose-900/85 text-rose-250 px-3.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-98 h-[32px] flex items-center justify-center gap-1.5 border border-rose-500/20" title="Bloquear Panel de Pacientes">
                             <i class="fa-solid fa-lock"></i> BLOQUEAR
                         </button>
+                        <button onclick="openChangePinModal()" class="bg-amber-900/60 hover:bg-amber-900/85 text-amber-200 px-3.5 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all shadow-md active:scale-98 h-[32px] flex items-center justify-center gap-1.5 border border-amber-500/20" title="Cambiar mi PIN de acceso">
+                            <i class="fa-solid fa-key"></i> MI PIN
+                        </button>
                     </div>
                 </div>
 
@@ -595,12 +693,12 @@
                         <div id="registroFieldsContainer" class="hidden flex-col gap-3 transition-all duration-300">
                             <div>
                                 <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Nombres y Apellidos Completos</label>
-                                <input id="regNombre" type="text" placeholder="Ej. DR. CARLOS SÁNCHEZ" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px] uppercase">
+                                <input id="regNombre" type="text" placeholder="Ej. DR. CARLOS SÁNCHEZ" maxlength="80" pattern="[A-ZÁÉÍÓÚÑÜa-záéíóúñü\s.\-]{5,80}" title="Solo letras, espacios, puntos y guiones (5 a 80 caracteres)" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px] uppercase">
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Celular de Contacto</label>
-                                    <input id="regCelular" type="text" maxlength="9" placeholder="Celular (9 dígitos)" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px]">
+                                    <input id="regCelular" type="text" maxlength="9" pattern="[0-9]{9}" inputmode="numeric" title="9 dígitos numéricos" placeholder="Celular (9 dígitos)" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px]">
                                 </div>
                                 <div>
                                     <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">Fecha de Nacimiento</label>
@@ -622,7 +720,7 @@
                         <div id="loginFieldsContainer" class="flex flex-col gap-3">
                             <div>
                                 <label class="block text-slate-500 uppercase tracking-wide mb-1 font-black text-[8px]">DNI del Profesional</label>
-                                <input id="loginUserDni" type="text" maxlength="8" placeholder="DNI (8 dígitos)" required class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px]">
+                                <input id="loginUserDni" type="text" maxlength="8" pattern="[0-9]{8}" inputmode="numeric" title="8 dígitos numéricos" placeholder="DNI (8 dígitos)" required class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px]">
                             </div>
 
                             <div id="loginPassContainer">
@@ -630,7 +728,12 @@
                                     <label class="block text-slate-500 uppercase tracking-wide font-black text-[8px]">PIN de Acceso (Solo Números)</label>
                                     <button type="button" onclick="openPinRecoveryModal()" class="text-[#10b981] hover:underline uppercase text-[8px] font-black tracking-wide">¿Me olvidé mi PIN?</button>
                                 </div>
-                                <input id="loginUserPin" type="password" maxlength="6" placeholder="PIN de 6 dígitos" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px] font-mono tracking-widest text-center text-lg">
+                                <input id="loginUserPin" type="password" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" title="6 dígitos numéricos" placeholder="PIN de 6 dígitos" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#0b5443] h-[36px] font-mono tracking-widest text-center text-lg">
+                            </div>
+
+                            <div id="captchaBox" class="hidden bg-amber-50 border border-amber-200 rounded-xl p-3">
+                                <label class="block text-amber-700 uppercase tracking-wide mb-1 font-black text-[8px]">Verificación humana: ¿Cuánto es <span id="captchaQ">?</span></label>
+                                <input id="captchaA" type="text" maxlength="3" inputmode="numeric" placeholder="Respuesta" class="w-full bg-white border border-amber-300 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500 h-[36px] font-mono tracking-widest text-center">
                             </div>
                         </div>
 
@@ -798,7 +901,7 @@
                     <div class="bg-black/40 p-3 rounded-xl border border-slate-800/80">
                         <p class="font-extrabold text-slate-400 border-b border-slate-800 pb-1.5 mb-2 uppercase tracking-wider">Métricas de Conexión</p>
                         <div class="space-y-1 text-[11px] font-medium">
-                            <p>URL Base: <span class="text-slate-300 break-all select-all font-mono text-[10px]">https://docs.google.com/spreadsheets/d/e/...</span></p>
+                            <p>URL Base: <span class="text-slate-300 break-all select-all font-mono text-[10px]">oculta (sincronización interna)</span></p>
                             <p>Estado de la Red: <span id="debugNetStatus" class="text-amber-500 font-extrabold">Sin conectar</span></p>
                             <p>Bytes Leídos: <span id="debugBytesRead" class="text-slate-300 font-mono">0 KB</span></p>
                             <p>Filas Totales: <span id="debugTotalRows" class="text-slate-300 font-extrabold">0</span></p>
@@ -865,7 +968,7 @@
                         </div>
                         <div id="adminRecoveryStep3" class="hidden flex-col gap-2">
                             <label class="block text-slate-500 uppercase tracking-wide font-black text-[8px]">Nueva clave ADM</label>
-                            <input id="adminNewPass1" type="password" placeholder="Nueva clave min 6" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px]">
+                            <input id="adminNewPass1" type="password" placeholder="Nueva clave min 8" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px]">
                             <input id="adminNewPass2" type="password" placeholder="Repetir nueva clave" class="w-full bg-white border border-slate-200 text-slate-800 text-[11px] rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#014d3a] h-[36px]">
                             <button type="button" onclick="handleAdminSetNewPass()" class="w-full bg-amber-600 hover:bg-amber-700 text-white py-2 rounded-xl text-[9px] font-black tracking-widest uppercase transition-all h-[34px]">GUARDAR NUEVA CLAVE</button>
                         </div>
@@ -937,6 +1040,30 @@
                     </div>
                 </div>
 
+                <!-- CAMBIO DIRECTO DE CLAVE ADM (sin recupero) -->
+                <div class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 no-print">
+                    <form onsubmit="handleAdminChangePass(event)" class="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end font-bold text-xs text-left">
+                        <div class="sm:col-span-4 text-slate-400 uppercase text-[9px] tracking-wider font-black flex items-center gap-2">
+                            <i class="fa-solid fa-lock text-amber-400"></i> Cambiar clave ADM (sin recupero)
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 uppercase text-[8px] mb-1">Clave actual</label>
+                            <input id="admChCurrent" type="password" required placeholder="Actual" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 uppercase text-[8px] mb-1">Nueva clave (min 8)</label>
+                            <input id="admChNew1" type="password" required minlength="8" placeholder="Nueva" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 uppercase text-[8px] mb-1">Confirmar nueva</label>
+                            <input id="admChNew2" type="password" required minlength="8" placeholder="Repetir" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        </div>
+                        <button type="submit" class="w-full bg-amber-700 hover:bg-amber-600 text-white py-2 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98 h-[38px]">
+                            CAMBIAR
+                        </button>
+                    </form>
+                </div>
+
                 <!-- SECCIÓN DE BITÁCORA (PANEL LOGS) -->
                 <div id="adminPanelLogs" class="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     <!-- PANEL IZQUIERDO: DIAGRAMA DE DISPOSITIVOS -->
@@ -961,6 +1088,7 @@
                                 </h3>
                                 <div class="flex gap-1.5 shrink-0">
                                     <input id="auditSearchInput" oninput="filterAuditLogs()" type="text" placeholder="Filtrar por DNI o Médico..." class="bg-slate-950 border border-slate-800 text-[10px] rounded-lg px-2.5 py-1 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 h-[26px]">
+                                    <button onclick="exportAuditCsv()" class="bg-sky-950/40 hover:bg-sky-900 text-sky-300 border border-sky-800/30 text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider transition-all h-[26px]" title="Descargar auditoría en Excel/CSV"><i class="fa-solid fa-file-csv mr-1"></i>CSV</button>
                                     <button onclick="clearAuditLogs()" class="bg-rose-950/40 hover:bg-rose-900 text-rose-250 border border-rose-800/30 text-[9px] font-black px-2.5 py-1 rounded-lg uppercase tracking-wider transition-all h-[26px]">Borrar</button>
                                 </div>
                             </div>
@@ -996,11 +1124,11 @@
                             </h3>
                             <div>
                                 <label class="block text-slate-400 uppercase text-[8px] mb-1">DNI del Profesional</label>
-                                <input id="regUserDni" type="text" maxlength="8" placeholder="DNI (8 dígitos)" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                <input id="regUserDni" type="text" maxlength="8" pattern="[0-9]{8}" inputmode="numeric" title="8 dígitos numéricos" placeholder="DNI (8 dígitos)" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                             </div>
                             <div>
                                 <label class="block text-slate-400 uppercase text-[8px] mb-1">Nombre Completo</label>
-                                <input id="regUserNombre" type="text" placeholder="Ej. DR. CARLOS REYNA" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 uppercase">
+                                <input id="regUserNombre" type="text" placeholder="Ej. DR. CARLOS REYNA" maxlength="80" pattern="[A-ZÁÉÍÓÚÑÜa-záéíóúñü\s.\-]{5,80}" title="Solo letras, espacios, puntos y guiones (5 a 80 caracteres)" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500 uppercase">
                             </div>
                             <div>
                                 <label class="block text-slate-400 uppercase text-[8px] mb-1">Fecha de Nacimiento (Cumpleaños)</label>
@@ -1008,7 +1136,7 @@
                             </div>
                             <div>
                                 <label class="block text-slate-400 uppercase text-[8px] mb-1">Celular de Contacto</label>
-                                <input id="regUserCelular" type="text" maxlength="9" placeholder="Celular (9 dígitos)" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                                <input id="regUserCelular" type="text" maxlength="9" pattern="[0-9]{9}" inputmode="numeric" title="9 dígitos numéricos" placeholder="Celular (9 dígitos)" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                             </div>
                             <div>
                                 <label class="block text-slate-400 uppercase text-[8px] mb-1">Cargo / Especialidad</label>
@@ -1025,12 +1153,35 @@
                         </form>
                     </div>
 
+                    <!-- RESPALDO DE SEGURIDAD -->
+                    <div class="bg-slate-900/40 p-4 rounded-2xl border border-slate-800 flex flex-col gap-3">
+                        <h3 class="text-xs font-extrabold text-slate-200 uppercase tracking-wider border-b border-slate-800 pb-2 mb-1 flex items-center gap-2">
+                            <i class="fa-solid fa-database text-sky-400"></i> Respaldo de Seguridad
+                        </h3>
+                        <p class="text-[9px] text-slate-400 font-bold leading-relaxed">
+                            Descargue la copia con usuarios, clave ADM y auditoría. Guárdela en otro equipo o USB.
+                        </p>
+                        <button onclick="exportBackup()" class="w-full bg-sky-700 hover:bg-sky-600 text-white py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98">
+                            <i class="fa-solid fa-download mr-1"></i> EXPORTAR RESPALDO
+                        </button>
+                        <label class="w-full bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-xl text-[10px] font-black tracking-widest uppercase transition-all shadow-md active:scale-98 text-center cursor-pointer">
+                            <i class="fa-solid fa-upload mr-1"></i> IMPORTAR RESPALDO
+                            <input type="file" accept=".json,application/json" class="hidden" onchange="importBackup(event)">
+                        </label>
+                    </div>
+
                     <!-- TABLA DE PERSONAL AUTORIZADO -->
                     <div class="bg-slate-900/40 p-4 rounded-2xl border border-slate-800 lg:col-span-2 flex flex-col justify-between">
                         <div>
                             <h3 class="text-xs font-extrabold text-slate-200 uppercase tracking-wider border-b border-slate-800 pb-2 mb-4 flex items-center gap-2">
                                 <i class="fa-solid fa-users text-blue-400"></i> Base de Datos de Personal de Red (SINO-REG)
                             </h3>
+                            <div class="relative mb-3">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                                    <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
+                                </span>
+                                <input id="usersSearch" oninput="renderUsersTable()" type="text" placeholder="Buscar por nombre, DNI o celular..." class="w-full bg-slate-950 border border-slate-800 text-white text-[11px] rounded-xl pl-9 pr-3 py-2 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            </div>
                             <div class="overflow-x-auto custom-scrollbar max-h-56 overflow-y-auto">
                                 <table class="w-full text-left text-[10px] font-bold text-slate-300 border-collapse min-w-[500px]">
                                     <thead>
@@ -1083,12 +1234,12 @@
                     </div>
                     <div>
                         <label class="block text-slate-400 uppercase text-[8px] mb-1">Nombre Completo</label>
-                        <input id="editUserNombre" type="text" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 h-[36px] uppercase">
+                        <input id="editUserNombre" type="text" required maxlength="80" pattern="[A-ZÁÉÍÓÚÑÜa-záéíóúñü\s.\-]{5,80}" title="Solo letras, espacios, puntos y guiones (5 a 80 caracteres)" class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 h-[36px] uppercase">
                     </div>
                     <div>
                         <label class="block text-slate-400 uppercase text-[8px] mb-1">PIN Numérico Único</label>
                         <div class="flex gap-1.5">
-                            <input id="editUserPin" type="text" maxlength="6" required class="w-full bg-slate-950 border border-slate-800 text-amber-400 font-mono font-bold rounded-xl px-3 py-2 h-[36px] uppercase tracking-widest text-center text-lg">
+                            <input id="editUserPin" type="text" maxlength="6" pattern="[0-9]{6}" inputmode="numeric" title="Vacío = no cambiar PIN" placeholder="Vacío = no cambiar" class="w-full bg-slate-950 border border-slate-800 text-amber-400 font-mono font-bold rounded-xl px-3 py-2 h-[36px] uppercase tracking-widest text-center text-lg">
                             <button type="button" onclick="regeneratePinInEditForm()" class="bg-amber-600/20 text-amber-400 border border-amber-500/30 px-3 rounded-xl hover:bg-amber-650 hover:text-white transition-all text-[11px]" title="Autogenerar PIN Numérico">
                                 <i class="fa-solid fa-arrows-rotate"></i>
                             </button>
@@ -1100,7 +1251,7 @@
                     </div>
                     <div>
                         <label class="block text-slate-400 uppercase text-[8px] mb-1">Celular de Contacto</label>
-                        <input id="editUserCelular" type="text" maxlength="9" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 h-[36px]">
+                        <input id="editUserCelular" type="text" maxlength="9" pattern="[0-9]{9}" inputmode="numeric" title="9 dígitos numéricos" required class="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3 py-2 h-[36px]">
                     </div>
                     <div>
                         <label class="block text-slate-400 uppercase text-[8px] mb-1">Cargo / Especialidad</label>
@@ -1135,7 +1286,10 @@
 
     <!-- LÓGICA DE SINCRONIZACIÓN E FILTRADO INTEGRAL (SINO-SINC MOTOR) -->
     <script>
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTH-sGKVHNCt-kPiOoVv1BnmsTSE1onfi0f05kk0hh8Uc0l0kH3V8QzY22UdS23TjA9MCX8tDYwSNe7/pub?gid=1171051655&single=true&output=csv";
+        // SEGURIDAD: URL de datos en partes (no copiar ni publicar)
+        const SHEET_URL = ["https://docs.google.com/spreadsheets/d/e/",
+        "2PACX-1vTH-sGKVHNCt-kPiOoVv1BnmsTSE1onfi0f05kk0hh8Uc0l0kH3V8QzY22UdS23TjA9MCX8tDYwSNe7",
+        "/pub?gid=1171051655&single=true&output=csv"].join("");
         
         // BASE DE DATOS DE AUDITORÍA DE INGRESO Y PERMANENCIA (MOCKS DE AUDITORÍA HISTÓRICOS REALISTAS)
         let auditLogs = [
@@ -1147,8 +1301,13 @@
         // BASE DE DATOS LIMPIA DE PERSONAL AUTORIZADO (Se llena dinámicamente con registros en vivo)
         let authorizedUsers = [];
         function saveUsersLS() { try { localStorage.setItem("sino_users", JSON.stringify(authorizedUsers)); } catch(e){} }
-        function loadUsersLS() { try { const c = localStorage.getItem("sino_users"); if (c) { const a = JSON.parse(c); if (Array.isArray(a)) authorizedUsers = a; } } catch(e){} }
+        function loadUsersLS() { try { const c = localStorage.getItem("sino_users"); if (c) { const a = JSON.parse(c); if (Array.isArray(a)) authorizedUsers = a; } } catch(e){} migratePlainPins(); }
         loadUsersLS();
+
+        // AUDITORÍA PERSISTENTE: sobrevive recargas (tope 200 registros)
+        function saveAuditLS() { try { localStorage.setItem("sino_audit", JSON.stringify(auditLogs.slice(0, 200))); } catch(e){} }
+        function loadAuditLS() { try { const c = localStorage.getItem("sino_audit"); if (c) { const a = JSON.parse(c); if (Array.isArray(a) && a.length) auditLogs = a; } } catch(e){} }
+        loadAuditLS();
 
         let isAdminLoggedIn = false;
         let chartAuditDevicesInstance = null;
@@ -1229,12 +1388,15 @@
         let inactivityTimeout = null;
         let inactivityInterval = null;
         let secondsRemaining = 300;
+        let warnShown = false;
 
         function startInactivityTracking() {
             if (inactivityTimeout) clearTimeout(inactivityTimeout);
             if (inactivityInterval) clearInterval(inactivityInterval);
             
             secondsRemaining = 300; // 5 minutos
+            warnShown = false;
+            closeInactivityWarning();
             const timerBadge = document.getElementById("kardexTimerBadge");
             if (timerBadge) {
                 timerBadge.classList.remove("hidden");
@@ -1244,6 +1406,10 @@
 
             inactivityInterval = setInterval(() => {
                 secondsRemaining--;
+                // AVISO A LOS 60 SEGUNDOS CON OPCIÓN DE EXTENDER
+                if (secondsRemaining === 60 && !warnShown) { warnShown = true; openInactivityWarning(); }
+                const warnCount = document.getElementById("warnCountdown");
+                if (warnCount) warnCount.textContent = Math.max(0, secondsRemaining);
                 if (timerBadge) {
                     const mins = Math.floor(secondsRemaining / 60).toString().padStart(2, '0');
                     const secs = (secondsRemaining % 60).toString().padStart(2, '0');
@@ -1270,7 +1436,24 @@
             startInactivityTracking();
         }
 
+        function openInactivityWarning() {
+            const modal = document.getElementById("inactivityWarnModal");
+            if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+        }
+
+        function closeInactivityWarning() {
+            const modal = document.getElementById("inactivityWarnModal");
+            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+        }
+
+        function extendSession() {
+            closeInactivityWarning();
+            resetInactivityTimer();
+            showToast("Sesión extendida 5 minutos más.", "success");
+        }
+
         function stopInactivityTracking() {
+            closeInactivityWarning();
             if (inactivityTimeout) clearTimeout(inactivityTimeout);
             if (inactivityInterval) clearInterval(inactivityInterval);
             const timerBadge = document.getElementById("kardexTimerBadge");
@@ -1318,11 +1501,45 @@
             if (!container) return;
             const textTime = new Date().toLocaleTimeString();
             const color = isError ? 'text-rose-400' : 'text-emerald-400';
-            container.innerHTML += `<p class="${color}">[${textTime}] ${message}</p>`;
+            container.innerHTML += `<p class="${color}">[${textTime}] ${escapeHtml(message)}</p>`;
             container.scrollTop = container.scrollHeight;
         }
 
-        let attemptsLeft = 3; 
+        let attemptsLeft = 3;
+        let captchaN1 = 0, captchaN2 = 0;
+
+        // CAPTCHA ANTI-FUERZA BRUTA (se exige tras fallos reiterados)
+        function newCaptcha() {
+            captchaN1 = 1 + Math.floor(Math.random() * 9);
+            captchaN2 = 1 + Math.floor(Math.random() * 9);
+            const q = document.getElementById("captchaQ");
+            if (q) q.textContent = captchaN1 + " + " + captchaN2;
+            const a = document.getElementById("captchaA");
+            if (a) a.value = "";
+        }
+        function isCaptchaActive() {
+            const box = document.getElementById("captchaBox");
+            return box && !box.classList.contains("hidden");
+        }
+        function showCaptcha() {
+            const box = document.getElementById("captchaBox");
+            if (box) box.classList.remove("hidden");
+            newCaptcha();
+        }
+        function hideCaptcha() {
+            const box = document.getElementById("captchaBox");
+            if (box) box.classList.add("hidden");
+        }
+        function checkCaptcha() {
+            if (!isCaptchaActive()) return true;
+            const v = (document.getElementById("captchaA").value || "").trim();
+            if (parseInt(v, 10) !== captchaN1 + captchaN2) {
+                showToast("Verificación incorrecta. Intente de nuevo.", "error");
+                newCaptcha();
+                return false;
+            }
+            return true;
+        } 
         let lockoutTimer = null; 
         let lockoutInterval = null; 
 
@@ -1379,15 +1596,22 @@
             }, 1000);
         }
 
-        // GENERAR PIN ÚNICO COMPUESTO EXCLUSIVAMENTE POR NÚMEROS (6 DÍGITOS)
+        // GENERAR PIN ÚNICO COMPUESTO EXCLUSIVAMENTE POR NÚMEROS (6 DÍGITOS) - SEGURIDAD: crypto aleatorio
         function generateNumericPin() {
-            return Math.floor(100000 + Math.random() * 900000).toString(); // PIN de 6 dígitos numéricos
+            try {
+                const buf = new Uint32Array(1);
+                window.crypto.getRandomValues(buf);
+                return (100000 + (buf[0] % 900000)).toString();
+            } catch (e) {
+                return Math.floor(100000 + Math.random() * 900000).toString();
+            }
         }
 
         // EVENTO: ABRIR MODAL DE RECUPERACIÓN DE PIN
         function openPinRecoveryModal() {
             document.getElementById("recoveryDni").value = "";
             document.getElementById("recoveryBirthday").value = "";
+            document.getElementById("recoveryCelular").value = "";
             document.getElementById("recoveryErrorMsg").classList.add("hidden");
             
             const modal = document.getElementById("pinRecoveryModal");
@@ -1403,6 +1627,62 @@
                 modal.classList.add("hidden");
                 modal.classList.remove("flex");
             }
+        }
+
+        // CAMBIO DE PIN EN SESIÓN (requiere PIN actual, guarda hash)
+        function openChangePinModal() {
+            if (!sessionDni) { showToast("Sin sesión activa.", "error"); return; }
+            document.getElementById("changeCurrentPin").value = "";
+            document.getElementById("changeNewPin1").value = "";
+            document.getElementById("changeNewPin2").value = "";
+            document.getElementById("changePinErrorMsg").classList.add("hidden");
+            const modal = document.getElementById("changePinModal");
+            if (modal) {
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+            }
+        }
+
+        function closeChangePinModal() {
+            const modal = document.getElementById("changePinModal");
+            if (modal) {
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+            }
+        }
+
+        function handleChangePinSubmit(event) {
+            event.preventDefault();
+            const cur = document.getElementById("changeCurrentPin").value.trim();
+            const n1 = document.getElementById("changeNewPin1").value.trim();
+            const n2 = document.getElementById("changeNewPin2").value.trim();
+            const errorMsg = document.getElementById("changePinErrorMsg");
+            const fail = (t) => {
+                errorMsg.innerText = t;
+                errorMsg.classList.remove("hidden");
+                triggerShakingEffect(event.target);
+            };
+            const user = authorizedUsers.find(u => u.dni === sessionDni);
+            if (!user) { fail("Sesión no válida. Reingrese."); return; }
+            if (hashPin(cur, user.dni) !== user.pin) {
+                fail("El PIN actual es incorrecto.");
+                showToast("PIN actual incorrecto.", "error");
+                return;
+            }
+            if (!/^\d{6}$/.test(n1) || n1 !== n2) {
+                fail("PIN nuevo inválido o no coincide (6 dígitos).");
+                return;
+            }
+            if (n1 === cur) {
+                fail("El nuevo PIN debe ser diferente al actual.");
+                return;
+            }
+            errorMsg.classList.add("hidden");
+            user.pin = hashPin(n1, user.dni);
+            saveUsersLS();
+            closeChangePinModal();
+            showToast("PIN actualizado correctamente.", "success");
+            addLog(`Cambio de PIN en sesión para ${user.nombre}.`);
         }
 
         // EVENTO: COPIAR PIN GENERADO AL PORTAPAPELES
@@ -1429,7 +1709,8 @@
         function handleForgotPasswordSubmit(event) {
             event.preventDefault();
             const dni = document.getElementById("recoveryDni").value.trim();
-            const birthday = document.getElementById("recoveryBirthday").value; 
+            const birthday = document.getElementById("recoveryBirthday").value;
+            const celular = document.getElementById("recoveryCelular").value.trim();
             const errorMsg = document.getElementById("recoveryErrorMsg");
 
             const matchedUser = authorizedUsers.find(u => u.dni === dni);
@@ -1451,15 +1732,25 @@
                 return;
             }
 
+            // Comparar celular registrado (tercer factor)
+            if (matchedUser.celular !== celular) {
+                errorMsg.innerText = "❌ Validación fallida. El celular no coincide con el registrado.";
+                errorMsg.classList.remove("hidden");
+                triggerShakingEffect(event.target);
+                showToast("Celular incorrecto", "error");
+                return;
+            }
+
             // ÉXITO: Validado correctamente. Se genera PIN NUEVO permanente, anterior queda invalidado.
             errorMsg.classList.add("hidden");
             const newPinRec = generateNumericPin();
-            matchedUser.pin = newPinRec;
+            matchedUser.pin = hashPin(newPinRec, matchedUser.dni);
             saveUsersLS();
             closePinRecoveryModal();
 
             // Desplegar Modal con el PIN NUEVO permanente
             document.getElementById("pinModalTitle").innerText = "NUEVO PIN PERMANENTE GENERADO";
+            document.getElementById("pinModalDesc").innerText = "Su PIN anterior quedó invalidado. Apunte el nuevo PIN, lo necesitará en sus accesos futuros.";
             document.getElementById("newPinValue").innerText = newPinRec;
             const displayModal = document.getElementById("newPinDisplayModal");
             if (displayModal) {
@@ -1468,12 +1759,13 @@
             }
 
             showToast("Nuevo PIN permanente generado. El anterior quedó invalidado.", "success");
-            addLog(`PIN NUEVO permanente para ${matchedUser.nombre} por recupero cumpleaños. Uso único y permanente, si olvida usar recuperar.`);
+            addLog(`PIN NUEVO permanente para ${matchedUser.nombre} por recupero triple factor. PIN anterior invalidado.`);
         }
 
         // CONTROLADOR DE PESTAÑAS LOGIN VS REGISTRO NUEVO
         function switchKardexTab(tabName) {
             currentLockTab = tabName;
+    hideCaptcha();
             
             const btnLogin = document.getElementById("btnTabLogin");
             const btnRegister = document.getElementById("btnTabRegister");
@@ -1570,6 +1862,11 @@
                     return;
                 }
 
+                if (!isValidNombre(nombreVal)) {
+                    showToast("Nombre inválido. Solo letras, espacios, puntos y guiones.", "error");
+                    return;
+                }
+
                 // Verificar si ya existe el DNI
                 const exists = authorizedUsers.some(u => u.dni === dniVal);
                 if (exists) {
@@ -1593,7 +1890,7 @@
                         celular: celularVal,
                         cargo: cargoVal,
                         estado: "ACTIVO",
-                        pin: generatedPin,
+                        pin: hashPin(generatedPin, dniVal),
                         nacimiento: birthdayVal
                     };
 
@@ -1604,6 +1901,7 @@
 
                     // Mostrar modal del PIN numérico obtenido
                     document.getElementById("pinModalTitle").innerText = "REGISTRO DE RED COMPLETADO";
+            document.getElementById("pinModalDesc").innerText = "Este es su código PIN único asistencial de tipo numérico. Por su seguridad, apúntelo bien para sus accesos futuros.";
                     document.getElementById("newPinValue").innerText = generatedPin;
                     const displayModal = document.getElementById("newPinDisplayModal");
                     if (displayModal) {
@@ -1623,7 +1921,7 @@
                     document.getElementById("regBirthday").value = "";
 
                     showToast("¡Registro exitoso! Anote su PIN numérico.", "success");
-                    addLog(`Nuevo médico registrado: ${nombreVal} (DNI ${dniVal}). PIN asignado: ${generatedPin}`);
+                    addLog(`Nuevo médico registrado: ${nombreVal} (DNI ${dniVal}). PIN asignado: ******`);
                     logAuditEvent(nombreVal, dniVal, celularVal, "PC Auto-Reg", "Intranet", "AUTOREGISTRO COMPLETADO", "-");
                 }, 1500);
 
@@ -1635,6 +1933,8 @@
                 showToast("Por favor, ingrese su DNI y su PIN de seguridad.", "error");
                 return;
             }
+
+            if (!checkCaptcha()) return;
 
             submitBtn.disabled = true;
             progressContainer.classList.remove("hidden");
@@ -1712,7 +2012,7 @@
 
                 setTimeout(() => {
                     // Validar si el PIN es correcto
-                    const isPinCorrect = (pinVal === matchedUser.pin);
+                    const isPinCorrect = (hashPin(pinVal, dniVal) === matchedUser.pin);
 
                     if (isPinCorrect) {
                         completeStep("stepCUI", "iconCUI", "PIN validado. Acceso concedido.");
@@ -1734,7 +2034,7 @@
                             document.getElementById("kardexWelcomeBanner").classList.remove("hidden");
                             document.getElementById("kardexWelcomeBanner").classList.add("flex");
 
-                            document.getElementById("kardexWelcomeText").innerHTML = `SESIÓN INICIADA: DNI ${dniVal} - ${matchedUser.nombre} (${matchedUser.cargo})`;
+                            document.getElementById("kardexWelcomeText").innerHTML = `SESIÓN INICIADA: DNI ${escapeHtml(dniVal)} - ${escapeHtml(matchedUser.nombre)} (${escapeHtml(matchedUser.cargo)})`;
                             
                             // REGISTRAR INGRESO EN LA AUDITORÍA
                             sessionStartTime = new Date();
@@ -1756,6 +2056,7 @@
                             progressContainer.classList.add("hidden");
                             submitBtn.disabled = false;
                             attemptsLeft--;
+                            if (attemptsLeft <= 1) showCaptcha();
 
                             logAuditEvent(matchedUser.nombre, dniVal, matchedUser.celular, "PC Desconocido", "Externa", "FALLO ACCESO (PIN ERRÓNEO)", "0 min");
 
@@ -1783,6 +2084,8 @@
         function lockKardex() {
             stopInactivityTracking();
             isKardexUnlocked = false;
+            try { localStorage.removeItem("sino_sinc_fast_cache"); } catch(e){}
+            hideCaptcha();
 
             document.getElementById("kardexHeaderControls").classList.add("hidden");
             document.getElementById("kardexHeaderControls").classList.remove("flex");
@@ -1845,6 +2148,7 @@
             };
 
             auditLogs.unshift(newLog);
+            saveAuditLS();
 
             if (isAdminLoggedIn) {
                 renderAuditTable();
@@ -1874,6 +2178,17 @@
             }
         }
 
+        // BUSCADOR DE PERSONAL (nombre, DNI o celular)
+        function getUsersFiltered() {
+            const el = document.getElementById("usersSearch");
+            const q = (el ? el.value : "").toLowerCase().trim();
+            if (q === "") return authorizedUsers;
+            return authorizedUsers.filter(u =>
+                String(u.nombre || "").toLowerCase().includes(q) ||
+                String(u.dni || "").includes(q) ||
+                String(u.celular || "").includes(q));
+        }
+
         // CONTROL DE BASE DE DATOS DE PERSONAL (SINO-REG)
         function renderUsersTable() {
             const tbody = document.getElementById("usersTableBody");
@@ -1885,7 +2200,13 @@
                 return;
             }
 
-            authorizedUsers.forEach((usr, idx) => {
+            const rows = getUsersFiltered();
+            if (rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500 italic">Sin resultados para esa búsqueda.</td></tr>`;
+                return;
+            }
+
+            rows.forEach((usr, idx) => {
                 const badgeClass = usr.estado === "ACTIVO" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-rose-500/10 text-rose-400 border-rose-500/20";
                 const toggleBtnText = usr.estado === "ACTIVO" ? "Suspender" : "Activar";
                 const toggleBtnClass = usr.estado === "ACTIVO" ? "bg-rose-950/40 hover:bg-rose-900 text-rose-300" : "bg-emerald-950/40 hover:bg-emerald-900 text-emerald-300";
@@ -1893,29 +2214,29 @@
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-800/30 border-b border-slate-800/40 transition-colors text-[10px]">
                         <td class="p-2">
-                            <span class="block text-slate-100 font-extrabold uppercase">${usr.nombre}</span>
-                            <span class="block text-slate-500 text-[8px] uppercase">${usr.cargo}</span>
+                            <span class="block text-slate-100 font-extrabold uppercase">${escapeHtml(usr.nombre)}</span>
+                            <span class="block text-slate-500 text-[8px] uppercase">${escapeHtml(usr.cargo)}</span>
                         </td>
                         <td class="p-2">
-                            <span class="block font-mono text-slate-300">DNI: ${usr.dni}</span>
-                            <span class="block font-mono text-emerald-400 font-extrabold">PIN: ${usr.pin}</span>
+                            <span class="block font-mono text-slate-300">DNI: ${escapeHtml(usr.dni)}</span>
+                            <span class="block font-mono text-emerald-400 font-extrabold">PIN: ******</span>
                         </td>
-                        <td class="p-2 font-mono text-slate-300">${usr.nacimiento}</td>
-                        <td class="p-2 font-mono text-slate-300">${usr.celular}</td>
+                        <td class="p-2 font-mono text-slate-300">${escapeHtml(usr.nacimiento)}</td>
+                        <td class="p-2 font-mono text-slate-300">${escapeHtml(usr.celular)}</td>
                         <td class="p-2 text-center">
                             <span class="px-2 py-0.5 rounded-full border text-[8px] uppercase font-black tracking-wider ${badgeClass}">
-                                ${usr.estado}
+                                ${escapeHtml(usr.estado)}
                             </span>
                         </td>
                         <td class="p-2 text-center">
                             <div class="flex gap-1 flex-wrap justify-center">
-                                <button onclick="openEditUserModal('${usr.dni}')" class="bg-amber-950/40 hover:bg-amber-900 text-amber-300 border border-amber-850/30 px-2 py-1 rounded-lg text-[8px] font-black uppercase transition-all" title="Editar PIN/Datos">
+                                <button onclick="openEditUserModal('${escapeHtml(usr.dni)}')" class="bg-amber-950/40 hover:bg-amber-900 text-amber-300 border border-amber-850/30 px-2 py-1 rounded-lg text-[8px] font-black uppercase transition-all" title="Editar PIN/Datos">
                                     Editar
                                 </button>
-                                <button onclick="toggleUserStatus('${usr.dni}')" class="px-2 py-1 rounded-lg text-[8px] font-black uppercase transition-all ${toggleBtnClass}">
+                                <button onclick="toggleUserStatus('${escapeHtml(usr.dni)}')" class="px-2 py-1 rounded-lg text-[8px] font-black uppercase transition-all ${toggleBtnClass}">
                                     ${toggleBtnText}
                                 </button>
-                                <button onclick="deleteUser('${usr.dni}')" class="bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded-lg text-[8px] font-black uppercase transition-all">
+                                <button onclick="deleteUser('${escapeHtml(usr.dni)}')" class="bg-slate-800 hover:bg-slate-700 text-slate-400 px-2 py-1 rounded-lg text-[8px] font-black uppercase transition-all">
                                     Quitar
                                 </button>
                             </div>
@@ -1932,7 +2253,7 @@
             document.getElementById("editOriginalDni").value = user.dni;
             document.getElementById("editUserDni").value = user.dni;
             document.getElementById("editUserNombre").value = user.nombre;
-            document.getElementById("editUserPin").value = user.pin;
+            document.getElementById("editUserPin").value = "";
             document.getElementById("editUserCumple").value = user.nacimiento;
             document.getElementById("editUserCelular").value = user.celular;
             document.getElementById("editUserCargo").value = user.cargo;
@@ -1967,22 +2288,27 @@
             const celular = document.getElementById("editUserCelular").value.trim();
             const cargo = document.getElementById("editUserCargo").value;
 
-            if (isNaN(pin) || pin.length !== 6) {
+            if (pin !== "" && (isNaN(pin) || pin.length !== 6)) {
                 showToast("El PIN de seguridad debe ser únicamente numérico de 6 dígitos.", "error");
+                return;
+            }
+
+            if (!isValidNombre(nombre)) {
+                showToast("Nombre inválido. Solo letras, espacios, puntos y guiones.", "error");
                 return;
             }
 
             const user = authorizedUsers.find(u => u.dni === originalDni);
             if (user) {
                 user.nombre = nombre;
-                user.pin = pin;
+                if (pin !== "") user.pin = hashPin(pin, user.dni);
                 user.nacimiento = cumple;
                 user.celular = celular;
                 user.cargo = cargo;
                 saveUsersLS();
 
                 showToast(`Datos de ${nombre} actualizados con éxito`, "success");
-                addLog(`Admin editó datos de DNI ${originalDni}. Nuevo PIN: ${pin}`);
+                addLog(`Admin editó datos de DNI ${originalDni}. Nuevo PIN: ******`);
                 renderUsersTable();
                 closeEditUserModal();
             }
@@ -2067,16 +2393,16 @@
                     </div>
                     <div class="flex-1 min-w-0 text-left">
                         <span class="text-[8px] text-emerald-400 font-black tracking-widest uppercase block leading-none">BIENVENIDA DE RED SINO-SINC</span>
-                        <h4 class="text-[11px] font-black uppercase text-slate-100 mt-1.5 truncate">¡HOLA, ${usr.nombre}!</h4>
-                        <p class="text-[9px] text-slate-300 font-semibold mt-0.5 uppercase">${usr.cargo}</p>
+                        <h4 class="text-[11px] font-black uppercase text-slate-100 mt-1.5 truncate">¡HOLA, ${escapeHtml(usr.nombre)}!</h4>
+                        <p class="text-[9px] text-slate-300 font-semibold mt-0.5 uppercase">${escapeHtml(usr.cargo)}</p>
                     </div>
                     <button onclick="this.closest('.fixed').remove()" class="text-slate-500 hover:text-white transition-colors text-xs shrink-0">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
                 <div class="bg-black/40 border border-slate-800 p-2.5 rounded-xl text-[9px] font-semibold text-slate-400 flex flex-col gap-1.5 font-mono text-left">
-                    <p>● PROFESIONAL: <span class="text-emerald-400 font-black">${usr.nombre}</span></p>
-                    <p>● IDENTIDAD: <span class="text-slate-250">DNI ${usr.dni}</span></p>
+                    <p>● PROFESIONAL: <span class="text-emerald-400 font-black">${escapeHtml(usr.nombre)}</span></p>
+                    <p>● IDENTIDAD: <span class="text-slate-250">DNI ${escapeHtml(usr.dni)}</span></p>
                     <p>● FECHA: <span class="text-slate-200">${currentDateStr}</span></p>
                     <p>● HORA: <span class="text-slate-200">${currentTimeStr}</span></p>
                     <p>● DISPOSITIVO: <span class="text-teal-400 font-bold uppercase">${deviceType}</span></p>
@@ -2122,6 +2448,94 @@
             }
         }
 
+        // RECORDATORIO DE RESPALDO: avisa si pasaron 7+ días (posponer = 1 día)
+        function checkBackupReminder() {
+            try {
+                const now = Date.now();
+                const last = parseInt(localStorage.getItem("sino_backup_last") || "0", 10);
+                const snooze = parseInt(localStorage.getItem("sino_backup_snooze") || "0", 10);
+                if (now - snooze < 24 * 60 * 60 * 1000) return;
+                const days = last ? Math.floor((now - last) / (24 * 60 * 60 * 1000)) : -1;
+                if (!last || days >= 7) {
+                    const txt = document.getElementById("backupRemindText");
+                    if (txt) txt.textContent = last ? `Tu último respaldo tiene ${days} días. ¿Exportamos ahora?` : "Aún no tienes ningún respaldo. ¿Creamos el primero ahora?";
+                    const modal = document.getElementById("backupRemindModal");
+                    if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+                }
+            } catch(e){}
+        }
+        function backupRemindLater() {
+            try { localStorage.setItem("sino_backup_snooze", Date.now().toString()); } catch(e){}
+            const modal = document.getElementById("backupRemindModal");
+            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+        }
+        function backupRemindNow() {
+            const modal = document.getElementById("backupRemindModal");
+            if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+            exportBackup();
+        }
+
+        // RESPALDO: exportar usuarios + clave ADM + auditoría a JSON
+        function exportBackup() {
+            try {
+                const data = {
+                    app: "hospital-ventanilla",
+                    version: 1,
+                    fecha: new Date().toISOString(),
+                    sino_users: authorizedUsers,
+                    sino_adm_pass: localStorage.getItem("sino_adm_pass") || "",
+                    sino_audit: auditLogs.slice(0, 200)
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                const a = document.createElement("a");
+                const f = new Date();
+                const pad = (n) => String(n).padStart(2, "0");
+                a.href = URL.createObjectURL(blob);
+                a.download = `respaldo-hv-${f.getFullYear()}${pad(f.getMonth() + 1)}${pad(f.getDate())}-${pad(f.getHours())}${pad(f.getMinutes())}.json`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                try { localStorage.setItem("sino_backup_last", Date.now().toString()); } catch(e){}
+                setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+                showToast("Respaldo descargado correctamente.", "success");
+                addLog("Admin exportó respaldo de usuarios y auditoría.");
+            } catch(e) { showToast("No se pudo generar el respaldo.", "error"); }
+        }
+
+        // RESPALDO: importar y restaurar desde JSON validado
+        function importBackup(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => {
+                try {
+                    const data = JSON.parse(reader.result);
+                    if (!data || data.app !== "hospital-ventanilla" || !Array.isArray(data.sino_users)) {
+                        showToast("Archivo de respaldo inválido.", "error");
+                        return;
+                    }
+                    const ok = confirm("¿RESTAURAR respaldo del " + (data.fecha || "?") + "?\n\nUsuarios: " + data.sino_users.length + "\nSe reemplazarán los datos actuales.");
+                    if (!ok) { event.target.value = ""; return; }
+                    authorizedUsers = data.sino_users;
+                    saveUsersLS();
+                    migratePlainPins();
+                    if (typeof data.sino_adm_pass === "string" && data.sino_adm_pass) {
+                        localStorage.setItem("sino_adm_pass", data.sino_adm_pass);
+                    }
+                    if (Array.isArray(data.sino_audit) && data.sino_audit.length) {
+                        auditLogs = data.sino_audit.slice(0, 200);
+                        saveAuditLS();
+                    }
+                    renderUsersTable();
+                    if (isAdminLoggedIn) { renderAuditTable(); renderAuditChart(); }
+                    showToast("Respaldo restaurado correctamente.", "success");
+                    addLog(`Admin restauró respaldo (${data.sino_users.length} usuarios).`);
+                } catch(e) { showToast("Archivo corrupto, no se pudo importar.", "error"); }
+                event.target.value = "";
+            };
+            reader.readAsText(file);
+        }
+
         function handlePreRegisterUser(event) {
             event.preventDefault();
             const dni = document.getElementById("regUserDni").value.trim();
@@ -2132,6 +2546,11 @@
 
             if (dni.length !== 8 || isNaN(dni) || celular.length !== 9 || isNaN(celular) || nombre.length < 5 || !cumple) {
                 showToast("Por favor complete los campos con formatos válidos.", "error");
+                return;
+            }
+
+            if (!isValidNombre(nombre)) {
+                showToast("Nombre inválido. Solo letras, espacios, puntos y guiones.", "error");
                 return;
             }
 
@@ -2148,9 +2567,9 @@
                 nombre, 
                 celular, 
                 cargo, 
-                estado: "ACTIVO", 
-                pin: generatedPin, 
-                nacimiento: cumple 
+                estado: "ACTIVO",
+                pin: hashPin(generatedPin, dni),
+                nacimiento: cumple
             };
             authorizedUsers.push(newUser);
             saveUsersLS();
@@ -2161,10 +2580,11 @@
             document.getElementById("regUserCumple").value = "";
 
             showToast(`¡${nombre} registrado correctamente!`, "success");
-            addLog(`Admin registró a ${nombre}. PIN generado: ${generatedPin}`);
+            addLog(`Admin registró a ${nombre}. PIN generado: ******`);
             renderUsersTable();
 
             document.getElementById("pinModalTitle").innerText = "REGISTRO DE RED COMPLETADO";
+            document.getElementById("pinModalDesc").innerText = "Este es su código PIN único asistencial de tipo numérico. Por su seguridad, apúntelo bien para sus accesos futuros.";
             document.getElementById("newPinValue").innerText = generatedPin;
             const displayModal = document.getElementById("newPinDisplayModal");
             if (displayModal) {
@@ -2234,9 +2654,26 @@
             const user = document.getElementById("adminUser").value.trim().toUpperCase();
             const pass = document.getElementById("adminPass").value.trim();
             const errorMsg = document.getElementById("adminLoginError");
-            const savedPass = localStorage.getItem("sino_adm_pass") || "VIGILANCIA2026";
+            // SEGURIDAD: sin clave por defecto en el código; primera vez se crea vía recupero UESA
+            const savedHash = localStorage.getItem("sino_adm_pass");
 
-            if (user === "ADMIN" && pass === savedPass) {
+            if (!savedHash) {
+                errorMsg.innerText = "Sin clave inicial. Defina su clave con el recupero UESA.";
+                errorMsg.classList.remove("hidden");
+                toggleAdminRecovery();
+                return;
+            }
+
+            // Migración: clave antigua en texto plano se actualiza a hash al entrar
+            let admOk = false;
+            if (/^[a-f0-9]{64}$/.test(savedHash)) {
+                admOk = (user === "ADMIN" && hashPin(pass, "ADM-UESA") === savedHash);
+            } else {
+                admOk = (user === "ADMIN" && pass === savedHash);
+                if (admOk) localStorage.setItem("sino_adm_pass", hashPin(pass, "ADM-UESA"));
+            }
+
+            if (admOk) {
                 errorMsg.classList.add("hidden");
                 closeAdminLoginModal();
                 isAdminLoggedIn = true;
@@ -2250,6 +2687,8 @@
         }
 
         let admRecoveryCode = null;
+        let admRecoveryExpires = 0; // expira en 5 min
+        let admRecoveryTries = 0; // máximo 3 intentos
 
         function toggleAdminRecovery() {
             const box = document.getElementById("adminRecoveryBox");
@@ -2275,12 +2714,14 @@
                 showToast("Correo no autorizado para recupero ADM.", "error");
                 return;
             }
-            admRecoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
+            admRecoveryCode = generateNumericPin();
+            admRecoveryExpires = Date.now() + 5 * 60 * 1000;
+            admRecoveryTries = 0;
             const s2 = document.getElementById("adminRecoveryStep2");
             s2.classList.remove("hidden");
             s2.classList.add("flex");
             document.getElementById("adminRecoveryStep3").classList.add("hidden");
-            msg.innerHTML = "✔ CÓDIGO DEMO: " + admRecoveryCode + "<br>En producción llegará a tu correo UESA.";
+            msg.innerHTML = "✔ CÓDIGO DEMO: " + admRecoveryCode + "<br>Válido 5 min, un solo uso. En producción llegará a tu correo UESA.";
             msg.className = "text-[10px] font-extrabold uppercase text-center py-2 px-3 rounded-xl text-emerald-700 bg-emerald-50 border border-emerald-200";
             msg.classList.remove("hidden");
             showToast("Código generado solo titular (demo en pantalla).", "success");
@@ -2290,13 +2731,31 @@
         function handleAdminVerifyCode() {
             const code = (document.getElementById("adminRecoveryCode").value || "").trim();
             const msg = document.getElementById("adminRecoveryMsg");
-            if (!admRecoveryCode || code !== admRecoveryCode) {
-                msg.innerText = "❌ Código incorrecto.";
+            const err = (t) => {
+                msg.innerText = t;
                 msg.className = "text-[10px] font-extrabold uppercase text-center py-2 px-3 rounded-xl text-rose-600 bg-rose-50 border border-rose-200";
                 msg.classList.remove("hidden");
+            };
+            if (!admRecoveryCode || Date.now() > admRecoveryExpires) {
+                admRecoveryCode = null;
+                err("❌ Código vencido (5 min). Genere uno nuevo.");
+                showToast("Código vencido.", "error");
+                return;
+            }
+            if (admRecoveryTries >= 3) {
+                admRecoveryCode = null;
+                err("❌ Demasiados intentos. Genere un código nuevo.");
+                showToast("Código bloqueado por intentos.", "error");
+                return;
+            }
+            if (code !== admRecoveryCode) {
+                admRecoveryTries++;
+                err(`❌ Código incorrecto. Intentos restantes: ${3 - admRecoveryTries}.`);
                 showToast("Código incorrecto.", "error");
                 return;
             }
+            admRecoveryCode = null; // un solo uso
+            admRecoveryExpires = 0;
             const s3 = document.getElementById("adminRecoveryStep3");
             s3.classList.remove("hidden");
             s3.classList.add("flex");
@@ -2309,14 +2768,16 @@
             const p1 = (document.getElementById("adminNewPass1").value || "").trim();
             const p2 = (document.getElementById("adminNewPass2").value || "").trim();
             const msg = document.getElementById("adminRecoveryMsg");
-            if (p1.length < 6 || p1 !== p2) {
-                msg.innerText = "❌ Claves no coinciden o muy corta min 6.";
+            if (p1.length < 8 || p1 !== p2) {
+                msg.innerText = "❌ Claves no coinciden o muy corta min 8.";
                 msg.className = "text-[10px] font-extrabold uppercase text-center py-2 px-3 rounded-xl text-rose-600 bg-rose-50 border border-rose-200";
                 msg.classList.remove("hidden");
                 return;
             }
-            localStorage.setItem("sino_adm_pass", p1);
+            localStorage.setItem("sino_adm_pass", hashPin(p1, "ADM-UESA"));
             admRecoveryCode = null;
+            admRecoveryExpires = 0;
+            admRecoveryTries = 0;
             document.getElementById("adminUser").value = "ADMIN";
             document.getElementById("adminPass").value = p1;
             msg.innerText = "✔ Nueva clave guardada solo en tu Chrome UESA.";
@@ -2324,6 +2785,33 @@
             msg.classList.remove("hidden");
             showToast("Nueva clave ADM guardada.", "success");
             addLog("Titular UESA cambió clave ADM local.");
+        }
+
+        // CAMBIO DIRECTO DE CLAVE ADM (requiere clave actual)
+        function handleAdminChangePass(event) {
+            event.preventDefault();
+            const cur = (document.getElementById("admChCurrent").value || "").trim();
+            const n1 = (document.getElementById("admChNew1").value || "").trim();
+            const n2 = (document.getElementById("admChNew2").value || "").trim();
+            const savedHash = localStorage.getItem("sino_adm_pass") || "";
+            if (!savedHash || hashPin(cur, "ADM-UESA") !== savedHash) {
+                showToast("La clave actual es incorrecta.", "error");
+                return;
+            }
+            if (n1.length < 8 || n1 !== n2) {
+                showToast("Nueva clave inválida o no coincide (min 8).", "error");
+                return;
+            }
+            if (n1 === cur) {
+                showToast("La nueva clave debe ser diferente.", "error");
+                return;
+            }
+            localStorage.setItem("sino_adm_pass", hashPin(n1, "ADM-UESA"));
+            document.getElementById("admChCurrent").value = "";
+            document.getElementById("admChNew1").value = "";
+            document.getElementById("admChNew2").value = "";
+            showToast("Clave ADM actualizada.", "success");
+            addLog("Admin cambió su clave desde el panel.");
         }
 
         function closeAdminAuditModal() {
@@ -2356,20 +2844,20 @@
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-800/30 border-b border-slate-800/40 transition-colors">
                         <td class="p-2">
-                            <span class="block text-slate-200 text-[10px]">${log.hora}</span>
-                            <span class="block text-slate-500 text-[8px]">${log.fecha}</span>
+                            <span class="block text-slate-200 text-[10px]">${escapeHtml(log.hora)}</span>
+                            <span class="block text-slate-500 text-[8px]">${escapeHtml(log.fecha)}</span>
                         </td>
-                        <td class="p-2 text-slate-100 uppercase truncate max-w-[130px]" title="${log.usuario}">${log.usuario}</td>
+                        <td class="p-2 text-slate-100 uppercase truncate max-w-[130px]" title="${escapeHtml(log.usuario)}">${escapeHtml(log.usuario)}</td>
                         <td class="p-2">
-                            <span class="block text-slate-400 font-mono text-[9px]">DNI: ${log.dni}</span>
-                            <span class="block text-slate-500 font-mono text-[8px]">CEL: ${log.celular || 'N/A'}</span>
+                            <span class="block text-slate-400 font-mono text-[9px]">DNI: ${escapeHtml(log.dni)}</span>
+                            <span class="block text-slate-500 font-mono text-[8px]">CEL: ${escapeHtml(log.celular || 'N/A')}</span>
                         </td>
-                        <td class="p-2 truncate max-w-[150px]" title="${log.equipo}">
-                            <span class="block text-slate-300 text-[9px]">${log.equipo}</span>
-                            <span class="block text-slate-500 font-mono text-[8px]">${log.red}</span>
+                        <td class="p-2 truncate max-w-[150px]" title="${escapeHtml(log.equipo)}">
+                            <span class="block text-slate-300 text-[9px]">${escapeHtml(log.equipo)}</span>
+                            <span class="block text-slate-500 font-mono text-[8px]">${escapeHtml(log.red)}</span>
                         </td>
-                        <td class="p-2 text-[9px] uppercase"><span class="${statusClass}">${log.estado}</span></td>
-                        <td class="p-2 text-center text-slate-300 font-mono">${log.permanencia}</td>
+                        <td class="p-2 text-[9px] uppercase"><span class="${statusClass}">${escapeHtml(log.estado)}</span></td>
+                        <td class="p-2 text-center text-slate-300 font-mono">${escapeHtml(log.permanencia)}</td>
                     </tr>
                 `;
             });
@@ -2396,8 +2884,51 @@
             renderAuditTable(filtered);
         }
 
+        // EXPORTAR AUDITORÍA A CSV (compatible Excel Perú: separador ; + BOM)
+        function exportAuditCsv() {
+            try {
+                if (!auditLogs.length) { showToast("Sin registros para exportar.", "warning"); return; }
+                const esc = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+                const lines = [["ID", "Fecha", "Hora", "Usuario", "DNI", "Celular", "Equipo", "Red", "Estado", "Permanencia"].join(";")];
+                auditLogs.forEach(l => lines.push([l.id, l.fecha, l.hora, l.usuario, l.dni, l.celular, l.equipo, l.red, l.estado, l.permanencia].map(esc).join(";")));
+                const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+                const a = document.createElement("a");
+                const f = new Date();
+                const pad = (n) => String(n).padStart(2, "0");
+                a.href = URL.createObjectURL(blob);
+                a.download = `auditoria-hv-${f.getFullYear()}${pad(f.getMonth() + 1)}${pad(f.getDate())}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+                showToast(`Auditoría exportada (${auditLogs.length} registros).`, "success");
+                addLog(`Admin exportó auditoría a CSV (${auditLogs.length} registros).`);
+            } catch(e) { showToast("No se pudo exportar.", "error"); }
+        }
+
         function clearAuditLogs() {
-            auditLogs = [];
+            const paso1 = confirm("¿BORRAR toda la bitácora de auditoría?\n\nEsta acción elimina todos los registros y NO se puede deshacer.");
+            if (!paso1) return;
+            const paso2 = confirm("CONFIRMACIÓN FINAL\n\n¿Seguro que deseas purgar la auditoría?");
+            if (!paso2) {
+                showToast("Purgado cancelado. Bitácora intacta.", "info");
+                return;
+            }
+            // Testigo forense: se guarda UN registro del purgado realizado
+            const ahora = new Date();
+            auditLogs = [{
+                id: Date.now(),
+                fecha: ahora.toLocaleDateString(),
+                hora: ahora.toLocaleTimeString(),
+                usuario: "ADMINISTRADOR",
+                dni: "-",
+                celular: "-",
+                equipo: "Consola ADM",
+                red: "Intranet Hospital",
+                estado: "PURGADO",
+                permanencia: "-"
+            }];
+            saveAuditLS();
             renderAuditTable();
             renderAuditChart();
             showToast("Bitácora de auditoría purgada de manera segura.", "info");
@@ -2483,11 +3014,93 @@
         const normalizeString = (str) => {
             if (!str) return "";
             return str.normalize("NFD")
-                      .replace(/[\u0300-\u036f]/g, "") 
+                      .replace(/[\u0300-\u036f]/g, "")
                       .toLowerCase()
                       .replace(/[º°ª]/g, "o")
-                      .replace(/[^a-z0-9]/g, ""); 
+                      .replace(/[^a-z0-9]/g, "");
         };
+
+        // SEGURIDAD: Escapa HTML para neutralizar inyecciones XSS en innerHTML
+        function escapeHtml(str) {
+            if (str === undefined || str === null) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
+        }
+
+        // SEGURIDAD: Solo letras (con tildes), espacios, puntos y guiones, 5 a 80 caracteres
+        function isValidNombre(str) {
+            return /^[A-ZÁÉÍÓÚÑÜ\s.\-]{5,80}$/.test(String(str || ""));
+        }
+
+        // SEGURIDAD: SHA-256 síncrono para no guardar PINs/claves en texto plano
+        function sha256(ascii) {
+            function rr(v, a) { return (v >>> a) | (v << (32 - a)); }
+            const maxWord = Math.pow(2, 32);
+            let result = '';
+            const words = [];
+            const asciiBitLength = ascii.length * 8;
+            let hash = sha256.h = sha256.h || [];
+            const k = sha256.k = sha256.k || [];
+            let primeCounter = k.length;
+            const isComposite = {};
+            for (let candidate = 2; primeCounter < 64; candidate++) {
+                if (!isComposite[candidate]) {
+                    for (let i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+                    hash[primeCounter] = (Math.pow(candidate, 0.5) * maxWord) | 0;
+                    k[primeCounter++] = (Math.pow(candidate, 1/3) * maxWord) | 0;
+                }
+            }
+            ascii += '\x80';
+            while (ascii.length % 64 - 56) ascii += '\x00';
+            for (let i = 0; i < ascii.length; i++) {
+                const j = ascii.charCodeAt(i);
+                if (j >> 8) return '';
+                words[i >> 2] |= j << ((3 - i) % 4) * 8;
+            }
+            words[words.length] = (asciiBitLength / maxWord) | 0;
+            words[words.length] = asciiBitLength;
+            for (let j = 0; j < words.length;) {
+                const w = words.slice(j, j += 16);
+                const oldHash = hash;
+                hash = hash.slice(0, 8);
+                for (let i = 0; i < 64; i++) {
+                    const w15 = w[i - 15], w2 = w[i - 2];
+                    const a = hash[0], e = hash[4];
+                    const temp1 = hash[7]
+                        + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25))
+                        + ((e & hash[5]) ^ ((~e) & hash[6]))
+                        + k[i]
+                        + (w[i] = (i < 16) ? w[i] : (w[i - 16] + (rr(w15, 7) ^ rr(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rr(w2, 17) ^ rr(w2, 19) ^ (w2 >>> 10))) | 0);
+                    const temp2 = (rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+                    hash = [(temp1 + temp2) | 0].concat(hash);
+                    hash[4] = (hash[4] + temp1) | 0;
+                }
+                for (let i = 0; i < 8; i++) hash[i] = (hash[i] + oldHash[i]) | 0;
+            }
+            for (let i = 0; i < 8; i++) {
+                for (let j = 3; j + 1; j--) {
+                    const b = (hash[i] >> (j * 8)) & 255;
+                    result += ((b < 16) ? 0 : '') + b.toString(16);
+                }
+            }
+            return result;
+        }
+        // Hash con sal: PINs con sal=DNI, clave ADM con sal fija
+        function hashPin(pin, salt) { return sha256(String(pin) + "|" + String(salt)); }
+        // Migra PINs antiguos en texto plano a hash al cargar
+        function migratePlainPins() {
+            try {
+                let changed = false;
+                authorizedUsers.forEach(u => {
+                    if (/^\d{6}$/.test(String(u.pin || ""))) { u.pin = hashPin(u.pin, u.dni); changed = true; }
+                });
+                if (changed) saveUsersLS();
+            } catch(e){}
+        }
 
         function getNormalizedValue(row, possibleKeys, defaultValue = "") {
             const normalizedPossible = possibleKeys.map(k => normalizeString(k));
@@ -2677,8 +3290,8 @@
                     if (container) {
                         container.innerHTML += `
                             <div class="bg-emerald-950/40 p-1.5 rounded border border-emerald-500/20 text-[9px]">
-                                <span class="text-slate-400 block uppercase font-bold text-[8px]">${variable}:</span>
-                                <span class="text-emerald-400 truncate block font-mono font-bold">${matched.raw}</span>
+                                <span class="text-slate-400 block uppercase font-bold text-[8px]">${escapeHtml(variable)}:</span>
+                                <span class="text-emerald-400 truncate block font-mono font-bold">${escapeHtml(matched.raw)}</span>
                             </div>
                         `;
                     }
@@ -2687,7 +3300,7 @@
                     if (container) {
                         container.innerHTML += `
                             <div class="bg-rose-950/20 p-1.5 rounded border border-rose-500/10 text-[9px]">
-                                <span class="text-slate-400 block uppercase font-bold text-[8px]">${variable}:</span>
+                                <span class="text-slate-400 block uppercase font-bold text-[8px]">${escapeHtml(variable)}:</span>
                                 <span class="text-rose-400 truncate block font-mono font-bold">FALLBACK: ${KEYS_MAP[variable][0]}</span>
                             </div>
                         `;
@@ -2960,19 +3573,19 @@
 
             const years = [...new Set(dbRawData.map(d => d.ano))].filter(Boolean).sort((a,b) => b-a);
             selectYear.innerHTML = '<option value="ALL" selected>Todos los Años</option>';
-            years.forEach(yr => selectYear.innerHTML += `<option value="${yr}">Año ${yr}</option>`);
+            years.forEach(yr => selectYear.innerHTML += `<option value="${escapeHtml(yr)}">Año ${escapeHtml(yr)}</option>`);
 
             const testTypes = [...new Set(dbRawData.map(d => d.diagnostic))].filter(Boolean).sort();
             selectType.innerHTML = '<option value="ALL" selected>Todas las Pruebas</option>';
-            testTypes.forEach(t => selectType.innerHTML += `<option value="${t}">${t}</option>`);
+            testTypes.forEach(t => selectType.innerHTML += `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`);
 
             const weeks = [...new Set(dbRawData.map(d => d.sem))].filter(Boolean).sort((a,b) => a-b);
             selectWeek.innerHTML = '<option value="ALL" selected>Todas</option>';
-            weeks.forEach(wk => selectWeek.innerHTML += `<option value="${wk}">Semana ${wk}</option>`);
+            weeks.forEach(wk => selectWeek.innerHTML += `<option value="${escapeHtml(wk)}">Semana ${escapeHtml(wk)}</option>`);
 
             const sectors = [...new Set(dbRawData.map(d => d.localidad))].filter(Boolean).sort();
             selectSector.innerHTML = '<option value="ALL" selected>Todos los Sectores</option>';
-            sectors.forEach(sec => selectSector.innerHTML += `<option value="${sec}">${sec}</option>`);
+            sectors.forEach(sec => selectSector.innerHTML += `<option value="${escapeHtml(sec)}">${escapeHtml(sec)}</option>`);
         }
 
         function applyFilters() {
@@ -3390,7 +4003,7 @@
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50 border-b border-slate-100 transition-colors">
                         <td class="p-3.5 text-slate-800 font-extrabold flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span> ${examen}
+                            <span class="w-1.5 h-1.5 rounded-full bg-teal-600"></span> ${escapeHtml(examen)}
                         </td>
                         <td class="p-3.5 text-center text-slate-700 font-bold">${data.total}</td>
                         <td class="p-3.5 text-center text-rose-600 font-extrabold bg-rose-50/20">${data.pos}</td>
@@ -3477,19 +4090,19 @@
 
                 tbody.innerHTML += `
                     <tr class="hover:bg-slate-50 border-b border-slate-100 transition-colors">
-                        <td class="p-3 text-center text-slate-500 font-extrabold bg-slate-50/50">${itemNum}</td>
+                        <td class="p-3 text-center text-slate-500 font-extrabold bg-slate-50/50">${escapeHtml(itemNum)}</td>
                         <td class="p-3 text-center">
-                            <span class="text-[10px] font-extrabold text-slate-700 block">S.E. ${d.sem}</span>
-                            <span class="text-[8px] font-semibold text-slate-400 block uppercase">${d.ano}</span>
+                            <span class="text-[10px] font-extrabold text-slate-700 block">S.E. ${escapeHtml(d.sem)}</span>
+                            <span class="text-[8px] font-semibold text-slate-400 block uppercase">${escapeHtml(d.ano)}</span>
                         </td>
-                        <td class="p-3 text-slate-600 font-semibold">${d.fecha}</td>
-                        <td class="p-3 text-slate-800 font-extrabold uppercase">${d.nombreCompletoOriginal}</td>
-                        <td class="p-3 text-center font-bold text-slate-500">${d.hc}</td>
-                        <td class="p-3 font-semibold text-slate-600 select-all">${d.dni}</td>
-                        <td class="p-3 text-purple-700 font-extrabold uppercase">${d.localidad}</td>
-                        <td class="p-3 text-teal-700 font-extrabold uppercase">${d.diagnostic}</td>
+                        <td class="p-3 text-slate-600 font-semibold">${escapeHtml(d.fecha)}</td>
+                        <td class="p-3 text-slate-800 font-extrabold uppercase">${escapeHtml(d.nombreCompletoOriginal)}</td>
+                        <td class="p-3 text-center font-bold text-slate-500">${escapeHtml(d.hc)}</td>
+                        <td class="p-3 font-semibold text-slate-600 select-all">${escapeHtml(d.dni)}</td>
+                        <td class="p-3 text-purple-700 font-extrabold uppercase">${escapeHtml(d.localidad)}</td>
+                        <td class="p-3 text-teal-700 font-extrabold uppercase">${escapeHtml(d.diagnostic)}</td>
                         <td class="p-3 text-center">
-                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${estadoClass}">${d.estado}</span>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${estadoClass}">${escapeHtml(d.estado)}</span>
                         </td>
                     </tr>
                 `;
@@ -3580,9 +4193,7 @@
                                 addLog(`Filas brutas procesadas correctamente: ${results.data.length}`);
                                 procesarFilasSheet(results.data);
                                 
-                                if (dbRawData && dbRawData.length > 0) {
-                                    localStorage.setItem("sino_sinc_fast_cache", JSON.stringify(dbRawData));
-                                }
+                                writeFastCache();
                                 
                                 if (statusText) statusText.textContent = "ONLINE";
                                 if (badgeDot) badgeDot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
@@ -3907,14 +4518,19 @@
 
         function toggleDebugConsole() {
             const modal = document.getElementById("debugConsoleModal");
-            if (modal) {
-                if (modal.classList.contains("hidden")) {
-                    modal.classList.remove("hidden");
-                    modal.classList.add("flex");
-                } else {
-                    modal.classList.remove("flex");
-                    modal.classList.add("hidden");
-                }
+            if (!modal) return;
+            const isOpening = modal.classList.contains("hidden");
+            // SEGURIDAD: solo el ADMIN autenticado puede abrir la consola de diagnóstico
+            if (isOpening && !isAdminLoggedIn) {
+                showToast("Acceso restringido. Solo administradores.", "error");
+                return;
+            }
+            if (isOpening) {
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+            } else {
+                modal.classList.remove("flex");
+                modal.classList.add("hidden");
             }
         }
 
@@ -3937,7 +4553,7 @@
                 icon = '<i class="fa-solid fa-circle-info text-blue-500"></i>';
             }
 
-            toast.innerHTML = `${icon} <span class="uppercase tracking-wider">${message}</span>`;
+            toast.innerHTML = `${icon} <span class="uppercase tracking-wider">${escapeHtml(message)}</span>`;
             toast.onclick = () => {
                 toast.classList.add("opacity-0", "translate-y-2");
                 setTimeout(() => toast.remove(), 300);
@@ -3983,6 +4599,42 @@
             }
         };
 
+        // CACHÉ OFUSCADO CON EXPIRACIÓN (12h): no legible a simple vista en el navegador
+        const CACHE_KEY = "HV-LAB-2026";
+        const CACHE_TTL = 12 * 60 * 60 * 1000;
+        function obfuscateCache(str) {
+            try {
+                let x = "";
+                for (let i = 0; i < str.length; i++) x += String.fromCharCode(str.charCodeAt(i) ^ CACHE_KEY.charCodeAt(i % CACHE_KEY.length));
+                return btoa(unescape(encodeURIComponent(x)));
+            } catch(e) { return ""; }
+        }
+        function deobfuscateCache(b64) {
+            try {
+                const x = decodeURIComponent(escape(atob(b64)));
+                let s = "";
+                for (let i = 0; i < x.length; i++) s += String.fromCharCode(x.charCodeAt(i) ^ CACHE_KEY.charCodeAt(i % CACHE_KEY.length));
+                return s;
+            } catch(e) { return ""; }
+        }
+        function writeFastCache() {
+            try {
+                if (dbRawData && dbRawData.length > 0) {
+                    localStorage.setItem("sino_sinc_fast_cache", obfuscateCache(JSON.stringify({ ts: Date.now(), rows: dbRawData })));
+                }
+            } catch(e){}
+        }
+        function readFastCache() {
+            try {
+                const raw = localStorage.getItem("sino_sinc_fast_cache");
+                if (!raw) return null;
+                const obj = JSON.parse(deobfuscateCache(raw));
+                if (!obj || !Array.isArray(obj.rows) || !obj.ts) return null;
+                if (Date.now() - obj.ts > CACHE_TTL) { localStorage.removeItem("sino_sinc_fast_cache"); return null; }
+                return obj.rows;
+            } catch(e) { return null; }
+        }
+
         function resetearCacheYForzar() {
             localStorage.removeItem("sino_sinc_fast_cache");
             addLog("Caché local de febriles removido exitosamente.");
@@ -4011,11 +4663,12 @@
         window.onload = function() {
             addLog("Módulo epidemiológico iniciado.");
             checkLockoutState();
+            setTimeout(checkBackupReminder, 2500);
             
             try {
-                const cachedData = localStorage.getItem("sino_sinc_fast_cache");
+                const cachedData = readFastCache();
                 if (cachedData) {
-                    dbRawData = JSON.parse(cachedData);
+                    dbRawData = cachedData;
                     if (dbRawData && dbRawData.length > 0) {
                         addLog(`Caché local rápido cargado: ${dbRawData.length} registros clínicos.`);
                         calcularMetricasAlertas();
